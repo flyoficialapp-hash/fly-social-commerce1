@@ -11,7 +11,7 @@
 
   <div class="glass-panel" style="width: 100%; max-width: 400px; padding: 40px 30px;">
     <div class="logo-container">
-      <img src="assets/logo.png" alt="FLY Logo" class="logo-img">
+      <img src="logo.png" alt="FLY Logo" class="logo-img">
     </div>
     
     <h2 style="text-align: center; margin-bottom: 25px; font-weight: 500; font-size: 1.3rem;">Definir Nova Palavra-passe</h2>
@@ -36,8 +36,6 @@
   <script>
     window.addEventListener('load', async () => {
       const msg = document.getElementById('message');
-      
-      // O Supabase lê automaticamente o token de recuperação que vem no link do e-mail
       if (window.location.hash && window.location.hash.includes('access_token')) {
         msg.style.color = 'var(--neon)';
         msg.innerText = 'Link validado! Podes criar a tua nova senha.';
@@ -54,25 +52,15 @@
       const btn = document.getElementById('btnReset');
       const msg = document.getElementById('message');
 
-      if (newPassword.length < 6) {
-        msg.style.color = 'var(--danger)'; msg.innerText = 'A senha deve ter pelo menos 6 caracteres.'; return;
-      }
-      if (newPassword !== confirmPassword) {
-        msg.style.color = 'var(--danger)'; msg.innerText = 'As senhas não coincidem.'; return;
-      }
+      if (newPassword.length < 6) { msg.style.color = 'var(--danger)'; msg.innerText = 'A senha deve ter pelo menos 6 caracteres.'; return; }
+      if (newPassword !== confirmPassword) { msg.style.color = 'var(--danger)'; msg.innerText = 'As senhas não coincidem.'; return; }
 
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A guardar...';
-      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A guardar...'; btn.disabled = true;
 
       const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
 
-      if (error) {
-        msg.style.color = 'var(--danger)'; msg.innerText = 'Erro: ' + error.message;
-        btn.innerHTML = 'Guardar Nova Senha'; btn.disabled = false;
-      } else {
-        msg.style.color = 'var(--success)'; msg.innerText = 'Senha atualizada! A redirecionar...';
-        setTimeout(() => window.location.href = 'index.html', 2000);
-      }
+      if (error) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro: ' + error.message; btn.innerHTML = 'Guardar Nova Senha'; btn.disabled = false; } 
+      else { msg.style.color = 'var(--success)'; msg.innerText = 'Senha atualizada! A redirecionar...'; setTimeout(() => window.location.href = 'index.html', 2000); }
     });
   </script>
 </body>

@@ -7,62 +7,152 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { height: 100vh; overflow: hidden; background: #000; display: flex; flex-direction: column; }
+    body { height: 100vh; overflow: hidden; background: #030712; display: flex; flex-direction: column; font-family: 'Inter', sans-serif; }
     
-    /* VÍDEO DO OUTRO LADO (Fundo) */
-    .remote-video-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; justify-content: center; align-items: center; z-index: 1; }
-    .remote-video-placeholder { text-align: center; color: var(--text-muted); }
-    .remote-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--neon); margin-bottom: 15px; animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 204, 255, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(0, 204, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 204, 255, 0); } }
-    .remote-name { font-size: 1.5rem; font-weight: bold; color: white; margin-bottom: 5px; }
-    .call-status { font-size: 1rem; color: var(--neon); }
+    /* FUNDO NEON */
+    .bg-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.15) 0%, #030712 70%); z-index: 0; pointer-events: none; }
 
-    /* VÍDEO LOCAL (Canto superior direito) */
-    .local-video-container { position: absolute; top: 40px; right: 20px; width: 110px; height: 160px; border-radius: 15px; overflow: hidden; border: 2px solid var(--glass-border); background: #000; z-index: 10; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-    .local-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); /* Espelha o vídeo local */ }
-    .local-video-off { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #222; color: var(--text-muted); font-size: 1.5rem;}
+    /* UI DE CHAMADA DE VOZ */
+    .voice-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .top-bar { position: absolute; top: 40px; left: 20px; width: 90%; display: flex; justify-content: space-between; align-items: center; color: white; font-size: 1.5rem; z-index: 20;}
+    .top-bar i { cursor: pointer; }
+    
+    .avatar-container { position: relative; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; }
+    
+    /* ANIMAÇÃO DE ONDAS SONORAS */
+    .pulse-ring { position: absolute; width: 220px; height: 220px; border-radius: 50%; border: 2px solid var(--neon); animation: pulse 2s infinite ease-out; opacity: 0; }
+    .pulse-ring:nth-child(1) { animation-delay: 0s; }
+    .pulse-ring:nth-child(2) { animation-delay: 0.5s; }
+    .pulse-ring:nth-child(3) { animation-delay: 1s; }
+    @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.8); opacity: 0; } }
+    
+    .call-avatar { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 3px solid var(--neon); box-shadow: 0 0 30px rgba(0, 204, 255, 0.5); z-index: 2; }
+    
+    .call-info { text-align: center; z-index: 2; }
+    .call-info h2 { font-size: 1.8rem; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px; }
+    .call-info p { color: var(--text-muted); font-size: 1rem; margin-bottom: 5px; }
+    .call-timer { color: var(--neon); font-size: 1.2rem; font-weight: bold; margin-bottom: 40px; letter-spacing: 1px;}
+    
+    .voice-controls { display: flex; gap: 30px; z-index: 20; }
+    .btn-ctrl-voice { display: flex; flex-direction: column; align-items: center; gap: 10px; color: white; font-size: 0.8rem; cursor: pointer; }
+    .icon-circle { width: 65px; height: 65px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; transition: 0.3s; backdrop-filter: blur(10px); }
+    .btn-ctrl-voice:hover .icon-circle { background: rgba(255,255,255,0.2); }
+    .btn-end-call .icon-circle { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 20px rgba(255, 51, 102, 0.5); width: 70px; height: 70px; font-size: 1.8rem; }
+    .btn-mute.active .icon-circle { background: white; color: #000; }
 
-    /* CONTROLES INFERIORES */
-    .call-controls { position: absolute; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; gap: 25px; z-index: 10; padding: 0 20px; }
-    .btn-control { width: 60px; height: 60px; border-radius: 50%; border: none; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); }
-    .btn-control:hover { transform: scale(1.1); }
-    .btn-mute { background: rgba(255,255,255,0.2); color: white; }
-    .btn-mute.active { background: white; color: #000; }
-    .btn-video { background: rgba(255,255,255,0.2); color: white; }
-    .btn-video.active { background: white; color: #000; }
-    .btn-end { background: var(--danger); color: white; width: 70px; height: 70px; font-size: 1.8rem; box-shadow: 0 0 20px rgba(255, 51, 102, 0.4); }
-    .btn-switch { background: rgba(255,255,255,0.2); color: white; }
+    /* UI DE CHAMADA DE VÍDEO */
+    .video-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none; flex-direction: column; background: #000; }
+    
+    /* VÍDEO REMOTO */
+    #remoteVideo { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 1; }
+    .remote-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #111; z-index: 1; }
+    .remote-placeholder img { width: 120px; height: 120px; border-radius: 50%; opacity: 0.5; }
+    
+    /* VÍDEO LOCAL (PIP) */
+    .local-video-container { position: absolute; top: 40px; left: 20px; width: 100px; height: 150px; border-radius: 15px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); z-index: 20; background: #222; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    #localVideo { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
+    .local-video-placeholder { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; color: var(--text-muted); }
+    
+    /* TOPO DO VÍDEO */
+    .video-top-right { position: absolute; top: 50px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 15px; z-index: 20; }
+    .timer-pill { background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(5px); font-weight: bold; }
+    .timer-pill .dot { width: 10px; height: 10px; background: var(--danger); border-radius: 50%; }
+    .btn-add-person { width: 45px; height: 45px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; backdrop-filter: blur(5px); cursor: pointer;}
+    
+    /* CONTROLES DO VÍDEO (RODAPÉ) */
+    .video-controls-bar { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 20; padding: 0 10px; }
+    .btn-ctrl-vid { display: flex; flex-direction: column; align-items: center; gap: 8px; color: white; font-size: 0.75rem; cursor: pointer; }
+    .btn-ctrl-vid .icon-circle { width: 55px; height: 55px; font-size: 1.3rem; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); }
+    .btn-ctrl-vid.active .icon-circle { background: white; color: #000; }
+    .btn-ctrl-vid.end .icon-circle { background: var(--danger); border-color: var(--danger); width: 60px; height: 60px; font-size: 1.5rem;}
 
-    .loading-call { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center; z-index: 5; }
-    .loading-call i { font-size: 3rem; color: var(--neon); animation: spin 1s linear infinite; margin-bottom: 15px; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <!-- Vídeo Remoto (Fundo) -->
-  <div class="remote-video-container">
-    <div class="remote-video-placeholder" id="remotePlaceholder">
-      <img id="remoteAvatar" src="" class="remote-avatar">
-      <div id="remoteName" class="remote-name">A ligar...</div>
-      <div id="callStatus" class="call-status">A estabelecer ligação segura...</div>
+  <div class="bg-glow"></div>
+
+  <!-- ======================= UI DE CHAMADA DE VOZ ======================= -->
+  <div class="voice-ui" id="voiceUI">
+    <div class="top-bar">
+      <i class="fa-solid fa-chevron-down" onclick="endCall()"></i>
+      <i class="fa-solid fa-expand"></i>
     </div>
-    <!-- O vídeo remoto vai aparecer aqui no futuro -->
-    <video id="remoteVideo" autoplay playsinline style="display:none; width: 100%; height: 100%; object-fit: cover;"></video>
+
+    <div class="avatar-container">
+      <div class="pulse-ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="pulse-ring"></div>
+      <img id="voiceAvatar" src="default-avatar.png" class="call-avatar">
+    </div>
+
+    <div class="call-info">
+      <h2 id="voiceName">A ligar... <i class="fa-solid fa-circle-check" style="color: var(--neon); font-size: 1rem;"></i></h2>
+      <p>Chamada de voz...</p>
+      <div class="call-timer" id="voiceTimer">00:00</div>
+    </div>
+
+    <div class="voice-controls">
+      <div class="btn-ctrl-voice btn-mute" id="btnMuteVoice" onclick="toggleMute()">
+        <div class="icon-circle"><i class="fa-solid fa-microphone"></i></div>
+        <span>Silenciar</span>
+      </div>
+      <div class="btn-ctrl-voice btn-end-call" onclick="endCall()">
+        <div class="icon-circle"><i class="fa-solid fa-phone-slash"></i></div>
+        <span>Desligar</span>
+      </div>
+      <div class="btn-ctrl-voice btn-speaker" onclick="alert('Altifalante em breve')">
+        <div class="icon-circle"><i class="fa-solid fa-volume-high"></i></div>
+        <span>Altifalante</span>
+      </div>
+    </div>
   </div>
 
-  <!-- Vídeo Local (Canto) -->
-  <div class="local-video-container" id="localVideoContainer">
-    <video id="localVideo" class="local-video" autoplay playsinline muted></video>
-    <div id="localVideoOff" class="local-video-off" style="display:none;"><i class="fa-solid fa-video-slash"></i></div>
-  </div>
+  <!-- ======================= UI DE CHAMADA DE VÍDEO ======================= -->
+  <div class="video-ui" id="videoUI">
+    <!-- Vídeo Remoto -->
+    <video id="remoteVideo" autoplay playsinline style="display:none;"></video>
+    <div class="remote-placeholder" id="remotePlaceholder">
+      <img id="remoteVideoAvatar" src="default-avatar.png">
+    </div>
 
-  <!-- Controles -->
-  <div class="call-controls">
-    <button class="btn-control btn-mute" id="btnMute" onclick="toggleMute()"><i class="fa-solid fa-microphone"></i></button>
-    <button class="btn-control btn-video active" id="btnVideo" onclick="toggleVideo()"><i class="fa-solid fa-video"></i></button>
-    <button class="btn-control btn-end" onclick="endCall()"><i class="fa-solid fa-phone-slash"></i></button>
-    <button class="btn-control btn-switch" onclick="switchCamera()"><i class="fa-solid fa-camera-rotate"></i></button>
+    <!-- Vídeo Local (PiP) -->
+    <div class="local-video-container">
+      <video id="localVideo" autoplay playsinline muted></video>
+      <div class="local-video-placeholder" id="localVideoPlaceholder">
+        <i class="fa-solid fa-video-slash"></i>
+      </div>
+    </div>
+
+    <!-- Topo Direito -->
+    <div class="video-top-right">
+      <div class="timer-pill"><div class="dot"></div> <span id="videoTimer">00:00</span></div>
+      <div class="btn-add-person"><i class="fa-solid fa-user-plus"></i></div>
+    </div>
+
+    <!-- Controles Inferiores -->
+    <div class="video-controls-bar">
+      <div class="btn-ctrl-vid active" id="btnVideoCam" onclick="toggleVideo()">
+        <div class="icon-circle"><i class="fa-solid fa-video"></i></div>
+        <span>Câmara</span>
+      </div>
+      <div class="btn-ctrl-vid" id="btnMuteVideo" onclick="toggleMute()">
+        <div class="icon-circle"><i class="fa-solid fa-microphone"></i></div>
+        <span>Microfone</span>
+      </div>
+      <div class="btn-ctrl-vid end" onclick="endCall()">
+        <div class="icon-circle"><i class="fa-solid fa-phone-slash"></i></div>
+        <span>Desligar</span>
+      </div>
+      <div class="btn-ctrl-vid" onclick="switchCamera()">
+        <div class="icon-circle"><i class="fa-solid fa-camera-rotate"></i></div>
+        <span>Inverter</span>
+      </div>
+      <div class="btn-ctrl-vid" onclick="alert('Mais opções em breve')">
+        <div class="icon-circle"><i class="fa-solid fa-ellipsis"></i></div>
+        <span>Mais</span>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -71,127 +161,137 @@
     let localStream = null;
     let isMuted = false;
     let isVideoOn = true;
-    let currentFacingMode = 'user'; // 'user' (frontal) ou 'environment' (traseira)
+    let currentFacingMode = 'user';
     let targetUserId = null;
+    let callTimerInterval = null;
+    let secondsElapsed = 0;
 
-    // 1. Iniciar a chamada
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function startTimer(elementId) {
+      clearInterval(callTimerInterval);
+      secondsElapsed = 0;
+      document.getElementById(elementId).innerText = "00:00";
+      callTimerInterval = setInterval(() => {
+        secondsElapsed++;
+        document.getElementById(elementId).innerText = formatTime(secondsElapsed);
+      }, 1000);
+    }
+
     async function initCall() {
       const urlParams = new URLSearchParams(window.location.search);
       targetUserId = urlParams.get('user_id');
-      const type = urlParams.get('type'); // 'audio' ou 'video'
+      const type = urlParams.get('type') || 'video'; // 'audio' ou 'video'
       
       if (!targetUserId) { alert('Utilizador não encontrado.'); window.history.back(); return; }
 
-      // Carregar dados do utilizador que estamos a ligar
+      // Buscar dados do utilizador
       const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', targetUserId).single();
-      if (profile) {
-        document.getElementById('remoteName').innerText = profile.username;
-        document.getElementById('remoteAvatar').src = profile.avatar_url || `https://i.pravatar.cc/150?u=${targetUserId}`;
-      }
+      const avatarUrl = profile && profile.avatar_url ? profile.avatar_url : 'default-avatar.png';
+      const userName = profile ? profile.username : 'Utilizador FLY';
 
-      // Se for chamada de voz, esconder o vídeo
+      // Configurar UI
       if (type === 'audio') {
-        isVideoOn = false;
-        document.getElementById('btnVideo').classList.remove('active');
-        document.getElementById('btnVideo').innerHTML = '<i class="fa-solid fa-video-slash"></i>';
-        document.getElementById('localVideoContainer').style.display = 'none';
-        document.getElementById('remoteAvatar').style.display = 'block';
+        document.getElementById('voiceUI').style.display = 'flex';
+        document.getElementById('videoUI').style.display = 'none';
+        document.getElementById('voiceName').innerHTML = `${userName} <i class="fa-solid fa-circle-check" style="color: var(--neon); font-size: 1rem;"></i>`;
+        document.getElementById('voiceAvatar').src = avatarUrl;
+        startTimer('voiceTimer');
+      } else {
+        document.getElementById('voiceUI').style.display = 'none';
+        document.getElementById('videoUI').style.display = 'flex';
+        document.getElementById('remoteVideoAvatar').src = avatarUrl;
+        startTimer('videoTimer');
       }
 
-      // Pedir permissão à câmara e microfone
+      // Tentar ligar a câmara
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
-          video: isVideoOn ? { facingMode: currentFacingMode } : false,
+          video: type === 'video' ? { facingMode: currentFacingMode } : false,
           audio: true
         });
 
-        if (isVideoOn) {
+        if (type === 'video') {
           document.getElementById('localVideo').srcObject = localStream;
+          document.getElementById('localVideo').style.display = 'block';
+          document.getElementById('localVideoPlaceholder').style.display = 'none';
         }
-        
-        document.getElementById('callStatus').innerText = 'A tocar...';
-        
-        // Aqui, no futuro, enviaremos o sinal de chamada via Supabase Realtime
-
       } catch (err) {
         console.error("Erro ao aceder à câmara:", err);
-        alert('Não foi possível aceder à câmara/microfone. Verifica as permissões do teu navegador.');
-        document.getElementById('callStatus').innerText = 'Erro de ligação';
+        // Visual de falha elegante
+        if (type === 'video') {
+          document.getElementById('localVideoPlaceholder').innerHTML = '<i class="fa-solid fa-video-slash"></i><br><span style="font-size:0.6rem">Sem Câmara</span>';
+          document.getElementById('btnVideoCam').classList.remove('active');
+          document.getElementById('btnVideoCam').innerHTML = '<div class="icon-circle"><i class="fa-solid fa-video-slash"></i></div><span>Câmara</span>';
+        }
       }
     }
 
-    // 2. Controles de Áudio/Vídeo
     function toggleMute() {
       if (!localStream) return;
       const audioTrack = localStream.getAudioTracks()[0];
       isMuted = !isMuted;
       audioTrack.enabled = !isMuted;
       
-      const btn = document.getElementById('btnMute');
+      // Atualizar botões de mute (Voz e Vídeo)
+      const btnMuteVoice = document.getElementById('btnMuteVoice');
+      const btnMuteVideo = document.getElementById('btnMuteVideo');
+
       if (isMuted) {
-        btn.classList.remove('active');
-        btn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+        if(btnMuteVoice) { btnMuteVoice.classList.add('active'); btnMuteVoice.innerHTML = '<div class="icon-circle" style="background:var(--danger); border-color:var(--danger)"><i class="fa-solid fa-microphone-slash"></i></div><span>Silenciado</span>'; }
+        if(btnMuteVideo) { btnMuteVideo.classList.add('active'); btnMuteVideo.querySelector('i').className = 'fa-solid fa-microphone-slash'; }
       } else {
-        btn.classList.add('active');
-        btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+        if(btnMuteVoice) { btnMuteVoice.classList.remove('active'); btnMuteVoice.innerHTML = '<div class="icon-circle"><i class="fa-solid fa-microphone"></i></div><span>Silenciar</span>'; }
+        if(btnMuteVideo) { btnMuteVideo.classList.remove('active'); btnMuteVideo.querySelector('i').className = 'fa-solid fa-microphone'; }
       }
     }
 
     function toggleVideo() {
       if (!localStream) return;
       const videoTrack = localStream.getVideoTracks()[0];
+      if (!videoTrack) return;
+      
       isVideoOn = !isVideoOn;
+      videoTrack.enabled = isVideoOn;
       
-      if (videoTrack) videoTrack.enabled = isVideoOn;
-      
-      const btn = document.getElementById('btnVideo');
+      const btn = document.getElementById('btnVideoCam');
       const localVid = document.getElementById('localVideo');
-      const localOff = document.getElementById('localVideoOff');
+      const localPlaceholder = document.getElementById('localVideoPlaceholder');
 
       if (isVideoOn) {
         btn.classList.add('active');
-        btn.innerHTML = '<i class="fa-solid fa-video"></i>';
+        btn.querySelector('i').className = 'fa-solid fa-video';
         localVid.style.display = 'block';
-        localOff.style.display = 'none';
+        localPlaceholder.style.display = 'none';
       } else {
         btn.classList.remove('active');
-        btn.innerHTML = '<i class="fa-solid fa-video-slash"></i>';
+        btn.querySelector('i').className = 'fa-solid fa-video-slash';
         localVid.style.display = 'none';
-        localOff.style.display = 'flex';
+        localPlaceholder.style.display = 'flex';
       }
     }
 
     async function switchCamera() {
-      if (!localStream) return;
+      if (!localStream || !isVideoOn) return;
       currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-      
-      // Parar a câmara atual
       localStream.getVideoTracks().forEach(track => track.stop());
-      
-      // Pedir a nova câmara
       try {
-        const newStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: currentFacingMode },
-          audio: true
-        });
-        
+        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
         localStream = newStream;
         document.getElementById('localVideo').srcObject = localStream;
-      } catch (err) {
-        console.error("Erro ao mudar de câmara:", err);
-      }
+      } catch (err) { console.error(err); }
     }
 
-    // 3. Terminar Chamada
     function endCall() {
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
-      // Voltar para o chat anterior
+      if (localStream) { localStream.getTracks().forEach(track => track.stop()); }
+      clearInterval(callTimerInterval);
       window.location.href = `conversa.html?seller_id=${targetUserId}`;
     }
 
-    // Iniciar
     initCall();
   </script>
 </body>

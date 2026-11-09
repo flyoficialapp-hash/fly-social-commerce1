@@ -9,7 +9,7 @@
   <style>
     .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
     .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px;}
-    .header-title img { height: 30px; }
+    .header-title img { height: 30px; border-radius: 5px;}
     .form-container { padding: 15px; padding-bottom: 100px; }
     .upload-box { border: 2px dashed var(--glass-border); border-radius: 15px; height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted); cursor: pointer; background: rgba(255,255,255,0.02); position: relative; overflow: hidden; margin-bottom: 20px;}
     .upload-box input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;}
@@ -32,7 +32,8 @@
 <body>
   <header class="header">
     <i class="fa-solid fa-arrow-left" onclick="window.history.back()" style="font-size: 1.5rem; cursor: pointer;"></i>
-    <div class="header-title"><img src="assets/logo.png" alt="FLY"> <span id="pageTitle">Criar Produto</span></div>
+    <!-- CORRIGIDO AQUI -->
+    <div class="header-title"><img src="logo.png" alt="FLY"> <span id="pageTitle">Criar Produto</span></div>
     <div style="width: 24px;"></div>
   </header>
   
@@ -66,7 +67,7 @@
     <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
     <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
     <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span></a>
-    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócio</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item active"><i class="fa-solid fa-briefcase"></i><span>Negócio</span></a>
     <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
@@ -77,7 +78,6 @@
     let editProductId = null;
     let currentImageUrl = null;
 
-    // Verifica se estamos a editar
     async function init() {
       const urlParams = new URLSearchParams(window.location.search);
       editProductId = urlParams.get('id');
@@ -86,7 +86,6 @@
         document.getElementById('pageTitle').innerText = "Editar Produto";
         document.getElementById('btnPublish').innerHTML = '<i class="fa-solid fa-check"></i> Guardar Alterações';
         
-        // Vai buscar os dados do produto para preencher o formulário
         const { data: product, error } = await supabaseClient.from('products').select('*').eq('id', editProductId).single();
         if (product) {
           document.getElementById('pName').value = product.name;
@@ -134,7 +133,6 @@
 
       let finalImageUrl = currentImageUrl;
 
-      // Se escolheu uma foto nova, faz upload
       if (selectedFile) {
         const fileExt = selectedFile.name.split('.').pop(); const fileName = `${Date.now()}.${fileExt}`; const filePath = `produtos/${fileName}`;
         const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(filePath, selectedFile);
@@ -144,12 +142,10 @@
       }
 
       if (editProductId) {
-        // MODO EDIÇÃO
         const { error: dbError } = await supabaseClient.from('products').update({ name, description, price, category, image_url: finalImageUrl }).eq('id', editProductId);
         if (dbError) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro ao salvar: ' + dbError.message; btn.innerHTML = 'Guardar'; btn.disabled = false; return; }
         msg.style.color = 'var(--success)'; msg.innerText = 'Produto atualizado com sucesso!';
       } else {
-        // MODO CRIAÇÃO
         const { error: dbError } = await supabaseClient.from('products').insert([{ seller_id: userId, name, description, price, category, image_url: finalImageUrl }]);
         if (dbError) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro ao salvar: ' + dbError.message; btn.innerHTML = 'Publicar'; btn.disabled = false; return; }
         msg.style.color = 'var(--success)'; msg.innerText = 'Produto publicado com sucesso!';

@@ -26,7 +26,7 @@
     .order-product-info h4 { font-size: 0.9rem; margin-bottom: 3px; }
     .order-product-info p { font-size: 0.8rem; color: var(--neon); font-weight: bold; }
     .order-buyer { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;}
-    .order-buyer img { width: 25px; height: 25px; border-radius: 50%; }
+    .order-buyer img { width: 25px; height: 25px; border-radius: 50%; object-fit: cover;}
     .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
     .status-pendente { background: rgba(255, 179, 0, 0.2); color: #ffb300; border: 1px solid #ffb300; }
     .status-preparando { background: rgba(0, 102, 255, 0.2); color: var(--primary); border: 1px solid var(--primary); }
@@ -40,7 +40,7 @@
 <body>
 
   <header class="header">
-    <div class="header-logo"><img src="assets/logo.png" alt="FLY"> Vendas</div>
+    <div class="header-logo"><img src="logo.png" alt="FLY"> Vendas</div>
     <div class="header-icons">
       <i class="fa-solid fa-plus" onclick="window.location.href='criar_produto.html'" title="Criar novo produto"></i>
       <i class="fa-solid fa-gear"></i>
@@ -61,14 +61,8 @@
   <nav class="bottom-nav">
     <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
     <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
-    <a href="chat.html" class="nav-item">
-      <i class="fa-solid fa-comment-dots"></i><span>Chat</span>
-      <span class="nav-badge" id="chat-badge">0</span>
-    </a>
-    <a href="gerenciar_vendas.html" class="nav-item active">
-      <i class="fa-solid fa-briefcase"></i><span>Negócio</span>
-      <span class="nav-badge" id="negocio-badge">0</span>
-    </a>
+    <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge">0</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item active"><i class="fa-solid fa-briefcase"></i><span>Negócio</span><span class="nav-badge" id="negocio-badge">0</span></a>
     <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
@@ -115,7 +109,7 @@
         const productName = order.products ? order.products.name : 'Produto apagado';
         const productImg = order.products && order.products.image_url ? order.products.image_url : 'https://via.placeholder.com/60';
         const buyerName = order.profiles ? order.profiles.username : 'Cliente';
-        const buyerAvatar = `https://i.pravatar.cc/150?u=${order.buyer_id}`;
+        const buyerAvatar = 'default-avatar.png'; // Alterado aqui
         const date = new Date(order.created_at).toLocaleDateString('pt-PT');
 
         let statusHtml = `<span class="status-badge status-pendente">Pendente</span>`;

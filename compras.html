@@ -8,8 +8,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px;}
-    .header-title img { height: 30px; }
+    .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; color: white;}
+    .header-title img { height: 30px; border-radius: 5px;}
     .orders-list { padding: 15px; padding-bottom: 90px; display: flex; flex-direction: column; gap: 15px; }
     .order-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; }
     .order-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
@@ -27,7 +27,6 @@
     .btn-review { background: linear-gradient(90deg, #ffb300, #ffd700); color: #000; }
     .btn-reviewed { background: transparent; border: 1px solid var(--success); color: var(--success); cursor: default; }
 
-    /* MODAL DE AVALIAÇÃO */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
     .modal-content { background: var(--bg-color); border: 1px solid #ffd700; border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); text-align: center; }
     .modal-content h3 { color: #ffd700; margin-bottom: 10px; }
@@ -42,13 +41,12 @@
 <body>
   <header class="header">
     <i class="fa-solid fa-arrow-left" onclick="window.location.href='perfil.html'" style="font-size: 1.5rem; cursor: pointer;"></i>
-    <div class="header-title"><img src="assets/logo.png" alt="FLY"> Minhas Compras</div>
+    <!-- CORRIGIDO AQUI -->
+    <div class="header-title"><img src="logo.png" alt="FLY"> Minhas Compras</div>
     <div style="width: 24px;"></div>
   </header>
 
-  <div class="orders-list" id="ordersList">
-    <p style="text-align: center; color: var(--text-muted);">A carregar as tuas compras...</p>
-  </div>
+  <div class="orders-list" id="ordersList"><p style="text-align: center; color: var(--text-muted);">A carregar as tuas compras...</p></div>
 
   <div class="modal-overlay" id="reviewModal">
     <div class="modal-content">
@@ -61,14 +59,8 @@
         <i class="fa-solid fa-star" onclick="setRating(4)"></i>
         <i class="fa-solid fa-star" onclick="setRating(5)"></i>
       </div>
-      <div class="input-group" style="text-align: left;">
-        <label>Comentário (Opcional)</label>
-        <textarea id="reviewComment" class="input-glass" rows="2" placeholder="Escreve um comentário..."></textarea>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeReviewModal()">Cancelar</button>
-        <button class="btn-submit" onclick="submitReview()" id="btnSubmitReview">Enviar</button>
-      </div>
+      <div class="input-group" style="text-align: left;"><label>Comentário (Opcional)</label><textarea id="reviewComment" class="input-glass" rows="2" placeholder="Escreve um comentário..."></textarea></div>
+      <div class="modal-footer"><button class="btn-cancel" onclick="closeReviewModal()">Cancelar</button><button class="btn-submit" onclick="submitReview()" id="btnSubmitReview">Enviar</button></div>
     </div>
   </div>
 
@@ -91,6 +83,7 @@
       const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser).eq('is_read', false);
       const chatBadge = document.getElementById('chat-badge');
       if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
+
       const { count: orderCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('seller_id', currentUser).eq('status', 'pendente');
       const negocioBadge = document.getElementById('negocio-badge');
       if (negocioBadge) { if (orderCount > 0) { negocioBadge.innerText = orderCount; negocioBadge.style.display = 'flex'; } else { negocioBadge.style.display = 'none'; } }
@@ -112,7 +105,6 @@
       }
 
       list.innerHTML = '';
-
       for (const order of orders) {
         const productName = order.products ? order.products.name : 'Produto apagado';
         const productImg = order.products && order.products.image_url ? order.products.image_url : 'https://via.placeholder.com/60';
@@ -124,18 +116,14 @@
         else if (order.status === 'enviado') statusHtml = `<span class="status-badge status-enviado">Enviado</span>`;
         else if (order.status === 'concluido') statusHtml = `<span class="status-badge status-concluido">Concluído</span>`;
 
-        // CORREÇÃO AQUI: Usar maybeSingle() para não gerar erro se não encontrar nada
         const { data: existingReview } = await supabaseClient.from('reviews').select('id').eq('order_id', order.id).maybeSingle();
         const hasReviewed = !!existingReview;
 
         let actionButtons = `<button class="btn-action btn-chat-buyer" onclick="window.location.href='conversa.html?seller_id=${order.seller_id}'"><i class="fa-solid fa-comment"></i> Falar com Vendedor</button>`;
 
         if (order.status === 'concluido') {
-          if (hasReviewed) {
-            actionButtons += `<button class="btn-action btn-reviewed"><i class="fa-solid fa-check"></i> Avaliado</button>`;
-          } else {
-            actionButtons += `<button class="btn-action btn-review" onclick="openReviewModal('${order.id}', '${order.seller_id}')"><i class="fa-solid fa-star"></i> Avaliar Vendedor</button>`;
-          }
+          if (hasReviewed) { actionButtons += `<button class="btn-action btn-reviewed"><i class="fa-solid fa-check"></i> Avaliado</button>`; } 
+          else { actionButtons += `<button class="btn-action btn-review" onclick="openReviewModal('${order.id}', '${order.seller_id}')"><i class="fa-solid fa-star"></i> Avaliar Vendedor</button>`; }
         }
 
         list.innerHTML += `
@@ -151,29 +139,19 @@
       }
     }
 
-    function openReviewModal(orderId, sellerId) {
-      currentOrderForReview = { orderId, sellerId }; selectedRating = 0; updateStarsUI(0);
-      document.getElementById('reviewComment').value = '';
-      document.getElementById('reviewModal').style.display = 'flex';
-    }
+    function openReviewModal(orderId, sellerId) { currentOrderForReview = { orderId, sellerId }; selectedRating = 0; updateStarsUI(0); document.getElementById('reviewComment').value = ''; document.getElementById('reviewModal').style.display = 'flex'; }
     function closeReviewModal() { document.getElementById('reviewModal').style.display = 'none'; }
     function setRating(rating) { selectedRating = rating; updateStarsUI(rating); }
-    function updateStarsUI(rating) {
-      const stars = document.querySelectorAll('#starsContainer i');
-      stars.forEach((star, index) => { if (index < rating) { star.classList.add('active'); } else { star.classList.remove('active'); } });
-    }
+    function updateStarsUI(rating) { const stars = document.querySelectorAll('#starsContainer i'); stars.forEach((star, index) => { if (index < rating) { star.classList.add('active'); } else { star.classList.remove('active'); } }); }
 
     async function submitReview() {
       if (selectedRating === 0) { alert('Por favor, escolhe pelo menos 1 estrela.'); return; }
       const btn = document.getElementById('btnSubmitReview'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
       const comment = document.getElementById('reviewComment').value.trim();
-
       const { error } = await supabaseClient.from('reviews').insert([{ order_id: currentOrderForReview.orderId, reviewer_id: currentUser, seller_id: currentOrderForReview.sellerId, rating: selectedRating, comment: comment }]);
-
       if (error) { alert('Erro ao enviar avaliação: ' + error.message); btn.innerHTML = 'Enviar'; btn.disabled = false; return; }
       closeReviewModal(); alert('Obrigado pela tua avaliação! ⭐'); loadMyPurchases(); 
     }
-
     loadMyPurchases();
   </script>
 </body>

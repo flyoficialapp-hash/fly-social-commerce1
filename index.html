@@ -18,32 +18,30 @@
 
     .login-wrapper {
       width: 100%;
-      max-width: 420px; /* Aumentei ligeiramente a largura máxima do container */
+      max-width: 420px;
       display: flex;
       flex-direction: column;
       align-items: center;
       z-index: 10;
     }
-
-    /* O GIF AINDA MAIOR */
+    
     .gif-hero-container {
       width: 100%;
       display: flex;
       justify-content: center;
       margin-bottom: 15px;
-      margin-top: -20px; /* Puxa o GIF um pouco para cima */
+      margin-top: -20px;
     }
     
     .gif-hero {
-      width: 100%; /* Ocupa toda a largura do container (até 420px) */
-      max-width: 380px; /* Limite máximo de largura para não esticar demais */
+      width: 100%;
+      max-width: 380px;
       height: auto;
-      max-height: 350px; /* Aumentei a altura máxima */
+      max-height: 350px;
       object-fit: contain;
-      filter: drop-shadow(0 0 25px rgba(0, 204, 255, 0.5)); /* Brilho mais intenso */
+      filter: drop-shadow(0 0 25px rgba(0, 204, 255, 0.5));
     }
 
-    /* PAINEL DO FORMULÁRIO */
     .login-panel {
       background: rgba(10, 25, 50, 0.6) !important;
       border: 1px solid var(--glass-border) !important;
@@ -56,12 +54,11 @@
 
   <div class="login-wrapper">
     
-    <!-- GIF EM DESTAQUE -->
+    <!-- IMAGEM CORRIGIDA AQUI (sem a pasta assets/) -->
     <div class="gif-hero-container">
-      <img src="assets/fundo_login.gif" alt="FLY - Conecta-te. Partilha. Voa mais alto!" class="gif-hero">
+      <img src="fundo_login.gif" alt="FLY - Conecta-te. Partilha. Voa mais alto!" class="gif-hero">
     </div>
 
-    <!-- FORMULÁRIO -->
     <div class="glass-panel login-panel">
       <h2 style="text-align: center; margin-bottom: 20px; font-weight: 500; font-size: 1.1rem; color: white;">Bem-vindo de volta!</h2>
 

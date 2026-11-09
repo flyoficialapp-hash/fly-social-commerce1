@@ -13,7 +13,6 @@
     .header-icons { display: flex; align-items: center; gap: 15px; }
     .header-icons i { font-size: 1.4rem; color: white; cursor: pointer;}
     .notification-badge { position: absolute; top: 10px; right: 45px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; display: none; }
-    
     .menu-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 5px; cursor: pointer; }
     .menu-drawer { position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: rgba(3, 7, 18, 0.98); backdrop-filter: blur(15px); z-index: 3000; border-right: 1px solid var(--neon); transition: 0.3s ease-in-out; display: flex; flex-direction: column; padding: 20px; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
     .menu-drawer.open { left: 0; }
@@ -26,7 +25,6 @@
     .menu-item:hover { background: rgba(0, 204, 255, 0.1); color: var(--neon); }
     .menu-item i { font-size: 1.2rem; width: 20px; text-align: center; }
     .menu-item.danger { color: #ff3366; margin-top: auto; }
-    
     .stories { display: flex; gap: 15px; padding: 15px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .story { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.8rem; cursor: pointer; }
     .story-ring { width: 65px; height: 65px; border-radius: 50%; background: linear-gradient(45deg, var(--primary), var(--neon)); padding: 3px; }
@@ -88,11 +86,10 @@
 <body>
 
   <header class="header">
-    <div class="header-logo"><img src="assets/logo.png" alt="FLY"> FLY</div>
+    <div class="header-logo"><img src="logo.png" alt="FLY"> FLY</div>
     <button class="menu-btn" onclick="openMenu()"><i class="fa-solid fa-bars"></i> MENU</button>
     <div class="header-icons">
       <i class="fa-solid fa-magnifying-glass" onclick="openSearch()"></i>
-      <!-- SINO ATUALIZADO AQUI -->
       <div style="position: relative;" onclick="window.location.href='notificacoes.html'">
         <i class="fa-regular fa-bell"></i>
         <div class="notification-badge" id="notifBadge"></div>
@@ -102,7 +99,7 @@
 
   <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
   <div class="menu-drawer" id="menuDrawer">
-    <div class="menu-header"><img src="assets/logo.png" alt="FLY"><i class="fa-solid fa-xmark" onclick="closeMenu()"></i></div>
+    <div class="menu-header"><img src="logo.png" alt="FLY"><i class="fa-solid fa-xmark" onclick="closeMenu()"></i></div>
     <a href="perfil.html" class="menu-item"><i class="fa-solid fa-user"></i> Meu Perfil</a>
     <a href="criar_produto.html" class="menu-item"><i class="fa-solid fa-plus-circle"></i> Criar Anúncio</a>
     <a href="favoritos.html" class="menu-item"><i class="fa-solid fa-bookmark"></i> Guardados</a>
@@ -209,7 +206,7 @@
       if (stories) { 
         stories.forEach(story => { 
           const author = story.profiles ? story.profiles.username : 'User'; 
-          const img = story.profiles && story.profiles.avatar_url ? story.profiles.avatar_url : `https://i.pravatar.cc/150?u=${story.user_id}`; 
+          const img = story.profiles && story.profiles.avatar_url ? story.profiles.avatar_url : 'default-avatar.png'; 
           html += `<div class="story" onclick="openStory('${story.media_url}', '${story.media_type}')"><div class="story-ring"><img src="${img}"></div><span>${author.split(' ')[0]}</span></div>`; 
         }); 
       } 
@@ -220,7 +217,6 @@
     function openStory(url, type) { const viewer = document.getElementById('storyViewer'); const img = document.getElementById('storyImg'); const vid = document.getElementById('storyVid'); const progress = document.getElementById('storyProgress'); viewer.style.display = 'flex'; progress.innerHTML = '<div class="progress-bar active"></div>'; if (type === 'video') { img.style.display = 'none'; vid.style.display = 'block'; vid.src = url; vid.play(); vid.onended = closeStory; } else { vid.style.display = 'none'; img.style.display = 'block'; img.src = url; storyTimer = setTimeout(closeStory, 5000); } }
     function closeStory() { document.getElementById('storyViewer').style.display = 'none'; document.getElementById('storyVid').pause(); clearTimeout(storyTimer); }
 
-    // --- LÓGICA INTELIGENTE DO FEED ---
     async function loadFeed() {
       const feed = document.getElementById('feedContainer');
       feed.innerHTML = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">A carregar...</p>';
@@ -251,7 +247,7 @@
         const { data: saved } = await supabaseClient.from('saved_posts').select('id').eq('post_id', post.id).eq('user_id', currentUser); const isSaved = saved && saved.length > 0;
         
         const authorName = post.profiles ? post.profiles.username : 'Utilizador FLY'; 
-        const authorAvatar = post.profiles && post.profiles.avatar_url ? post.profiles.avatar_url : `https://i.pravatar.cc/150?u=${post.user_id}`;
+        const authorAvatar = post.profiles && post.profiles.avatar_url ? post.profiles.avatar_url : 'default-avatar.png';
         const isPremium = post.profiles && post.profiles.is_premium;
         const verifiedIcon = isPremium ? '<i class="fa-solid fa-crown" style="color: #ffd700; font-size: 0.8rem;" title="Premium"></i>' : '<i class="fa-solid fa-circle-check" style="color: var(--neon); font-size: 0.8rem;"></i>';
         
@@ -288,7 +284,6 @@
       }
     }
 
-    // Restantes funções mantidas...
     let currentActionSheetData = null;
     function openActionSheet(postId, content, mediaUrl, mediaType) { actionSheetPostId = postId; currentActionSheetData = { content, mediaUrl, mediaType }; document.getElementById('actionSheetOverlay').style.display = 'flex'; }
     function closeActionSheet(event) { if (event && event.target !== event.currentTarget) return; document.getElementById('actionSheetOverlay').style.display = 'none'; }
@@ -305,7 +300,7 @@
     async function toggleSave(postId, isSaved) { const icon = document.getElementById(`save-icon-${postId}`); if (isSaved) { await supabaseClient.from('saved_posts').delete().eq('post_id', postId).eq('user_id', currentUser); icon.classList.remove('fa-solid', 'saved'); icon.classList.add('fa-regular'); icon.setAttribute('onclick', `toggleSave('${postId}', false)`); } else { await supabaseClient.from('saved_posts').insert([{ post_id: postId, user_id: currentUser }]); icon.classList.remove('fa-regular'); icon.classList.add('fa-solid', 'saved'); icon.setAttribute('onclick', `toggleSave('${postId}', true)`); } }
     async function sharePost(content, mediaUrl) { const urlToShare = mediaUrl ? mediaUrl : window.location.href; const textToShare = content ? `${content}\n\nVê no FLY: ${urlToShare}` : `Vê esta publicação no FLY: ${urlToShare}`; if (navigator.share) { try { await navigator.share({ title: 'FLY', text: content || 'Vê isto no FLY!', url: urlToShare }); return; } catch (err) {} } try { await navigator.clipboard.writeText(textToShare); const irParaWhatsApp = confirm('Link copiado!\n\nPartilhar pelo WhatsApp?'); if (irParaWhatsApp) { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textToShare)}`, '_blank'); } } catch (err) { alert('Copia o link:\n\n' + urlToShare); } }
     async function toggleComments(postId) { const section = document.getElementById(`comments-${postId}`); if (section.style.display === 'block') { section.style.display = 'none'; return; } section.style.display = 'block'; loadComments(postId); }
-    async function loadComments(postId) { const list = document.getElementById(`comments-list-${postId}`); list.innerHTML = 'A carregar...'; const { data: comments, error } = await supabaseClient.from('comments').select(`*, profiles ( username, avatar_url )`).eq('post_id', postId).order('created_at', { ascending: true }); if (error) { list.innerHTML = 'Erro.'; return; } list.innerHTML = ''; if (comments.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); font-size: 0.8rem;">Sem comentários.</p>'; return; } comments.forEach(c => { const author = c.profiles ? c.profiles.username : 'User'; const avatar = c.profiles && c.profiles.avatar_url ? c.profiles.avatar_url : `https://i.pravatar.cc/150?u=${c.user_id}`; list.innerHTML += `<div class="comment-item"><img src="${avatar}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;"><div><strong>${author}</strong> ${c.content}</div></div>`; }); }
+    async function loadComments(postId) { const list = document.getElementById(`comments-list-${postId}`); list.innerHTML = 'A carregar...'; const { data: comments, error } = await supabaseClient.from('comments').select(`*, profiles ( username, avatar_url )`).eq('post_id', postId).order('created_at', { ascending: true }); if (error) { list.innerHTML = 'Erro.'; return; } list.innerHTML = ''; if (comments.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); font-size: 0.8rem;">Sem comentários.</p>'; return; } comments.forEach(c => { const author = c.profiles ? c.profiles.username : 'User'; const avatar = c.profiles && c.profiles.avatar_url ? c.profiles.avatar_url : 'default-avatar.png'; list.innerHTML += `<div class="comment-item"><img src="${avatar}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;"><div><strong>${author}</strong> ${c.content}</div></div>`; }); }
     function openSearch() { document.getElementById('searchModal').style.display = 'flex'; }
     function filterPosts(query) { const resultsDiv = document.getElementById('searchResults'); if (!query) { resultsDiv.innerHTML = "Escreve algo."; return; } const filtered = allPosts.filter(p => p.content && p.content.toLowerCase().includes(query.toLowerCase())); if (filtered.length === 0) { resultsDiv.innerHTML = "Nenhum post encontrado."; return; } resultsDiv.innerHTML = ''; filtered.forEach(p => { const author = p.profiles ? p.profiles.username : 'User'; resultsDiv.innerHTML += `<div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; margin-bottom:10px; text-align:left;"><strong style="color:var(--neon)">${author}:</strong> ${p.content}</div>`; }); }
 

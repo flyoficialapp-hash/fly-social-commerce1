@@ -105,7 +105,7 @@
       if (error || !product) { document.getElementById('loading').innerText = 'Erro ao carregar.'; return; }
       
       productData = product;
-      let sellerName = "Vendedor FLY"; let sellerAvatar = `https://i.pravatar.cc/150?u=${product.seller_id}`;
+      let sellerName = "Vendedor FLY"; let sellerAvatar = 'default-avatar.png'; // Alterado aqui
       
       if (product.seller_id) {
         const { data: seller } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', product.seller_id).single();
@@ -144,36 +144,18 @@
       else { alert('Anúncio apagado com sucesso!'); window.location.href = 'mercado.html'; }
     }
 
-    // FUNÇÃO DE COMPRA ATUALIZADA
     async function buyProduct() {
       if (!currentUser || !productData) return;
-      
       const btn = document.getElementById('btnBuy'); 
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A processar...'; 
-      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A processar...'; btn.disabled = true;
 
-      // 1. Cria o pedido no banco de dados
       const { data: newOrder, error } = await supabaseClient.from('orders').insert([{ 
-        buyer_id: currentUser, 
-        seller_id: productData.seller_id, 
-        product_id: productData.id, 
-        total_price: productData.price, 
-        status: 'pendente' 
+        buyer_id: currentUser, seller_id: productData.seller_id, product_id: productData.id, total_price: productData.price, status: 'pendente' 
       }]).select().single();
 
-      if (error) { 
-        alert('Erro ao criar pedido: ' + error.message); 
-        btn.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> Comprar'; 
-        btn.disabled = false; 
-        return; 
-      }
+      if (error) { alert('Erro ao criar pedido: ' + error.message); btn.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> Comprar'; btn.disabled = false; return; }
       
-      // 2. Notifica o vendedor
-      await supabaseClient.from('notifications').insert([{ 
-        user_id: productData.seller_id, sender_id: currentUser, type: 'order', post_id: null 
-      }]);
-
-      // 3. REDIRECIONA PARA A TELA DE PAGAMENTO (CHECKOUT)
+      await supabaseClient.from('notifications').insert([{ user_id: productData.seller_id, sender_id: currentUser, type: 'order', post_id: null }]);
       window.location.href = `checkout.html?order_id=${newOrder.id}`;
     }
     
