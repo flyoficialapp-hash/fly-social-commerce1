@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Nova Palavra-passe</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body style="justify-content: center; align-items: center; padding: 20px;">
+
+  <div class="glass-panel" style="width: 100%; max-width: 400px; padding: 40px 30px;">
+    <div class="logo-container">
+      <img src="assets/logo.png" alt="FLY Logo" class="logo-img">
+    </div>
+    
+    <h2 style="text-align: center; margin-bottom: 25px; font-weight: 500; font-size: 1.3rem;">Definir Nova Palavra-passe</h2>
+
+    <form id="resetForm">
+      <div class="input-group">
+        <label>Nova Palavra-passe</label>
+        <input type="password" id="newPassword" class="input-glass" placeholder="Mínimo 6 caracteres" required>
+      </div>
+      <div class="input-group">
+        <label>Confirmar Palavra-passe</label>
+        <input type="password" id="confirmPassword" class="input-glass" placeholder="Repete a nova senha" required>
+      </div>
+      <button type="submit" class="btn-primary" style="margin-top: 10px;" id="btnReset">Guardar Nova Senha</button>
+    </form>
+    
+    <p id="message" style="text-align: center; margin-top: 15px; font-size: 0.9rem; font-weight: bold;"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    window.addEventListener('load', async () => {
+      const msg = document.getElementById('message');
+      
+      // O Supabase lê automaticamente o token de recuperação que vem no link do e-mail
+      if (window.location.hash && window.location.hash.includes('access_token')) {
+        msg.style.color = 'var(--neon)';
+        msg.innerText = 'Link validado! Podes criar a tua nova senha.';
+      } else {
+        msg.style.color = 'var(--danger)';
+        msg.innerText = 'Aviso: Link de recuperação inválido ou expirado. Pede um novo.';
+      }
+    });
+
+    document.getElementById('resetForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const btn = document.getElementById('btnReset');
+      const msg = document.getElementById('message');
+
+      if (newPassword.length < 6) {
+        msg.style.color = 'var(--danger)'; msg.innerText = 'A senha deve ter pelo menos 6 caracteres.'; return;
+      }
+      if (newPassword !== confirmPassword) {
+        msg.style.color = 'var(--danger)'; msg.innerText = 'As senhas não coincidem.'; return;
+      }
+
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A guardar...';
+      btn.disabled = true;
+
+      const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+
+      if (error) {
+        msg.style.color = 'var(--danger)'; msg.innerText = 'Erro: ' + error.message;
+        btn.innerHTML = 'Guardar Nova Senha'; btn.disabled = false;
+      } else {
+        msg.style.color = 'var(--success)'; msg.innerText = 'Senha atualizada! A redirecionar...';
+        setTimeout(() => window.location.href = 'index.html', 2000);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Chamada</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { height: 100vh; overflow: hidden; background: #000; display: flex; flex-direction: column; }
+    
+    /* VÍDEO DO OUTRO LADO (Fundo) */
+    .remote-video-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; justify-content: center; align-items: center; z-index: 1; }
+    .remote-video-placeholder { text-align: center; color: var(--text-muted); }
+    .remote-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--neon); margin-bottom: 15px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 204, 255, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(0, 204, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 204, 255, 0); } }
+    .remote-name { font-size: 1.5rem; font-weight: bold; color: white; margin-bottom: 5px; }
+    .call-status { font-size: 1rem; color: var(--neon); }
+
+    /* VÍDEO LOCAL (Canto superior direito) */
+    .local-video-container { position: absolute; top: 40px; right: 20px; width: 110px; height: 160px; border-radius: 15px; overflow: hidden; border: 2px solid var(--glass-border); background: #000; z-index: 10; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+    .local-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); /* Espelha o vídeo local */ }
+    .local-video-off { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #222; color: var(--text-muted); font-size: 1.5rem;}
+
+    /* CONTROLES INFERIORES */
+    .call-controls { position: absolute; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; gap: 25px; z-index: 10; padding: 0 20px; }
+    .btn-control { width: 60px; height: 60px; border-radius: 50%; border: none; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); }
+    .btn-control:hover { transform: scale(1.1); }
+    .btn-mute { background: rgba(255,255,255,0.2); color: white; }
+    .btn-mute.active { background: white; color: #000; }
+    .btn-video { background: rgba(255,255,255,0.2); color: white; }
+    .btn-video.active { background: white; color: #000; }
+    .btn-end { background: var(--danger); color: white; width: 70px; height: 70px; font-size: 1.8rem; box-shadow: 0 0 20px rgba(255, 51, 102, 0.4); }
+    .btn-switch { background: rgba(255,255,255,0.2); color: white; }
+
+    .loading-call { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center; z-index: 5; }
+    .loading-call i { font-size: 3rem; color: var(--neon); animation: spin 1s linear infinite; margin-bottom: 15px; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- Vídeo Remoto (Fundo) -->
+  <div class="remote-video-container">
+    <div class="remote-video-placeholder" id="remotePlaceholder">
+      <img id="remoteAvatar" src="" class="remote-avatar">
+      <div id="remoteName" class="remote-name">A ligar...</div>
+      <div id="callStatus" class="call-status">A estabelecer ligação segura...</div>
+    </div>
+    <!-- O vídeo remoto vai aparecer aqui no futuro -->
+    <video id="remoteVideo" autoplay playsinline style="display:none; width: 100%; height: 100%; object-fit: cover;"></video>
+  </div>
+
+  <!-- Vídeo Local (Canto) -->
+  <div class="local-video-container" id="localVideoContainer">
+    <video id="localVideo" class="local-video" autoplay playsinline muted></video>
+    <div id="localVideoOff" class="local-video-off" style="display:none;"><i class="fa-solid fa-video-slash"></i></div>
+  </div>
+
+  <!-- Controles -->
+  <div class="call-controls">
+    <button class="btn-control btn-mute" id="btnMute" onclick="toggleMute()"><i class="fa-solid fa-microphone"></i></button>
+    <button class="btn-control btn-video active" id="btnVideo" onclick="toggleVideo()"><i class="fa-solid fa-video"></i></button>
+    <button class="btn-control btn-end" onclick="endCall()"><i class="fa-solid fa-phone-slash"></i></button>
+    <button class="btn-control btn-switch" onclick="switchCamera()"><i class="fa-solid fa-camera-rotate"></i></button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let localStream = null;
+    let isMuted = false;
+    let isVideoOn = true;
+    let currentFacingMode = 'user'; // 'user' (frontal) ou 'environment' (traseira)
+    let targetUserId = null;
+
+    // 1. Iniciar a chamada
+    async function initCall() {
+      const urlParams = new URLSearchParams(window.location.search);
+      targetUserId = urlParams.get('user_id');
+      const type = urlParams.get('type'); // 'audio' ou 'video'
+      
+      if (!targetUserId) { alert('Utilizador não encontrado.'); window.history.back(); return; }
+
+      // Carregar dados do utilizador que estamos a ligar
+      const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', targetUserId).single();
+      if (profile) {
+        document.getElementById('remoteName').innerText = profile.username;
+        document.getElementById('remoteAvatar').src = profile.avatar_url || `https://i.pravatar.cc/150?u=${targetUserId}`;
+      }
+
+      // Se for chamada de voz, esconder o vídeo
+      if (type === 'audio') {
+        isVideoOn = false;
+        document.getElementById('btnVideo').classList.remove('active');
+        document.getElementById('btnVideo').innerHTML = '<i class="fa-solid fa-video-slash"></i>';
+        document.getElementById('localVideoContainer').style.display = 'none';
+        document.getElementById('remoteAvatar').style.display = 'block';
+      }
+
+      // Pedir permissão à câmara e microfone
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+          video: isVideoOn ? { facingMode: currentFacingMode } : false,
+          audio: true
+        });
+
+        if (isVideoOn) {
+          document.getElementById('localVideo').srcObject = localStream;
+        }
+        
+        document.getElementById('callStatus').innerText = 'A tocar...';
+        
+        // Aqui, no futuro, enviaremos o sinal de chamada via Supabase Realtime
+
+      } catch (err) {
+        console.error("Erro ao aceder à câmara:", err);
+        alert('Não foi possível aceder à câmara/microfone. Verifica as permissões do teu navegador.');
+        document.getElementById('callStatus').innerText = 'Erro de ligação';
+      }
+    }
+
+    // 2. Controles de Áudio/Vídeo
+    function toggleMute() {
+      if (!localStream) return;
+      const audioTrack = localStream.getAudioTracks()[0];
+      isMuted = !isMuted;
+      audioTrack.enabled = !isMuted;
+      
+      const btn = document.getElementById('btnMute');
+      if (isMuted) {
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+      } else {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+      }
+    }
+
+    function toggleVideo() {
+      if (!localStream) return;
+      const videoTrack = localStream.getVideoTracks()[0];
+      isVideoOn = !isVideoOn;
+      
+      if (videoTrack) videoTrack.enabled = isVideoOn;
+      
+      const btn = document.getElementById('btnVideo');
+      const localVid = document.getElementById('localVideo');
+      const localOff = document.getElementById('localVideoOff');
+
+      if (isVideoOn) {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fa-solid fa-video"></i>';
+        localVid.style.display = 'block';
+        localOff.style.display = 'none';
+      } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fa-solid fa-video-slash"></i>';
+        localVid.style.display = 'none';
+        localOff.style.display = 'flex';
+      }
+    }
+
+    async function switchCamera() {
+      if (!localStream) return;
+      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+      
+      // Parar a câmara atual
+      localStream.getVideoTracks().forEach(track => track.stop());
+      
+      // Pedir a nova câmara
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: currentFacingMode },
+          audio: true
+        });
+        
+        localStream = newStream;
+        document.getElementById('localVideo').srcObject = localStream;
+      } catch (err) {
+        console.error("Erro ao mudar de câmara:", err);
+      }
+    }
+
+    // 3. Terminar Chamada
+    function endCall() {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
+      // Voltar para o chat anterior
+      window.location.href = `conversa.html?seller_id=${targetUserId}`;
+    }
+
+    // Iniciar
+    initCall();
+  </script>
+</body>
+</html>

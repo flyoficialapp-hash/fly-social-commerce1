@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Configurações</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; color: white;}
+    .header-title img { height: 30px; }
+
+    .settings-container { padding: 15px 15px 90px 15px; display: flex; flex-direction: column; gap: 20px; }
+    
+    .settings-group { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; overflow: hidden; }
+    .settings-group-title { font-size: 0.8rem; color: var(--neon); font-weight: bold; margin-bottom: -5px; margin-left: 10px; text-transform: uppercase; letter-spacing: 1px;}
+    
+    .settings-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-item:hover { background: rgba(255,255,255,0.05); }
+    
+    .settings-item-left { display: flex; align-items: center; gap: 15px; }
+    .settings-icon { width: 35px; height: 35px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 1rem; }
+    .icon-blue { background: rgba(0, 204, 255, 0.1); color: var(--neon); }
+    .icon-red { background: rgba(255, 51, 102, 0.1); color: var(--danger); }
+    .icon-gold { background: rgba(255, 215, 0, 0.1); color: #ffd700; }
+    .icon-green { background: rgba(0, 230, 118, 0.1); color: var(--success); }
+    .icon-purple { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+    
+    .settings-text h4 { font-size: 0.95rem; color: white; margin-bottom: 3px; }
+    .settings-text p { font-size: 0.75rem; color: var(--text-muted); }
+    
+    .settings-item i.chevron { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* TOGGLE SWITCH */
+    .toggle-switch { position: relative; display: inline-block; width: 45px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(21px); }
+
+    /* MODAIS */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
+    .modal-content { background: var(--bg-color); border: 1px solid var(--neon); border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; box-shadow: 0 0 30px rgba(0, 204, 255, 0.2); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-header h3 { color: var(--neon); }
+    .modal-header i { cursor: pointer; font-size: 1.5rem; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.location.href='perfil.html'" style="font-size: 1.5rem; cursor: pointer;"></i>
+    <div class="header-title"><img src="assets/logo.png" alt="FLY"> Definições</div>
+    <div style="width: 24px;"></div>
+  </header>
+
+  <div class="settings-container">
+    
+    <!-- 1. CONTA E SEGURANÇA -->
+    <p class="settings-group-title">Conta e Segurança</p>
+    <div class="settings-group">
+      <div class="settings-item" onclick="window.location.href='perfil.html'">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-blue"><i class="fa-solid fa-user-pen"></i></div>
+          <div class="settings-text"><h4>Editar Perfil</h4><p>Foto, nome e biografia</p></div>
+        </div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+      
+      <div class="settings-item" onclick="openPasswordModal()">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-blue"><i class="fa-solid fa-lock"></i></div>
+          <div class="settings-text"><h4>Alterar Palavra-passe</h4><p>Muda a tua senha de acesso</p></div>
+        </div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+
+      <div class="settings-item" onclick="openEmailModal()">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-blue"><i class="fa-solid fa-envelope"></i></div>
+          <div class="settings-text"><h4>Alterar E-mail</h4><p id="displayEmail">A carregar...</p></div>
+        </div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+
+      <div class="settings-item" onclick="alert('Em breve: Autenticação em 2 Fatores (2FA) para máxima segurança.')">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-green"><i class="fa-solid fa-shield-halved"></i></div>
+          <div class="settings-text"><h4>Autenticação 2FA</h4><p>Aumenta a segurança da conta</p></div>
+        </div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+    </div>
+
+    <!-- 2. PRIVACIDADE -->
+    <p class="settings-group-title">Privacidade</p>
+    <div class="settings-group">
+      <div class="settings-item">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-purple"><i class="fa-solid fa-eye-slash"></i></div>
+          <div class="settings-text"><h4>Conta Privada</h4><p>Só seguidores veem os teus posts</p></div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="togglePrivate" onchange="saveSetting('private_account', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-item" onclick="alert('Em breve: Escolher quem pode enviar mensagens.')">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-purple"><i class="fa-solid fa-comment-slash"></i></div>
+          <div class="settings-text"><h4>Quem pode enviar mensagens</h4><p>Todos</p></div>
+        </div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+    </div>
+
+    <!-- 3. NOTIFICAÇÕES -->
+    <p class="settings-group-title">Notificações</p>
+    <div class="settings-group">
+      <div class="settings-item">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-gold"><i class="fa-solid fa-bell"></i></div>
+          <div class="settings-text"><h4>Notificações Push</h4><p>Avisos no telemóvel</p></div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="togglePush" onchange="saveSetting('notif_push', this.checked)" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-gold"><i class="fa-solid fa-envelope-open-text"></i></div>
+          <div class="settings-text"><h4>Notificações por E-mail</h4><p>Resumos de vendas e mensagens</p></div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleEmailNotif" onchange="saveSetting('notif_email', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 4. MARKETPLACE -->
+    <p class="settings-group-title">Marketplace (Vendas)</p>
+    <div class="settings-group">
+      <div class="settings-item">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-red"><i class="fa-solid fa-plane"></i></div>
+          <div class="settings-text"><h4>Modo de Férias</h4><p>Pausa todos os teus anúncios</p></div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleVacation" onchange="toggleVacationMode(this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-item" onclick="alert('Em breve: Adicionar IBAN ou Multicaixa para receber pagamentos.')">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-green"><i class="fa-solid fa-credit-card"></i></div>
+          <div class="settings-text"><h4>Dados de Pagamento</h4><p>Como recebes o teu dinheiro</p></div>
+        </div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+
+      <div class="settings-item" onclick="alert('Em breve: Gerir os teus endereços de entrega.')">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-green"><i class="fa-solid fa-location-dot"></i></div>
+          <div class="settings-text"><h4>Endereço de Entrega</h4><p>Onde recebes as tuas compras</p></div>
+        </div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+    </div>
+
+    <!-- 5. SUPORTE E SOBRE -->
+    <p class="settings-group-title">Suporte e Sobre</p>
+    <div class="settings-group">
+      <div class="settings-item" onclick="alert('Em breve: Centro de Ajuda FLY.')">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-blue"><i class="fa-solid fa-circle-question"></i></div>
+          <div class="settings-text"><h4>Centro de Ajuda</h4><p>Perguntas frequentes</p></div>
+        </div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+
+      <div class="settings-item" onclick="alert('Em breve: Termos e Políticas de Privacidade.')">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-blue"><i class="fa-solid fa-file-contract"></i></div>
+          <div class="settings-text"><h4>Termos e Políticas</h4><p>Regras da comunidade</p></div>
+        </div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+
+      <div class="settings-item" onclick="alert('FLY Versão 1.0.0\nFeito com 💙 em Angola.')">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-purple"><i class="fa-solid fa-circle-info"></i></div>
+          <div class="settings-text"><h4>Versão da App</h4><p>v1.0.0</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. ZONA DE PERIGO -->
+    <p class="settings-group-title">Sessão e Conta</p>
+    <div class="settings-group">
+      <div class="settings-item" onclick="logout()">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-red"><i class="fa-solid fa-right-from-bracket"></i></div>
+          <div class="settings-text"><h4 style="color: var(--danger);">Terminar Sessão</h4><p>Sair da conta neste dispositivo</p></div>
+        </div>
+      </div>
+      
+      <div class="settings-item" onclick="deleteAccountAlert()">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-red"><i class="fa-solid fa-trash"></i></div>
+          <div class="settings-text"><h4 style="color: var(--danger);">Apagar Conta</h4><p>Eliminar permanentemente a conta</p></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL DE MUDAR PALAVRA-PASSE -->
+  <div class="modal-overlay" id="passwordModal">
+    <div class="modal-content">
+      <div class="modal-header"><h3>Nova Palavra-passe</h3><i class="fa-solid fa-xmark" onclick="document.getElementById('passwordModal').style.display='none'"></i></div>
+      <div class="input-group"><label>Nova Senha</label><input type="password" id="newPassword" class="input-glass" placeholder="Mínimo 6 caracteres"></div>
+      <div class="input-group"><label>Confirmar Senha</label><input type="password" id="confirmPassword" class="input-glass" placeholder="Repete a senha"></div>
+      <button class="btn-primary" style="margin-top: 10px;" onclick="changePassword()" id="btnSavePassword">Guardar</button>
+      <p id="pwdMsg" style="text-align: center; margin-top: 10px; font-size: 0.9rem; font-weight: bold;"></p>
+    </div>
+  </div>
+
+  <!-- MODAL DE MUDAR E-MAIL -->
+  <div class="modal-overlay" id="emailModal">
+    <div class="modal-content">
+      <div class="modal-header"><h3>Alterar E-mail</h3><i class="fa-solid fa-xmark" onclick="document.getElementById('emailModal').style.display='none'"></i></div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">O Supabase vai enviar um link de confirmação para o novo e-mail.</p>
+      <div class="input-group"><label>Novo E-mail</label><input type="email" id="newEmail" class="input-glass" placeholder="novo@email.com"></div>
+      <button class="btn-primary" style="margin-top: 10px;" onclick="changeEmail()" id="btnSaveEmail">Atualizar E-mail</button>
+      <p id="emailMsg" style="text-align: center; margin-top: 10px; font-size: 0.9rem; font-weight: bold;"></p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+      
+      document.getElementById('displayEmail').innerText = session.user.email;
+
+      // Carregar as configurações guardadas
+      const { data: profile } = await supabaseClient.from('profiles').select('settings').eq('id', currentUser).single();
+      if (profile && profile.settings) {
+        const s = profile.settings;
+        if(s.private_account) document.getElementById('togglePrivate').checked = true;
+        if(s.notif_push !== undefined) document.getElementById('togglePush').checked = s.notif_push;
+        if(s.notif_email) document.getElementById('toggleEmailNotif').checked = true;
+        if(s.vacation_mode) document.getElementById('toggleVacation').checked = true;
+      }
+    }
+
+    // --- GUARDAR TOGGLES GENÉRICOS ---
+    async function saveSetting(key, value) {
+      const { data: profile } = await supabaseClient.from('profiles').select('settings').eq('id', currentUser).single();
+      let settings = profile.settings || {};
+      settings[key] = value;
+      await supabaseClient.from('profiles').update({ settings }).eq('id', currentUser);
+    }
+
+    // --- MODO DE FÉRIAS (PAUSAR PRODUTOS) ---
+    async function toggleVacationMode(isVacation) {
+      saveSetting('vacation_mode', isVacation);
+      
+      const newStatus = isVacation ? 'pausado' : 'ativo';
+      
+      const { error } = await supabaseClient.from('products').update({ status: newStatus }).eq('seller_id', currentUser);
+      
+      if (error) { alert('Erro ao pausar anúncios: ' + error.message); return; }
+      
+      if (isVacation) alert('Modo de Férias ativado! Todos os teus anúncios foram pausados.');
+      else alert('Modo de Férias desativado! Os teus anúncios estão ativos novamente.');
+    }
+
+    // --- ALTERAR PALAVRA-PASSE ---
+    function openPasswordModal() {
+      document.getElementById('passwordModal').style.display = 'flex';
+      document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; document.getElementById('pwdMsg').innerText = '';
+    }
+    async function changePassword() {
+      const newPass = document.getElementById('newPassword').value; const confirmPass = document.getElementById('confirmPassword').value;
+      const msg = document.getElementById('pwdMsg'); const btn = document.getElementById('btnSavePassword');
+      if (newPass.length < 6) { msg.style.color = 'var(--danger)'; msg.innerText = 'A senha deve ter 6 caracteres.'; return; }
+      if (newPass !== confirmPass) { msg.style.color = 'var(--danger)'; msg.innerText = 'As senhas não coincidem.'; return; }
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+      const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+      if (error) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro: ' + error.message; btn.innerHTML = 'Guardar'; btn.disabled = false; } 
+      else { msg.style.color = 'var(--success)'; msg.innerText = 'Senha atualizada!'; setTimeout(() => { document.getElementById('passwordModal').style.display = 'none'; }, 2000); btn.innerHTML = 'Guardar'; btn.disabled = false; }
+    }
+
+    // --- ALTERAR E-MAIL ---
+    function openEmailModal() {
+      document.getElementById('emailModal').style.display = 'flex';
+      document.getElementById('newEmail').value = ''; document.getElementById('emailMsg').innerText = '';
+    }
+    async function changeEmail() {
+      const newEmail = document.getElementById('newEmail').value; const msg = document.getElementById('emailMsg'); const btn = document.getElementById('btnSaveEmail');
+      if(!newEmail) return;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+      const { error } = await supabaseClient.auth.updateUser({ email: newEmail });
+      if (error) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro: ' + error.message; btn.innerHTML = 'Atualizar E-mail'; btn.disabled = false; } 
+      else { msg.style.color = 'var(--success)'; msg.innerText = 'Link enviado para o novo e-mail! Verifica a caixa de entrada.'; btn.innerHTML = 'Atualizar E-mail'; btn.disabled = false; }
+    }
+
+    // --- APAGAR CONTA E LOGOUT ---
+    function deleteAccountAlert() {
+      alert('Atenção: A exclusão permanente de conta estará disponível numa próxima atualização por motivos de segurança.');
+    }
+    async function logout() { 
+      if(confirm('Tens a certeza que queres terminar a sessão?')) {
+        await supabaseClient.auth.signOut(); 
+        window.location.href = 'index.html'; 
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

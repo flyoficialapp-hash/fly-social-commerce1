@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Chat</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    
+    /* CABEÇALHO DO CHAT */
+    .chat-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: rgba(3, 7, 18, 0.95); border-bottom: 1px solid var(--glass-border); z-index: 10; }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header-left i { font-size: 1.5rem; cursor: pointer; color: white; }
+    .chat-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--primary); border: 2px solid var(--glass-border); }
+    .chat-user-name { font-weight: bold; font-size: 1rem; color: white;}
+    .chat-status { font-size: 0.75rem; color: var(--success); }
+    .header-actions { display: flex; gap: 15px; }
+    .header-actions i { font-size: 1.3rem; color: var(--neon); cursor: pointer; transition: 0.2s; }
+    .header-actions i:hover { color: white; transform: scale(1.1); }
+
+    /* ÁREA DE MENSAGENS */
+    .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 90px; }
+    .message { max-width: 80%; padding: 12px 16px; border-radius: 15px; font-size: 0.95rem; line-height: 1.4; position: relative; word-wrap: break-word;}
+    .message.sent { align-self: flex-end; background: linear-gradient(90deg, var(--primary), var(--neon)); color: white; border-bottom-right-radius: 4px; }
+    .message.received { align-self: flex-start; background: var(--glass-bg); border: 1px solid var(--glass-border); color: white; border-bottom-left-radius: 4px; }
+    
+    /* MENSAGEM COM IMAGEM */
+    .message-image { max-width: 100%; border-radius: 10px; margin-bottom: 5px; cursor: pointer; }
+    
+    .message-time { font-size: 0.65rem; color: rgba(255,255,255,0.7); text-align: right; margin-top: 5px; display: block; }
+
+    /* BARRA DE INPUT */
+    .chat-input-area { position: fixed; bottom: 0; left: 0; width: 100%; padding: 10px 15px; background: rgba(3, 7, 18, 0.95); border-top: 1px solid var(--glass-border); display: flex; gap: 10px; align-items: center; z-index: 20; }
+    .input-actions { display: flex; gap: 15px; align-items: center; }
+    .input-actions i { font-size: 1.5rem; color: var(--neon); cursor: pointer; transition: 0.2s; }
+    .input-actions i:hover { color: white; }
+    
+    .chat-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 30px; padding: 12px 15px; color: white; outline: none; font-size: 0.95rem;}
+    .btn-send { width: 45px; height: 45px; border-radius: 50%; background: var(--primary); border: none; color: white; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
+
+    /* PAINEL DE EMOJIS (Escondido por defeito) */
+    .emoji-panel { position: fixed; bottom: 80px; left: 15px; background: var(--bg-color); border: 1px solid var(--neon); border-radius: 15px; padding: 10px; display: none; grid-template-columns: repeat(5, 1fr); gap: 10px; z-index: 30; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+    .emoji-panel span { font-size: 1.5rem; cursor: pointer; transition: 0.2s; text-align: center; }
+    .emoji-panel span:hover { transform: scale(1.3); }
+  </style>
+</head>
+<body>
+  <header class="chat-header">
+    <div class="header-left">
+      <i class="fa-solid fa-arrow-left" onclick="window.location.href='chat.html'"></i>
+      <img id="chatAvatar" src="" class="chat-avatar">
+      <div>
+        <div id="chatSellerName" class="chat-user-name">A carregar...</div>
+        <div class="chat-status"><i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Online</div>
+      </div>
+    </div>
+    
+    <!-- BOTÕES DE CHAMADA NO TOPO -->
+    <div class="header-actions">
+      <i class="fa-solid fa-phone" onclick="startCall('audio')"></i>
+      <i class="fa-solid fa-video" onclick="startCall('video')"></i>
+    </div>
+  </header>
+
+  <div class="chat-messages" id="chatMessages"></div>
+
+  <!-- PAINEL DE EMOJIS -->
+  <div class="emoji-panel" id="emojiPanel">
+    <span onclick="addEmoji('😀')">😀</span>
+    <span onclick="addEmoji('😂')">😂</span>
+    <span onclick="addEmoji('❤️')">❤️</span>
+    <span onclick="addEmoji('👍')">👍</span>
+    <span onclick="addEmoji('🔥')">🔥</span>
+    <span onclick="addEmoji('😮')">😮</span>
+    <span onclick="addEmoji('😢')">😢</span>
+    <span onclick="addEmoji('🙏')">🙏</span>
+    <span onclick="addEmoji('💪')">💪</span>
+    <span onclick="addEmoji('🎉')">🎉</span>
+    <span onclick="addEmoji('🙌')">🙌</span>
+    <span onclick="addEmoji('😍')">😍</span>
+    <span onclick="addEmoji('🤔')">🤔</span>
+    <span onclick="addEmoji('👏')">👏</span>
+    <span onclick="addEmoji('💯')">💯</span>
+  </div>
+
+  <!-- BARRA DE INPUT ATUALIZADA -->
+  <div class="chat-input-area">
+    <div class="input-actions">
+      <i class="fa-regular fa-face-smile" onclick="toggleEmojiPanel()"></i>
+      <i class="fa-solid fa-paperclip" onclick="document.getElementById('fileInput').click()"></i>
+      <!-- Input escondido para ficheiros -->
+      <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;" onchange="uploadMedia(event)">
+    </div>
+    
+    <input type="text" id="messageInput" class="chat-input" placeholder="Escreva uma mensagem..." onkeypress="handleKeyPress(event)">
+    
+    <button class="btn-send" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let currentUser = null; let sellerId = null;
+
+    async function initChat() {
+      const urlParams = new URLSearchParams(window.location.search);
+      sellerId = urlParams.get('seller_id');
+      if (!sellerId) { alert('Vendedor não encontrado.'); window.location.href = 'chat.html'; return; }
+      
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+
+      const { data: seller } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', sellerId).single();
+      if (seller) {
+        document.getElementById('chatSellerName').innerText = currentUser === sellerId ? "Você (O seu anúncio)" : seller.username;
+        document.getElementById('chatAvatar').src = seller.avatar_url || `https://i.pravatar.cc/150?u=${sellerId}`;
+      }
+
+      await loadMessages(); 
+      
+      supabaseClient.channel('chat-room').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+        const newMsg = payload.new;
+        if (newMsg.sender_id !== currentUser && (newMsg.sender_id === sellerId && newMsg.receiver_id === currentUser)) { 
+          appendMessage(newMsg); 
+          markAsRead();
+        }
+      }).subscribe();
+    }
+
+    async function loadMessages() {
+      const { data: messages, error } = await supabaseClient.from('messages').select('*').or(`and(sender_id.eq.${currentUser},receiver_id.eq.${sellerId}),and(sender_id.eq.${sellerId},receiver_id.eq.${currentUser})`).order('created_at', { ascending: true });
+      if (error) return;
+      const chatBox = document.getElementById('chatMessages'); chatBox.innerHTML = '';
+      messages.forEach(msg => appendMessage(msg));
+      await markAsRead();
+    }
+
+    async function markAsRead() {
+      await supabaseClient.from('messages').update({ is_read: true }).eq('receiver_id', currentUser).eq('sender_id', sellerId).eq('is_read', false);
+    }
+
+    function appendMessage(msg) {
+      const chatBox = document.getElementById('chatMessages');
+      const isSent = msg.sender_id === currentUser;
+      const timeDate = msg.created_at ? new Date(msg.created_at) : new Date();
+      const time = timeDate.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+      
+      const div = document.createElement('div');
+      div.className = `message ${isSent ? 'sent' : 'received'}`;
+      
+      // Verifica se a mensagem tem um ficheiro anexado (imagem/vídeo)
+      let contentHtml = '';
+      if (msg.file_url) {
+        if (msg.file_type && msg.file_type.startsWith('image/')) {
+          contentHtml = `<img src="${msg.file_url}" class="message-image" onclick="window.open('${msg.file_url}', '_blank')">`;
+        } else if (msg.file_type && msg.file_type.startsWith('video/')) {
+          contentHtml = `<video src="${msg.file_url}" controls style="max-width: 100%; border-radius: 10px; margin-bottom: 5px;"></video>`;
+        }
+      }
+      
+      div.innerHTML = `${contentHtml}${msg.content ? `<div>${msg.content}</div>` : ''}<span class="message-time">${time}</span>`;
+      chatBox.appendChild(div); 
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('messageInput'); const text = input.value.trim(); if (!text) return;
+      input.value = '';
+      const receiver = (currentUser === sellerId) ? currentUser : sellerId;
+      
+      const tempMsg = { sender_id: currentUser, receiver_id: receiver, content: text };
+      appendMessage(tempMsg);
+
+      const { error } = await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: receiver, content: text, is_read: false }]);
+      if (error) { alert(`Erro ao enviar: ${error.message}`); }
+    }
+
+    // --- FUNÇÃO PARA ENVIAR ANEXOS (IMAGEM/VÍDEO) ---
+    async function uploadMedia(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const receiver = (currentUser === sellerId) ? currentUser : sellerId;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `chats/${currentUser}_${Date.now()}.${fileExt}`;
+
+      // Mostra um aviso temporário
+      const chatBox = document.getElementById('chatMessages');
+      const tempDiv = document.createElement('div');
+      tempDiv.className = 'message sent';
+      tempDiv.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> A enviar ficheiro...`;
+      chatBox.appendChild(tempDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(fileName, file);
+      if (uploadError) { alert('Erro no upload: ' + uploadError.message); tempDiv.remove(); return; }
+
+      const { data: publicUrl } = supabaseClient.storage.from('fly_bucket').getPublicUrl(fileName);
+      
+      // Grava a mensagem com o URL do ficheiro
+      const { error: dbError } = await supabaseClient.from('messages').insert([{ 
+        sender_id: currentUser, 
+        receiver_id: receiver, 
+        content: '', 
+        file_url: publicUrl.publicUrl,
+        file_type: file.type,
+        is_read: false 
+      }]);
+
+      tempDiv.remove();
+      if (dbError) { alert('Erro ao enviar: ' + dbError.message); }
+      else { loadMessages(); } // Recarrega para mostrar o ficheiro
+    }
+
+    // --- EMOJIS ---
+    function toggleEmojiPanel() {
+      const panel = document.getElementById('emojiPanel');
+      panel.style.display = panel.style.display === 'grid' ? 'none' : 'grid';
+    }
+
+    function addEmoji(emoji) {
+      const input = document.getElementById('messageInput');
+      input.value += emoji;
+      input.focus();
+    }
+
+    // --- CHAMADAS ---
+    function startCall(type) {
+      window.location.href = `chamada.html?user_id=${sellerId}&type=${type}`;
+    }
+
+    function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+    initChat();
+  </script>
+</body>
+</html>

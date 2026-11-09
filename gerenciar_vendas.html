@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Gerir Vendas</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header-logo { font-size: 1.5rem; font-weight: 800; font-style: italic; color: white; display: flex; align-items: center; gap: 10px;}
+    .header-logo img { height: 35px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 204, 255, 0.3); }
+    .header-icons i { font-size: 1.4rem; margin-left: 15px; color: white; cursor: pointer;}
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
+    .stat-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; }
+    .stat-title { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; }
+    .stat-value { font-size: 1.4rem; font-weight: bold; color: white; }
+    .tabs { display: flex; gap: 10px; padding: 0 15px 15px 15px; overflow-x: auto; scrollbar-width: none; }
+    .tab { padding: 8px 16px; border-radius: 20px; background: var(--glass-bg); border: 1px solid var(--glass-border); font-size: 0.9rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+    .tab.active { background: var(--primary); color: white; border-color: var(--neon); }
+    .orders-list { padding: 0 15px 90px 15px; display: flex; flex-direction: column; gap: 15px; }
+    .order-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; }
+    .order-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+    .order-product { display: flex; gap: 10px; margin-bottom: 10px; }
+    .order-product img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; }
+    .order-product-info h4 { font-size: 0.9rem; margin-bottom: 3px; }
+    .order-product-info p { font-size: 0.8rem; color: var(--neon); font-weight: bold; }
+    .order-buyer { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;}
+    .order-buyer img { width: 25px; height: 25px; border-radius: 50%; }
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+    .status-pendente { background: rgba(255, 179, 0, 0.2); color: #ffb300; border: 1px solid #ffb300; }
+    .status-preparando { background: rgba(0, 102, 255, 0.2); color: var(--primary); border: 1px solid var(--primary); }
+    .status-enviado { background: rgba(0, 230, 118, 0.2); color: var(--success); border: 1px solid var(--success); }
+    .order-actions { display: flex; gap: 10px; }
+    .btn-action { flex: 1; padding: 10px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; justify-content: center; align-items: center; gap: 5px; }
+    .btn-chat-buyer { background: transparent; border: 1px solid var(--neon); color: var(--neon); }
+    .btn-advance { background: var(--primary); color: white; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-logo"><img src="assets/logo.png" alt="FLY"> Vendas</div>
+    <div class="header-icons">
+      <i class="fa-solid fa-plus" onclick="window.location.href='criar_produto.html'" title="Criar novo produto"></i>
+      <i class="fa-solid fa-gear"></i>
+    </div>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-title">Total Vendido</div><div class="stat-value" id="totalSales">0 Kz</div></div>
+    <div class="stat-card"><div class="stat-title">Pedidos Pendentes</div><div class="stat-value" id="pendingOrders" style="color: #ffb300;">0</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active">Todos</div><div class="tab">Pendentes</div><div class="tab">Enviados</div>
+  </div>
+
+  <div class="orders-list" id="ordersList"><p style="text-align: center; color: var(--text-muted);">A carregar os teus pedidos...</p></div>
+
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
+    <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="chat.html" class="nav-item">
+      <i class="fa-solid fa-comment-dots"></i><span>Chat</span>
+      <span class="nav-badge" id="chat-badge">0</span>
+    </a>
+    <a href="gerenciar_vendas.html" class="nav-item active">
+      <i class="fa-solid fa-briefcase"></i><span>Negócio</span>
+      <span class="nav-badge" id="negocio-badge">0</span>
+    </a>
+    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
+
+    async function updateBadges() {
+      if (!currentUser) return;
+      const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser).eq('is_read', false);
+      const chatBadge = document.getElementById('chat-badge');
+      if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
+
+      const { count: orderCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('seller_id', currentUser).eq('status', 'pendente');
+      const negocioBadge = document.getElementById('negocio-badge');
+      if (negocioBadge) { if (orderCount > 0) { negocioBadge.innerText = orderCount; negocioBadge.style.display = 'flex'; } else { negocioBadge.style.display = 'none'; } }
+    }
+
+    async function loadSales() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+      
+      updateBadges(); setInterval(updateBadges, 10000);
+
+      const { data: orders, error } = await supabaseClient.from('orders').select(`*, products ( name, image_url ), profiles:buyer_id ( username )`).eq('seller_id', currentUser).order('created_at', { ascending: false });
+      const list = document.getElementById('ordersList');
+      
+      if (error) { list.innerHTML = `<p style="color:red; text-align:center;">Erro: ${error.message}</p>`; return; }
+      if (!orders || orders.length === 0) {
+        list.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 30px;"><i class="fa-solid fa-box-open" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i><p>Ainda não tens pedidos.</p><button onclick="window.location.href='criar_produto.html'" style="margin-top:15px; padding:10px 20px; border-radius:20px; background:var(--primary); color:white; border:none;">Criar um Produto</button></div>`;
+        return;
+      }
+
+      list.innerHTML = '';
+      let totalVendido = 0; let pendentes = 0;
+
+      orders.forEach(order => {
+        if (order.status === 'enviado' || order.status === 'concluido') totalVendido += order.total_price;
+        if (order.status === 'pendente') pendentes++;
+
+        const productName = order.products ? order.products.name : 'Produto apagado';
+        const productImg = order.products && order.products.image_url ? order.products.image_url : 'https://via.placeholder.com/60';
+        const buyerName = order.profiles ? order.profiles.username : 'Cliente';
+        const buyerAvatar = `https://i.pravatar.cc/150?u=${order.buyer_id}`;
+        const date = new Date(order.created_at).toLocaleDateString('pt-PT');
+
+        let statusHtml = `<span class="status-badge status-pendente">Pendente</span>`;
+        let actionBtn = `<button class="btn-action btn-advance" onclick="updateStatus('${order.id}', 'preparando')"><i class="fa-solid fa-box"></i> Preparar</button>`;
+        
+        if (order.status === 'preparando') { statusHtml = `<span class="status-badge status-preparando">Em Preparação</span>`; actionBtn = `<button class="btn-action btn-advance" onclick="updateStatus('${order.id}', 'enviado')"><i class="fa-solid fa-truck"></i> Enviar</button>`; } 
+        else if (order.status === 'enviado') { statusHtml = `<span class="status-badge status-enviado">Enviado</span>`; actionBtn = `<button class="btn-action btn-advance" style="background:var(--success);" onclick="updateStatus('${order.id}', 'concluido')"><i class="fa-solid fa-check"></i> Concluir</button>`; } 
+        else if (order.status === 'concluido') { statusHtml = `<span class="status-badge" style="background:rgba(255,255,255,0.1); color:white;">Concluído</span>`; actionBtn = ``; }
+
+        list.innerHTML += `
+          <div class="order-card">
+            <div class="order-header"><span>Pedido #${order.id.split('-')[0].toUpperCase()}</span><span>${date}</span></div>
+            <div class="order-product">
+              <img src="${productImg}">
+              <div class="order-product-info"><h4>${productName}</h4><p>${formatKz(order.total_price)}</p></div>
+              <div style="margin-left: auto;">${statusHtml}</div>
+            </div>
+            <div class="order-buyer"><img src="${buyerAvatar}"><span>Cliente: <strong>${buyerName}</strong></span></div>
+            <div class="order-actions">
+              <button class="btn-action btn-chat-buyer" onclick="window.location.href='conversa.html?seller_id=${order.buyer_id}'"><i class="fa-solid fa-comment"></i> Falar</button>
+              ${actionBtn}
+            </div>
+          </div>`;
+      });
+      document.getElementById('totalSales').innerText = formatKz(totalVendido);
+      document.getElementById('pendingOrders').innerText = pendentes;
+    }
+
+    async function updateStatus(orderId, newStatus) {
+      const confirmMsg = newStatus === 'enviado' ? 'Confirmas que já enviaste o produto?' : 'Avançar o estado do pedido?';
+      if (!confirm(confirmMsg)) return;
+      const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
+      if (error) { alert('Erro: ' + error.message); return; }
+      loadSales();
+    }
+    loadSales();
+  </script>
+</body>
+</html>

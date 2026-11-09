@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Detalhes do Produto</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header-icons i { font-size: 1.4rem; color: white; cursor: pointer;}
+    .product-container { padding: 15px; padding-bottom: 100px; }
+    .main-image { width: 100%; height: 300px; object-fit: cover; border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: 0 0 20px rgba(0, 204, 255, 0.2); }
+    .product-details { margin-top: 20px; }
+    .product-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; }
+    .product-price { font-size: 1.8rem; font-weight: 800; color: var(--neon); margin-bottom: 10px; }
+    .product-location { color: var(--text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 5px; margin-bottom: 20px; }
+    .description-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border); margin-bottom: 20px; }
+    .description-box h3 { font-size: 1rem; margin-bottom: 8px; color: var(--neon); }
+    .description-box p { font-size: 0.9rem; color: #ccc; line-height: 1.5; }
+    .seller-info { display: flex; align-items: center; gap: 10px; background: var(--glass-bg); padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border); }
+    .seller-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: var(--primary); }
+    .seller-name { font-weight: bold; }
+    .seller-badge { font-size: 0.7rem; color: var(--success); }
+    .bottom-action-bar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--glass-border); display: flex; gap: 10px; z-index: 1000; }
+    .btn-chat { flex: 1; padding: 15px; background: transparent; border: 1px solid var(--neon); border-radius: 12px; color: var(--neon); font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; }
+    .btn-buy-now { flex: 2; padding: 15px; background: linear-gradient(90deg, var(--primary), var(--neon)); border: none; border-radius: 12px; color: white; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
+    .btn-buy-now:disabled { background: var(--text-muted); box-shadow: none; cursor: not-allowed; }
+    
+    .seller-actions { display: flex; gap: 10px; margin-bottom: 20px; }
+    .btn-edit { flex: 1; padding: 12px; background: rgba(255, 179, 0, 0.1); border: 1px solid #ffb300; color: #ffb300; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; }
+    .btn-delete { flex: 1; padding: 12px; background: rgba(255, 51, 102, 0.1); border: 1px solid var(--danger); color: var(--danger); border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; }
+
+    .confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 3000; display: none; justify-content: center; align-items: center; padding: 20px; }
+    .confirm-box { background: var(--bg-color); border: 1px solid var(--danger); border-radius: 20px; width: 100%; max-width: 350px; padding: 25px; text-align: center; box-shadow: 0 0 30px rgba(255, 51, 102, 0.2); }
+    .confirm-box i { font-size: 3rem; color: var(--danger); margin-bottom: 15px; }
+    .confirm-box h3 { color: white; margin-bottom: 10px; }
+    .confirm-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+    .confirm-actions { display: flex; gap: 10px; }
+    .btn-cancel-confirm { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--glass-border); background: transparent; color: white; font-weight: bold; cursor: pointer; }
+    .btn-confirm-delete { flex: 1; padding: 12px; border-radius: 10px; border: none; background: var(--danger); color: white; font-weight: bold; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.history.back()"></i>
+    <div class="header-icons"><i class="fa-regular fa-heart"></i><i class="fa-solid fa-share-nodes" style="margin-left: 15px;"></i></div>
+  </header>
+
+  <div class="product-container">
+    <div id="loading" style="text-align: center; color: white; margin-top: 50px;">A carregar...</div>
+    <div id="productContent" style="display: none;">
+      <img id="pImage" src="" class="main-image">
+      <div class="product-details">
+        <h1 id="pName" class="product-title"></h1>
+        <div id="pPrice" class="product-price"></div>
+        <div class="product-location"><i class="fa-solid fa-location-dot"></i> Luanda, Angola</div>
+        
+        <div class="seller-actions" id="sellerActions" style="display: none;">
+          <button class="btn-edit" onclick="editProduct()"><i class="fa-solid fa-pen"></i> Editar</button>
+          <button class="btn-delete" onclick="openConfirmDelete()"><i class="fa-solid fa-trash"></i> Apagar</button>
+        </div>
+
+        <div class="description-box"><h3>Descrição</h3><p id="pDescription"></p></div>
+        <div class="seller-info">
+          <img id="pSellerAvatar" class="seller-avatar" src="">
+          <div>
+            <div id="pSellerName" class="seller-name">Vendedor</div>
+            <div class="seller-badge"><i class="fa-solid fa-circle-check"></i> Vendedor Verificado</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-action-bar" id="actionBar" style="display: none;">
+    <button class="btn-chat" id="btnChat"><i class="fa-solid fa-comment-dots"></i> Chat</button>
+    <button class="btn-buy-now" id="btnBuy" onclick="buyProduct()"><i class="fa-solid fa-cart-shopping"></i> Comprar</button>
+  </div>
+
+  <div class="confirm-modal" id="deleteConfirmModal">
+    <div class="confirm-box">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <h3>Apagar Anúncio?</h3>
+      <p>Tens a certeza que queres apagar este produto? Esta ação é permanente e não pode ser desfeita.</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel-confirm" onclick="closeConfirmDelete()">Cancelar</button>
+        <button class="btn-confirm-delete" onclick="executeDelete()">Sim, Apagar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let productData = null; let currentUser = null;
+    function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
+
+    async function loadProductDetails() {
+      const urlParams = new URLSearchParams(window.location.search); const productId = urlParams.get('id');
+      if (!productId) { alert('Produto não encontrado!'); window.location.href = 'mercado.html'; return; }
+
+      const { data: { session } } = await supabaseClient.auth.getSession(); if (session) currentUser = session.user.id;
+      const { data: product, error } = await supabaseClient.from('products').select('*').eq('id', productId).single();
+      if (error || !product) { document.getElementById('loading').innerText = 'Erro ao carregar.'; return; }
+      
+      productData = product;
+      let sellerName = "Vendedor FLY"; let sellerAvatar = `https://i.pravatar.cc/150?u=${product.seller_id}`;
+      
+      if (product.seller_id) {
+        const { data: seller } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', product.seller_id).single();
+        if (seller) { sellerName = seller.username; if(seller.avatar_url) sellerAvatar = seller.avatar_url; }
+      }
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('productContent').style.display = 'block';
+      document.getElementById('actionBar').style.display = 'flex';
+
+      document.getElementById('pImage').src = product.image_url || 'https://via.placeholder.com/300';
+      document.getElementById('pName').innerText = product.name;
+      document.getElementById('pPrice').innerText = formatKz(product.price);
+      document.getElementById('pDescription').innerText = product.description || 'Sem descrição.';
+      document.getElementById('pSellerName').innerText = sellerName;
+      document.getElementById('pSellerAvatar').src = sellerAvatar;
+
+      if (currentUser === product.seller_id) {
+        document.getElementById('sellerActions').style.display = 'flex';
+        const btnBuy = document.getElementById('btnBuy'); 
+        btnBuy.innerText = 'Este produto é teu'; 
+        btnBuy.disabled = true; 
+      } else {
+        document.getElementById('btnChat').onclick = () => { window.location.href = `conversa.html?seller_id=${product.seller_id}`; };
+      }
+    }
+
+    function editProduct() { window.location.href = `criar_produto.html?id=${productData.id}`; }
+    function openConfirmDelete() { document.getElementById('deleteConfirmModal').style.display = 'flex'; }
+    function closeConfirmDelete() { document.getElementById('deleteConfirmModal').style.display = 'none'; }
+    
+    async function executeDelete() {
+      closeConfirmDelete();
+      const { error } = await supabaseClient.from('products').delete().eq('id', productData.id);
+      if (error) { alert('Erro ao apagar: ' + error.message); } 
+      else { alert('Anúncio apagado com sucesso!'); window.location.href = 'mercado.html'; }
+    }
+
+    // FUNÇÃO DE COMPRA ATUALIZADA
+    async function buyProduct() {
+      if (!currentUser || !productData) return;
+      
+      const btn = document.getElementById('btnBuy'); 
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A processar...'; 
+      btn.disabled = true;
+
+      // 1. Cria o pedido no banco de dados
+      const { data: newOrder, error } = await supabaseClient.from('orders').insert([{ 
+        buyer_id: currentUser, 
+        seller_id: productData.seller_id, 
+        product_id: productData.id, 
+        total_price: productData.price, 
+        status: 'pendente' 
+      }]).select().single();
+
+      if (error) { 
+        alert('Erro ao criar pedido: ' + error.message); 
+        btn.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> Comprar'; 
+        btn.disabled = false; 
+        return; 
+      }
+      
+      // 2. Notifica o vendedor
+      await supabaseClient.from('notifications').insert([{ 
+        user_id: productData.seller_id, sender_id: currentUser, type: 'order', post_id: null 
+      }]);
+
+      // 3. REDIRECIONA PARA A TELA DE PAGAMENTO (CHECKOUT)
+      window.location.href = `checkout.html?order_id=${newOrder.id}`;
+    }
+    
+    loadProductDetails();
+  </script>
+</body>
+</html>

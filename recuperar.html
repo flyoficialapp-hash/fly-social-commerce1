@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Recuperar Conta</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body style="justify-content: center; align-items: center; padding: 20px;">
+
+  <div class="glass-panel" style="width: 100%; max-width: 400px; padding: 40px 30px;">
+    <div class="logo-container">
+      <img src="assets/logo.png" alt="FLY Logo" class="logo-img">
+    </div>
+    
+    <h2 style="text-align: center; margin-bottom: 10px; font-weight: 500; font-size: 1.3rem;">Recuperar Conta</h2>
+    <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px;">Insere o teu e-mail para receberes um link de recuperação.</p>
+
+    <form id="recoveryForm">
+      <div class="input-group">
+        <label>E-mail da Conta</label>
+        <input type="email" id="recoveryEmail" class="input-glass" placeholder="seu@email.com" required>
+      </div>
+      <button type="submit" class="btn-primary" style="margin-top: 10px;" id="btnRecover">Enviar Link</button>
+    </form>
+
+    <button class="btn-outline" style="margin-top: 15px;" onclick="window.location.href='index.html'">Voltar ao Login</button>
+    
+    <p id="message" style="text-align: center; margin-top: 15px; font-size: 0.9rem; font-weight: bold;"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    document.getElementById('recoveryForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('recoveryEmail').value;
+      const btn = document.getElementById('btnRecover');
+      const msg = document.getElementById('message');
+
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A enviar...';
+      btn.disabled = true;
+
+      // AQUI ESTÁ A ATUALIZAÇÃO: O link agora aponta para o teu domínio no Cloudflare
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://fly.flyoficialapp.workers.dev/redefinir.html' 
+      });
+
+      if (error) {
+        msg.style.color = 'var(--danger)';
+        msg.innerText = 'Erro: ' + error.message;
+      } else {
+        msg.style.color = 'var(--success)';
+        msg.innerText = 'Link enviado! Verifica a tua caixa de entrada (e a pasta de spam).';
+      }
+      
+      btn.innerHTML = 'Enviar Link';
+      btn.disabled = false;
+    });
+  </script>
+</body>
+</html>

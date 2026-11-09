@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Minhas Compras</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px;}
+    .header-title img { height: 30px; }
+    .orders-list { padding: 15px; padding-bottom: 90px; display: flex; flex-direction: column; gap: 15px; }
+    .order-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; }
+    .order-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+    .order-product { display: flex; gap: 10px; margin-bottom: 15px; align-items: center;}
+    .order-product img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; }
+    .order-product-info h4 { font-size: 0.95rem; margin-bottom: 3px; }
+    .order-product-info p { font-size: 0.85rem; color: var(--neon); font-weight: bold; }
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+    .status-pendente { background: rgba(255, 179, 0, 0.2); color: #ffb300; border: 1px solid #ffb300; }
+    .status-preparando { background: rgba(0, 102, 255, 0.2); color: var(--primary); border: 1px solid var(--primary); }
+    .status-enviado { background: rgba(0, 230, 118, 0.2); color: var(--success); border: 1px solid var(--success); }
+    .status-concluido { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); }
+    .btn-action { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; justify-content: center; align-items: center; gap: 5px; transition: 0.2s; }
+    .btn-chat-buyer { background: transparent; border: 1px solid var(--neon); color: var(--neon); margin-bottom: 10px;}
+    .btn-review { background: linear-gradient(90deg, #ffb300, #ffd700); color: #000; }
+    .btn-reviewed { background: transparent; border: 1px solid var(--success); color: var(--success); cursor: default; }
+
+    /* MODAL DE AVALIAÇÃO */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
+    .modal-content { background: var(--bg-color); border: 1px solid #ffd700; border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); text-align: center; }
+    .modal-content h3 { color: #ffd700; margin-bottom: 10px; }
+    .modal-content p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+    .stars-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; font-size: 2.5rem; color: #555; cursor: pointer; }
+    .stars-container i.active { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+    .modal-footer { display: flex; gap: 10px; }
+    .btn-cancel { flex: 1; padding: 12px; border-radius: 10px; background: transparent; border: 1px solid var(--glass-border); color: white; font-weight: bold; cursor: pointer; }
+    .btn-submit { flex: 2; padding: 12px; border-radius: 10px; background: linear-gradient(90deg, #b8860b, #ffd700); border: none; color: #000; font-weight: bold; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.location.href='perfil.html'" style="font-size: 1.5rem; cursor: pointer;"></i>
+    <div class="header-title"><img src="assets/logo.png" alt="FLY"> Minhas Compras</div>
+    <div style="width: 24px;"></div>
+  </header>
+
+  <div class="orders-list" id="ordersList">
+    <p style="text-align: center; color: var(--text-muted);">A carregar as tuas compras...</p>
+  </div>
+
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal-content">
+      <h3>Avaliar Vendedor</h3>
+      <p>Como foi a tua experiência com esta compra?</p>
+      <div class="stars-container" id="starsContainer">
+        <i class="fa-solid fa-star" onclick="setRating(1)"></i>
+        <i class="fa-solid fa-star" onclick="setRating(2)"></i>
+        <i class="fa-solid fa-star" onclick="setRating(3)"></i>
+        <i class="fa-solid fa-star" onclick="setRating(4)"></i>
+        <i class="fa-solid fa-star" onclick="setRating(5)"></i>
+      </div>
+      <div class="input-group" style="text-align: left;">
+        <label>Comentário (Opcional)</label>
+        <textarea id="reviewComment" class="input-glass" rows="2" placeholder="Escreve um comentário..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeReviewModal()">Cancelar</button>
+        <button class="btn-submit" onclick="submitReview()" id="btnSubmitReview">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
+    <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge">0</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócio</span><span class="nav-badge" id="negocio-badge">0</span></a>
+    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let currentUser = null; let currentOrderForReview = null; let selectedRating = 0;
+    function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
+
+    async function updateBadges() {
+      if (!currentUser) return;
+      const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser).eq('is_read', false);
+      const chatBadge = document.getElementById('chat-badge');
+      if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
+      const { count: orderCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('seller_id', currentUser).eq('status', 'pendente');
+      const negocioBadge = document.getElementById('negocio-badge');
+      if (negocioBadge) { if (orderCount > 0) { negocioBadge.innerText = orderCount; negocioBadge.style.display = 'flex'; } else { negocioBadge.style.display = 'none'; } }
+    }
+
+    async function loadMyPurchases() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+      updateBadges(); setInterval(updateBadges, 10000);
+
+      const { data: orders, error } = await supabaseClient.from('orders').select(`*, products ( name, image_url ), profiles:seller_id ( username, avatar_url )`).eq('buyer_id', currentUser).order('created_at', { ascending: false });
+      const list = document.getElementById('ordersList');
+
+      if (error) { list.innerHTML = `<p style="color:red; text-align:center;">Erro: ${error.message}</p>`; return; }
+      if (!orders || orders.length === 0) {
+        list.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 30px;"><i class="fa-solid fa-bag-shopping" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i><p>Ainda não fizeste nenhuma compra.</p><button onclick="window.location.href='mercado.html'" style="margin-top:15px; padding:10px 20px; border-radius:20px; background:var(--primary); color:white; border:none;">Ir ao Mercado</button></div>`;
+        return;
+      }
+
+      list.innerHTML = '';
+
+      for (const order of orders) {
+        const productName = order.products ? order.products.name : 'Produto apagado';
+        const productImg = order.products && order.products.image_url ? order.products.image_url : 'https://via.placeholder.com/60';
+        const sellerName = order.profiles ? order.profiles.username : 'Vendedor';
+        const date = new Date(order.created_at).toLocaleDateString('pt-PT');
+
+        let statusHtml = `<span class="status-badge status-pendente">Pendente</span>`;
+        if (order.status === 'preparando') statusHtml = `<span class="status-badge status-preparando">Em Preparação</span>`;
+        else if (order.status === 'enviado') statusHtml = `<span class="status-badge status-enviado">Enviado</span>`;
+        else if (order.status === 'concluido') statusHtml = `<span class="status-badge status-concluido">Concluído</span>`;
+
+        // CORREÇÃO AQUI: Usar maybeSingle() para não gerar erro se não encontrar nada
+        const { data: existingReview } = await supabaseClient.from('reviews').select('id').eq('order_id', order.id).maybeSingle();
+        const hasReviewed = !!existingReview;
+
+        let actionButtons = `<button class="btn-action btn-chat-buyer" onclick="window.location.href='conversa.html?seller_id=${order.seller_id}'"><i class="fa-solid fa-comment"></i> Falar com Vendedor</button>`;
+
+        if (order.status === 'concluido') {
+          if (hasReviewed) {
+            actionButtons += `<button class="btn-action btn-reviewed"><i class="fa-solid fa-check"></i> Avaliado</button>`;
+          } else {
+            actionButtons += `<button class="btn-action btn-review" onclick="openReviewModal('${order.id}', '${order.seller_id}')"><i class="fa-solid fa-star"></i> Avaliar Vendedor</button>`;
+          }
+        }
+
+        list.innerHTML += `
+          <div class="order-card">
+            <div class="order-header"><span>Pedido #${order.id.split('-')[0].toUpperCase()}</span><span>${date}</span></div>
+            <div class="order-product">
+              <img src="${productImg}">
+              <div class="order-product-info"><h4>${productName}</h4><p>${formatKz(order.total_price)}</p><div style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">Vendedor: <strong>${sellerName}</strong></div></div>
+              <div style="margin-left: auto; align-self: flex-start;">${statusHtml}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">${actionButtons}</div>
+          </div>`;
+      }
+    }
+
+    function openReviewModal(orderId, sellerId) {
+      currentOrderForReview = { orderId, sellerId }; selectedRating = 0; updateStarsUI(0);
+      document.getElementById('reviewComment').value = '';
+      document.getElementById('reviewModal').style.display = 'flex';
+    }
+    function closeReviewModal() { document.getElementById('reviewModal').style.display = 'none'; }
+    function setRating(rating) { selectedRating = rating; updateStarsUI(rating); }
+    function updateStarsUI(rating) {
+      const stars = document.querySelectorAll('#starsContainer i');
+      stars.forEach((star, index) => { if (index < rating) { star.classList.add('active'); } else { star.classList.remove('active'); } });
+    }
+
+    async function submitReview() {
+      if (selectedRating === 0) { alert('Por favor, escolhe pelo menos 1 estrela.'); return; }
+      const btn = document.getElementById('btnSubmitReview'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+      const comment = document.getElementById('reviewComment').value.trim();
+
+      const { error } = await supabaseClient.from('reviews').insert([{ order_id: currentOrderForReview.orderId, reviewer_id: currentUser, seller_id: currentOrderForReview.sellerId, rating: selectedRating, comment: comment }]);
+
+      if (error) { alert('Erro ao enviar avaliação: ' + error.message); btn.innerHTML = 'Enviar'; btn.disabled = false; return; }
+      closeReviewModal(); alert('Obrigado pela tua avaliação! ⭐'); loadMyPurchases(); 
+    }
+
+    loadMyPurchases();
+  </script>
+</body>
+</html>

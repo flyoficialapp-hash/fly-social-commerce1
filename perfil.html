@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Perfil</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header-logo { font-size: 1.5rem; font-weight: 800; font-style: italic; color: white; display: flex; align-items: center; gap: 10px;}
+    .header-logo img { height: 35px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 204, 255, 0.3); }
+    .header-icons a { color: white; text-decoration: none; }
+    .header-icons i { font-size: 1.4rem; margin-left: 15px; cursor: pointer;}
+    
+    .profile-header { display: flex; flex-direction: column; align-items: center; padding: 20px; text-align: center; }
+    .profile-avatar-container { position: relative; margin-bottom: 15px; }
+    .profile-avatar { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(45deg, var(--primary), var(--neon)); padding: 3px; box-shadow: 0 0 20px rgba(0, 204, 255, 0.4); }
+    .profile-avatar.premium-ring { background: linear-gradient(45deg, #b8860b, #ffd700); box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+    .profile-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--bg-color); background: #000; }
+    .edit-avatar-btn { position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border: 2px solid var(--bg-color); width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 0.8rem; }
+    .profile-name { font-size: 1.4rem; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 5px;}
+    .profile-email { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; }
+    .profile-bio { font-size: 0.9rem; color: #ccc; max-width: 80%; margin: 0 auto 15px auto; line-height: 1.4; }
+    .social-links { display: flex; gap: 15px; margin-bottom: 15px; justify-content: center; }
+    .social-icon { width: 35px; height: 35px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; justify-content: center; align-items: center; color: white; font-size: 1rem; text-decoration: none; transition: 0.3s; border: 1px solid var(--glass-border); }
+    .social-icon:hover { background: var(--primary); transform: translateY(-2px); box-shadow: 0 0 10px var(--neon); }
+    
+    /* BOTÕES DE AÇÃO SOCIAL (Seguir / Amigo) */
+    .social-actions { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; max-width: 300px; }
+    .btn-social { flex: 1; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; transition: 0.3s; border: none; }
+    .btn-follow { background: var(--primary); color: white; }
+    .btn-follow.following { background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--glass-border); }
+    .btn-friend { background: var(--success); color: #000; }
+    .btn-friend.pending { background: rgba(255, 179, 0, 0.2); color: #ffb300; border: 1px solid #ffb300; cursor: not-allowed;}
+    .btn-friend.friends { background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--glass-border); }
+
+    .action-buttons { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+    .btn-favoritos { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--glass-bg); border: 1px solid var(--neon); color: var(--neon); padding: 10px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 0.85rem;}
+    .btn-compras { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--glass-bg); border: 1px solid #ffd700; color: #ffd700; padding: 10px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 0.85rem;}
+
+    .premium-banner { background: linear-gradient(90deg, #7e22ce, #a855f7); border-radius: 15px; padding: 15px; margin: 0 20px 20px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); }
+    .premium-banner h4 { font-size: 0.9rem; margin-bottom: 3px; }
+    .premium-banner p { font-size: 0.75rem; color: #e0e0e0; }
+    .premium-banner i { font-size: 1.5rem; color: #ffd700; }
+    
+    .stats-container { display: flex; justify-content: center; gap: 25px; padding: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; margin: 0 20px 20px 20px; }
+    .stat-box { text-align: center; }
+    .stat-value { font-size: 1.2rem; font-weight: bold; color: var(--neon); }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); }
+    
+    .section-title { padding: 0 20px; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; color: white; }
+    .my-products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px 20px 20px; }
+    .product-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer;}
+    .product-image { width: 100%; height: 120px; object-fit: cover; background: #000; }
+    .product-info { padding: 10px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+    .product-title { font-size: 0.85rem; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .product-price { font-size: 0.9rem; font-weight: bold; color: var(--neon); }
+    
+    .btn-logout { width: calc(100% - 40px); margin: 10px 20px 120px 20px; padding: 15px; background: rgba(255, 51, 102, 0.15); border: 1px solid var(--danger); border-radius: 12px; color: var(--danger); font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s; }
+    .btn-logout:hover { background: var(--danger); color: white; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
+    .modal-content { background: var(--bg-color); border: 1px solid var(--neon); border-radius: 20px; width: 100%; max-width: 400px; padding: 20px; box-shadow: 0 0 30px rgba(0, 204, 255, 0.2); max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .modal-header h3 { color: var(--neon); }
+    .modal-header i { cursor: pointer; font-size: 1.5rem; }
+    .avatar-upload-box { display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; }
+    .avatar-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--neon); margin-bottom: 10px; background: #000; }
+    .btn-upload-avatar { background: var(--glass-bg); border: 1px solid var(--neon); color: var(--neon); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.history.back()" style="font-size: 1.5rem; cursor: pointer;"></i>
+    <div class="header-logo"><img src="assets/logo.png" alt="FLY"> Perfil</div>
+    <div class="header-icons" id="headerSettings">
+      <!-- A engrenagem só aparece se for o teu perfil -->
+    </div>
+  </header>
+
+  <div class="profile-header">
+    <div class="profile-avatar-container">
+      <div class="profile-avatar" id="avatarRing"><img src="" alt="Avatar" id="userAvatar"></div>
+      <div class="edit-avatar-btn" id="editAvatarBtn" onclick="openEditModal()" style="display: none;"><i class="fa-solid fa-pen"></i></div>
+    </div>
+    <div class="profile-name" id="userName">A carregar... <span id="premiumBadge" style="display:none; color: #ffd700;"><i class="fa-solid fa-crown"></i></span></div>
+    <div class="profile-email" id="userEmail">...</div>
+    <div class="profile-bio" id="userBio">Sem biografia.</div>
+    <div class="social-links" id="socialLinks"></div>
+    
+    <!-- BOTÕES SOCIAIS (SEGUIR / AMIGO) -->
+    <div class="social-actions" id="socialActions" style="display: none;">
+      <button class="btn-social btn-follow" id="btnFollow" onclick="toggleFollow()"><i class="fa-solid fa-user-plus"></i> Seguir</button>
+      <button class="btn-social btn-friend" id="btnFriend" onclick="sendFriendRequest()"><i class="fa-solid fa-user-group"></i> Adicionar</button>
+    </div>
+
+    <!-- BOTÕES DO DONO DO PERFIL -->
+    <div class="action-buttons" id="ownerActions" style="display: none;">
+      <button class="btn-favoritos" onclick="window.location.href='favoritos.html'"><i class="fa-solid fa-bookmark"></i> Guardados</button>
+      <button class="btn-compras" onclick="window.location.href='compras.html'"><i class="fa-solid fa-bag-shopping"></i> Minhas Compras</button>
+    </div>
+  </div>
+
+  <div class="premium-banner" id="premiumBanner" onclick="window.location.href='premium.html'" style="display: none;">
+    <div><h4>Seja Premium! 👑</h4><p>Mais visibilidade, mais vendas, mais vantagens.</p></div>
+    <i class="fa-solid fa-chevron-right"></i>
+  </div>
+
+  <div class="stats-container">
+    <div class="stat-box"><div class="stat-value" id="countProducts">0</div><div class="stat-label">Anúncios</div></div>
+    <div class="stat-box"><div class="stat-value" id="countFollowers">0</div><div class="stat-label">Seguidores</div></div>
+    <div class="stat-box"><div class="stat-value" id="countFriends">0</div><div class="stat-label">Amigos</div></div>
+    <div class="stat-box"><div class="stat-value" id="avgRating">0.0</div><div class="stat-label">Avaliação</div></div>
+  </div>
+
+  <div class="section-title" id="productsTitle">Anúncios</div>
+  <div class="my-products-grid" id="myProducts"><p style="color: var(--text-muted); grid-column: span 2; text-align: center;">A carregar...</p></div>
+  
+  <button class="btn-logout" id="btnLogout" onclick="logout()" style="display: none;"><i class="fa-solid fa-right-from-bracket"></i> Terminar Sessão</button>
+
+  <!-- MODAL DE EDIÇÃO -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+      <div class="modal-header"><h3>Editar Perfil</h3><i class="fa-solid fa-xmark" onclick="document.getElementById('editModal').style.display='none'"></i></div>
+      <div class="avatar-upload-box">
+        <img id="editAvatarPreview" class="avatar-preview" src="">
+        <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="previewAvatar(event)">
+        <button class="btn-upload-avatar" onclick="document.getElementById('avatarInput').click()">Mudar Foto</button>
+      </div>
+      <div class="input-group"><label>Nome de Utilizador</label><input type="text" id="editUsername" class="input-glass" placeholder="O teu nome..."></div>
+      <div class="input-group"><label>Biografia</label><textarea id="editBio" class="input-glass" rows="2" placeholder="Fala um pouco sobre ti..."></textarea></div>
+      <div class="input-group"><label><i class="fa-brands fa-instagram"></i> Instagram</label><input type="url" id="editInstagram" class="input-glass" placeholder="https://instagram.com/oteuuser"></div>
+      <div class="input-group"><label><i class="fa-brands fa-whatsapp"></i> WhatsApp</label><input type="url" id="editWhatsapp" class="input-glass" placeholder="https://wa.me/2449xxxxxxxx"></div>
+      <div class="input-group"><label><i class="fa-brands fa-facebook"></i> Facebook</label><input type="url" id="editFacebook" class="input-glass" placeholder="https://facebook.com/oteuperfil"></div>
+      <button class="btn-primary" style="margin-top: 10px;" onclick="saveProfile()" id="btnSaveProfile">Guardar Alterações</button>
+      <p id="editMsg" style="text-align: center; margin-top: 10px; font-size: 0.9rem; font-weight: bold;"></p>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
+    <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge">0</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócio</span><span class="nav-badge" id="negocio-badge">0</span></a>
+    <a href="perfil.html" class="nav-item active"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let loggedInUser = null; // Quem está a usar a app
+    let profileUser = null; // O perfil que está a ser visto
+    let isMyProfile = false;
+    let currentAvatarUrl = ""; let selectedAvatarFile = null; let currentSocialLinks = {};
+    let isFollowing = false; let friendshipStatus = 'none'; // 'none', 'pendente', 'aceite'
+
+    function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
+
+    async function updateBadges() {
+      if (!loggedInUser) return;
+      const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', loggedInUser).eq('is_read', false);
+      const chatBadge = document.getElementById('chat-badge');
+      if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
+
+      const { count: orderCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('seller_id', loggedInUser).eq('status', 'pendente');
+      const negocioBadge = document.getElementById('negocio-badge');
+      if (negocioBadge) { if (orderCount > 0) { negocioBadge.innerText = orderCount; negocioBadge.style.display = 'flex'; } else { negocioBadge.style.display = 'none'; } }
+    }
+
+    async function loadProfile() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      loggedInUser = session.user.id;
+
+      // Vê se o URL tem um ID de outro utilizador
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlId = urlParams.get('id');
+      
+      profileUser = urlId ? urlId : loggedInUser;
+      isMyProfile = (profileUser === loggedInUser);
+
+      updateBadges(); setInterval(updateBadges, 10000);
+
+      // 1. Carregar Dados Básicos do Perfil
+      try {
+        const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_url, bio, social_links, is_premium').eq('id', profileUser).single();
+        if (profile) {
+          document.getElementById('userName').innerHTML = (profile.username || "Utilizador FLY");
+          document.getElementById('userBio').innerText = profile.bio || "Sem biografia.";
+          currentAvatarUrl = profile.avatar_url || `https://i.pravatar.cc/150?u=${profileUser}`;
+          document.getElementById('userAvatar').src = currentAvatarUrl;
+          
+          if (profile.is_premium) {
+            document.getElementById('premiumBadge').style.display = 'inline';
+            document.getElementById('avatarRing').classList.add('premium-ring');
+          }
+
+          currentSocialLinks = profile.social_links || {};
+          const linksContainer = document.getElementById('socialLinks'); linksContainer.innerHTML = '';
+          if (currentSocialLinks.instagram) linksContainer.innerHTML += `<a href="${currentSocialLinks.instagram}" target="_blank" class="social-icon instagram"><i class="fa-brands fa-instagram"></i></a>`;
+          if (currentSocialLinks.whatsapp) linksContainer.innerHTML += `<a href="${currentSocialLinks.whatsapp}" target="_blank" class="social-icon whatsapp"><i class="fa-brands fa-whatsapp"></i></a>`;
+          if (currentSocialLinks.facebook) linksContainer.innerHTML += `<a href="${currentSocialLinks.facebook}" target="_blank" class="social-icon facebook"><i class="fa-brands fa-facebook-f"></i></a>`;
+        }
+      } catch (err) { console.error(err); }
+
+      // 2. Configurar a Interface consoante seja MEU ou DE OUTRO
+      if (isMyProfile) {
+        document.getElementById('userEmail').innerText = session.user.email;
+        document.getElementById('ownerActions').style.display = 'flex';
+        document.getElementById('editAvatarBtn').style.display = 'flex';
+        document.getElementById('btnLogout').style.display = 'flex';
+        document.getElementById('headerSettings').innerHTML = `<a href="configuracoes.html"><i class="fa-solid fa-gear"></i></a>`;
+        document.getElementById('productsTitle').innerText = "Os Meus Anúncios";
+        
+        // Mostrar banner premium se não for premium
+        const { data: profile } = await supabaseClient.from('profiles').select('is_premium').eq('id', loggedInUser).single();
+        if (profile && !profile.is_premium) document.getElementById('premiumBanner').style.display = 'flex';
+
+      } else {
+        // É o perfil de outra pessoa
+        document.getElementById('userEmail').style.display = 'none';
+        document.getElementById('socialActions').style.display = 'flex';
+        document.getElementById('productsTitle').innerText = "Anúncios de " + document.getElementById('userName').innerText;
+        await checkSocialStatus(); // Vê se já segue ou é amigo
+      }
+
+      // 3. Carregar Contadores (Seguidores e Amigos)
+      const { count: followersCount } = await supabaseClient.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileUser);
+      document.getElementById('countFollowers').innerText = followersCount || 0;
+
+      // Amigos (Procura em ambas as direções com estado 'aceite')
+      const { data: friendsData } = await supabaseClient.from('friendships').select('*').eq('status', 'aceite').or(`requester_id.eq.${profileUser},addressee_id.eq.${profileUser}`);
+      document.getElementById('countFriends').innerText = friendsData ? friendsData.length : 0;
+
+      // 4. Carregar Avaliações
+      try {
+        const { data: reviews } = await supabaseClient.from('reviews').select('rating').eq('seller_id', profileUser);
+        if (reviews && reviews.length > 0) {
+          const sum = reviews.reduce((acc, curr) => acc + curr.rating, 0);
+          document.getElementById('avgRating').innerText = (sum / reviews.length).toFixed(1);
+        } else { document.getElementById('avgRating').innerText = "0.0"; }
+      } catch (err) {}
+
+      // 5. Carregar Anúncios
+      const grid = document.getElementById('myProducts');
+      try {
+        const { data: products } = await supabaseClient.from('products').select('id, name, price, image_url').eq('seller_id', profileUser).eq('status', 'ativo').order('created_at', { ascending: false });
+        
+        if (products && products.length > 0) {
+          document.getElementById('countProducts').innerText = products.length; grid.innerHTML = '';
+          products.forEach(product => {
+            const card = document.createElement('div'); card.className = 'product-card';
+            card.onclick = () => window.location.href = `produto.html?id=${product.id}`;
+            const imgUrl = product.image_url || 'https://via.placeholder.com/150?text=Sem+Foto';
+            card.innerHTML = `<img src="${imgUrl}" class="product-image"><div class="product-info"><div class="product-title">${product.name}</div><div class="product-price">${formatKz(product.price)}</div></div>`;
+            grid.appendChild(card);
+          });
+        } else { grid.innerHTML = '<p style="color: var(--text-muted); grid-column: span 2; text-align: center;">Nenhum anúncio ativo.</p>'; }
+      } catch (err) { grid.innerHTML = 'Erro ao carregar.'; }
+    }
+
+    // --- LÓGICA SOCIAL (SEGUIR E AMIGOS) ---
+    async function checkSocialStatus() {
+      // 1. Verificar se já sigo
+      const { data: follow } = await supabaseClient.from('follows').select('*').eq('follower_id', loggedInUser).eq('following_id', profileUser).maybeSingle();
+      isFollowing = !!follow;
+      updateFollowButton();
+
+      // 2. Verificar estado da amizade
+      const { data: friendship } = await supabaseClient.from('friendships')
+        .select('*')
+        .or(`and(requester_id.eq.${loggedInUser},addressee_id.eq.${profileUser}),and(requester_id.eq.${profileUser},addressee_id.eq.${loggedInUser})`)
+        .maybeSingle();
+
+      if (friendship) {
+        if (friendship.status === 'aceite') friendshipStatus = 'aceite';
+        else if (friendship.status === 'pendente') friendshipStatus = 'pendente';
+      } else {
+        friendshipStatus = 'none';
+      }
+      updateFriendButton();
+    }
+
+    function updateFollowButton() {
+      const btn = document.getElementById('btnFollow');
+      if (isFollowing) {
+        btn.classList.add('following');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> A Seguir';
+      } else {
+        btn.classList.remove('following');
+        btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Seguir';
+      }
+    }
+
+    function updateFriendButton() {
+      const btn = document.getElementById('btnFriend');
+      btn.className = 'btn-social btn-friend'; // Reset classes
+      if (friendshipStatus === 'aceite') {
+        btn.classList.add('friends');
+        btn.innerHTML = '<i class="fa-solid fa-user-check"></i> Amigos';
+        btn.disabled = true;
+      } else if (friendshipStatus === 'pendente') {
+        btn.classList.add('pending');
+        btn.innerHTML = '<i class="fa-solid fa-clock"></i> Pendente';
+        btn.disabled = true;
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-user-group"></i> Adicionar';
+        btn.disabled = false;
+      }
+    }
+
+    async function toggleFollow() {
+      if (isFollowing) {
+        // Deixar de seguir
+        await supabaseClient.from('follows').delete().eq('follower_id', loggedInUser).eq('following_id', profileUser);
+        isFollowing = false;
+      } else {
+        // Seguir
+        await supabaseClient.from('follows').insert([{ follower_id: loggedInUser, following_id: profileUser }]);
+        isFollowing = true;
+        // Notificar
+        await supabaseClient.from('notifications').insert([{ user_id: profileUser, sender_id: loggedInUser, type: 'follow' }]);
+      }
+      updateFollowButton();
+      loadProfile(); // Atualiza o contador de seguidores
+    }
+
+    async function sendFriendRequest() {
+      if (friendshipStatus !== 'none') return;
+      const btn = document.getElementById('btnFriend');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      
+      const { error } = await supabaseClient.from('friendships').insert([{
+        requester_id: loggedInUser,
+        addressee_id: profileUser,
+        status: 'pendente'
+      }]);
+
+      if (error) {
+        alert('Erro ao enviar pedido: ' + error.message);
+        updateFriendButton();
+      } else {
+        friendshipStatus = 'pendente';
+        updateFriendButton();
+        await supabaseClient.from('notifications').insert([{ user_id: profileUser, sender_id: loggedInUser, type: 'friend' }]);
+      }
+    }
+
+    // --- EDIÇÃO DE PERFIL (Mantido igual) ---
+    function openEditModal() {
+      document.getElementById('editModal').style.display = 'flex';
+      document.getElementById('editUsername').value = document.getElementById('userName').innerText.replace('👑','').trim();
+      document.getElementById('editBio').value = document.getElementById('userBio').innerText === "Sem biografia." ? "" : document.getElementById('userBio').innerText;
+      document.getElementById('editInstagram').value = currentSocialLinks.instagram || "";
+      document.getElementById('editWhatsapp').value = currentSocialLinks.whatsapp || "";
+      document.getElementById('editFacebook').value = currentSocialLinks.facebook || "";
+      document.getElementById('editAvatarPreview').src = currentAvatarUrl;
+      document.getElementById('editMsg').innerText = '';
+      selectedAvatarFile = null;
+    }
+    function previewAvatar(event) { const file = event.target.files[0]; if (!file) return; selectedAvatarFile = file; document.getElementById('editAvatarPreview').src = URL.createObjectURL(file); }
+
+    async function saveProfile() {
+      const btn = document.getElementById('btnSaveProfile'); const msg = document.getElementById('editMsg');
+      const newUsername = document.getElementById('editUsername').value.trim(); const newBio = document.getElementById('editBio').value.trim();
+      const insta = document.getElementById('editInstagram').value.trim(); const zap = document.getElementById('editWhatsapp').value.trim(); const face = document.getElementById('editFacebook').value.trim();
+      if (!newUsername) { msg.style.color = 'var(--danger)'; msg.innerText = 'O nome não pode estar vazio.'; return; }
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A guardar...'; btn.disabled = true;
+      let newAvatarUrl = currentAvatarUrl;
+      if (selectedAvatarFile) {
+        const fileExt = selectedAvatarFile.name.split('.').pop(); const fileName = `avatars/${loggedInUser}_${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(fileName, selectedAvatarFile);
+        if (uploadError) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro na foto: ' + uploadError.message; btn.innerHTML = 'Guardar'; btn.disabled = false; return; }
+        const { data } = supabaseClient.storage.from('fly_bucket').getPublicUrl(fileName); newAvatarUrl = data.publicUrl;
+      }
+      const newLinks = {}; if (insta) newLinks.instagram = insta; if (zap) newLinks.whatsapp = zap; if (face) newLinks.facebook = face;
+      const { error: updateError } = await supabaseClient.from('profiles').update({ username: newUsername, avatar_url: newAvatarUrl, bio: newBio, social_links: newLinks }).eq('id', loggedInUser);
+      if (updateError) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro: ' + updateError.message; btn.innerHTML = 'Guardar'; btn.disabled = false; return; }
+      msg.style.color = 'var(--success)'; msg.innerText = 'Perfil atualizado!';
+      setTimeout(() => { document.getElementById('editModal').style.display = 'none'; loadProfile(); }, 1000);
+    }
+    
+    async function logout() { if(confirm('Terminar sessão?')) { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; } }
+    
+    loadProfile();
+  </script>
+</body>
+</html>

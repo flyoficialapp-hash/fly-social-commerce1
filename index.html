@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Entrar</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background: var(--bg-gradient);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    .login-wrapper {
+      width: 100%;
+      max-width: 420px; /* Aumentei ligeiramente a largura máxima do container */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 10;
+    }
+
+    /* O GIF AINDA MAIOR */
+    .gif-hero-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 15px;
+      margin-top: -20px; /* Puxa o GIF um pouco para cima */
+    }
+    
+    .gif-hero {
+      width: 100%; /* Ocupa toda a largura do container (até 420px) */
+      max-width: 380px; /* Limite máximo de largura para não esticar demais */
+      height: auto;
+      max-height: 350px; /* Aumentei a altura máxima */
+      object-fit: contain;
+      filter: drop-shadow(0 0 25px rgba(0, 204, 255, 0.5)); /* Brilho mais intenso */
+    }
+
+    /* PAINEL DO FORMULÁRIO */
+    .login-panel {
+      background: rgba(10, 25, 50, 0.6) !important;
+      border: 1px solid var(--glass-border) !important;
+      padding: 25px 20px !important;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-wrapper">
+    
+    <!-- GIF EM DESTAQUE -->
+    <div class="gif-hero-container">
+      <img src="assets/fundo_login.gif" alt="FLY - Conecta-te. Partilha. Voa mais alto!" class="gif-hero">
+    </div>
+
+    <!-- FORMULÁRIO -->
+    <div class="glass-panel login-panel">
+      <h2 style="text-align: center; margin-bottom: 20px; font-weight: 500; font-size: 1.1rem; color: white;">Bem-vindo de volta!</h2>
+
+      <form id="loginForm">
+        <div class="input-group">
+          <label>E-mail</label>
+          <input type="email" id="email" class="input-glass" placeholder="seu@email.com" required>
+        </div>
+        
+        <div class="input-group">
+          <label>Palavra-passe</label>
+          <div class="password-container">
+            <input type="password" id="password" class="input-glass" placeholder="••••••••" required>
+            <i class="fa-solid fa-eye-slash toggle-password" onclick="togglePassword('password', this)"></i>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn-primary" style="margin-top: 10px;">Entrar</button>
+        
+        <p style="text-align: right; margin-top: 10px; margin-bottom: 15px;">
+          <a href="recuperar.html" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none;">Esqueci-me da palavra-passe</a>
+        </p>
+      </form>
+
+      <div style="text-align: center; margin: 20px 0; color: var(--text-muted);">ou</div>
+
+      <form id="registerForm" style="display: none;">
+        <div class="input-group">
+          <label>Nome de Utilizador</label>
+          <input type="text" id="username" class="input-glass" placeholder="Ex: CarlosTech" required>
+        </div>
+        <div class="input-group">
+          <label>E-mail</label>
+          <input type="email" id="regEmail" class="input-glass" placeholder="seu@email.com" required>
+        </div>
+        <div class="input-group">
+          <label>Palavra-passe</label>
+          <div class="password-container">
+            <input type="password" id="regPassword" class="input-glass" placeholder="Mínimo 6 caracteres" required>
+            <i class="fa-solid fa-eye-slash toggle-password" onclick="togglePassword('regPassword', this)"></i>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top: 10px;">Criar Conta</button>
+      </form>
+
+      <button id="toggleAuth" class="btn-outline" style="margin-top: 15px;">Ainda não tenho conta</button>
+      
+      <p id="message" style="text-align: center; margin-top: 15px; font-size: 0.9rem; font-weight: bold;"></p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    function togglePassword(inputId, iconElement) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        iconElement.classList.remove('fa-eye-slash');
+        iconElement.classList.add('fa-eye');
+        iconElement.style.color = 'var(--neon)';
+      } else {
+        input.type = 'password';
+        iconElement.classList.remove('fa-eye');
+        iconElement.classList.add('fa-eye-slash');
+        iconElement.style.color = 'var(--text-muted)';
+      }
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const toggleAuth = document.getElementById('toggleAuth');
+    const messageEl = document.getElementById('message');
+
+    let isLogin = true;
+
+    toggleAuth.addEventListener('click', () => {
+      isLogin = !isLogin;
+      if (isLogin) {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        toggleAuth.innerText = 'Ainda não tenho conta';
+      } else {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        toggleAuth.innerText = 'Já tenho conta, entrar';
+      }
+      messageEl.innerText = '';
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      messageEl.style.color = 'var(--neon)';
+      messageEl.innerText = 'A entrar...';
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        messageEl.style.color = 'var(--danger)';
+        messageEl.innerText = error.message;
+      } else {
+        window.location.href = 'home.html';
+      }
+    });
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      messageEl.style.color = 'var(--neon)';
+      messageEl.innerText = 'A criar conta...';
+
+      const { data: authData, error: authError } = await supabaseClient.auth.signUp({ 
+        email, 
+        password,
+        options: { data: { username: username } }
+      });
+
+      if (authError) {
+        messageEl.style.color = 'var(--danger)';
+        messageEl.innerText = authError.message;
+      } else {
+        messageEl.style.color = 'var(--success)';
+        messageEl.innerText = 'Conta criada com sucesso! A entrar...';
+        setTimeout(() => window.location.href = 'home.html', 1500);
+      }
+    });
+  </script>
+</body>
+</html>

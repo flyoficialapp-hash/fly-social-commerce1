@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Favoritos</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px;}
+    .header-title img { height: 30px; }
+    .tabs { display: flex; gap: 10px; padding: 0 15px 15px 15px; justify-content: center; }
+    .tab { flex: 1; text-align: center; padding: 12px; border-radius: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); font-size: 0.95rem; color: var(--text-muted); cursor: pointer; font-weight: bold; }
+    .tab.active { background: var(--primary); color: white; border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 204, 255, 0.4); }
+    .content-area { padding: 0 15px 90px 15px; }
+    .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .product-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; }
+    .product-image { width: 100%; height: 120px; object-fit: cover; background: #000; }
+    .product-info { padding: 10px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+    .product-title { font-size: 0.85rem; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .product-price { font-size: 0.9rem; font-weight: bold; color: var(--neon); }
+    .post-card { margin-bottom: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; cursor: pointer; }
+    .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .post-header img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid var(--neon); }
+    .post-header h4 { font-size: 0.9rem; }
+    .post-content { font-size: 0.9rem; color: #ddd; }
+    .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+    .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.location.href='perfil.html'" style="font-size: 1.5rem; cursor: pointer;"></i>
+    <div class="header-title"><img src="assets/logo.png" alt="FLY"> Guardados</div>
+    <div style="width: 24px;"></div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" id="tabPosts" onclick="switchTab('posts')">Posts</div>
+    <div class="tab" id="tabProdutos" onclick="switchTab('produtos')">Produtos</div>
+  </div>
+
+  <div class="content-area" id="contentArea"><p style="text-align: center; color: var(--text-muted);">A carregar...</p></div>
+
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
+    <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="chat.html" class="nav-item">
+      <i class="fa-solid fa-comment-dots"></i><span>Chat</span>
+      <span class="nav-badge" id="chat-badge">0</span>
+    </a>
+    <a href="gerenciar_vendas.html" class="nav-item">
+      <i class="fa-solid fa-briefcase"></i><span>Negócio</span>
+      <span class="nav-badge" id="negocio-badge">0</span>
+    </a>
+    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let currentUser = null; let currentTab = 'posts';
+
+    async function updateBadges() {
+      if (!currentUser) return;
+      const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser).eq('is_read', false);
+      const chatBadge = document.getElementById('chat-badge');
+      if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
+
+      const { count: orderCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('seller_id', currentUser).eq('status', 'pendente');
+      const negocioBadge = document.getElementById('negocio-badge');
+      if (negocioBadge) { if (orderCount > 0) { negocioBadge.innerText = orderCount; negocioBadge.style.display = 'flex'; } else { negocioBadge.style.display = 'none'; } }
+    }
+
+    function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+      updateBadges(); setInterval(updateBadges, 10000);
+      loadContent();
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('tabPosts').classList.toggle('active', tab === 'posts');
+      document.getElementById('tabProdutos').classList.toggle('active', tab === 'produtos');
+      loadContent();
+    }
+
+    async function loadContent() {
+      const area = document.getElementById('contentArea');
+      area.innerHTML = '<p style="text-align: center; color: var(--text-muted);">A carregar...</p>';
+
+      if (currentTab === 'posts') {
+        const { data: saved, error } = await supabaseClient.from('saved_posts').select(`post_id, posts ( id, content, media_url, media_type, profiles(username, avatar_url) )`).eq('user_id', currentUser);
+        if (error || !saved || saved.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-bookmark"></i><p>Ainda não guardaste nenhum post.</p></div>`; return; }
+        area.innerHTML = '';
+        saved.forEach(item => {
+          const post = item.posts; if (!post) return;
+          const author = post.profiles ? post.profiles.username : 'User';
+          const avatar = post.profiles && post.profiles.avatar_url ? post.profiles.avatar_url : `https://i.pravatar.cc/150?u=${post.id}`;
+          area.innerHTML += `<div class="post-card" onclick="window.location.href='home.html'"><div class="post-header"><img src="${avatar}"><h4>${author}</h4></div><div class="post-content">${post.content || 'Post com multimédia'}</div></div>`;
+        });
+      } else {
+        const { data: favs, error: favError } = await supabaseClient.from('favorites').select('product_id').eq('user_id', currentUser);
+        if (favError || !favs || favs.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-heart"></i><p>Ainda não guardaste nenhum produto.</p></div>`; return; }
+        const productIds = favs.map(f => f.product_id);
+        const { data: products, error: prodError } = await supabaseClient.from('products').select('id, name, price, image_url').in('id', productIds);
+        if (prodError || !products || products.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-heart"></i><p>Os produtos que guardaste já não estão disponíveis.</p></div>`; return; }
+        area.innerHTML = '<div class="products-grid" id="favGrid"></div>';
+        const grid = document.getElementById('favGrid');
+        products.forEach(p => {
+          const imgUrl = p.image_url || 'https://via.placeholder.com/150';
+          grid.innerHTML += `<div class="product-card" onclick="window.location.href='produto.html?id=${p.id}'"><img src="${imgUrl}" class="product-image"><div class="product-info"><div class="product-title">${p.name}</div><div class="product-price">${formatKz(p.price)}</div></div></div>`;
+        });
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

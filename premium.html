@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Loja Premium</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px;}
+    .header-title img { height: 30px; }
+    
+    .premium-hero { padding: 20px; text-align: center; }
+    .premium-hero h2 { font-size: 1.6rem; color: #ffd700; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+    .premium-hero p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+
+    .plan-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; margin: 0 15px 20px 15px; position: relative; overflow: hidden; }
+    .plan-card.popular { border-color: #a855f7; box-shadow: 0 0 25px rgba(168, 85, 247, 0.3); background: linear-gradient(180deg, rgba(30, 20, 50, 0.9), var(--glass-bg)); }
+    .popular-badge { position: absolute; top: 0; right: 0; background: #a855f7; color: white; font-size: 0.7rem; font-weight: bold; padding: 5px 15px; border-bottom-left-radius: 15px; }
+    
+    .plan-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
+    .plan-price { font-size: 1.8rem; font-weight: 800; color: #ffd700; margin-bottom: 15px; }
+    .plan-price span { font-size: 0.9rem; color: var(--text-muted); font-weight: normal; }
+    
+    .benefits-list { list-style: none; margin-bottom: 20px; }
+    .benefits-list li { font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; color: #ddd; }
+    .benefits-list i { color: #ffd700; }
+
+    .btn-assinar { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
+    .btn-assinar.normal { background: linear-gradient(90deg, #b8860b, #ffd700); color: #000; }
+    .btn-assinar.popular { background: linear-gradient(90deg, #7e22ce, #a855f7); color: white; box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); }
+    
+    .payment-methods { padding: 0 15px 100px 15px; }
+    .payment-methods h3 { font-size: 1rem; margin-bottom: 15px; color: white; }
+    .pay-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+    .pay-btn { flex: 1; min-width: 30%; padding: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 10px; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.8rem; }
+    .pay-btn i { font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.history.back()" style="font-size: 1.5rem; cursor: pointer;"></i>
+    <div class="header-title"><img src="assets/logo.png" alt="FLY"> Loja Premium</div>
+    <div style="width: 24px;"></div>
+  </header>
+
+  <div class="premium-hero">
+    <i class="fa-solid fa-crown" style="font-size: 3rem; color: #ffd700; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255,215,0,0.5));"></i>
+    <h2>Seja Premium!</h2>
+    <p>Mais visibilidade, mais vendas, mais vantagens.</p>
+  </div>
+
+  <!-- PLANO MENSAL -->
+  <div class="plan-card">
+    <div class="plan-title">Plano Mensal</div>
+    <div class="plan-price">Kz 2.500 <span>/mês</span></div>
+    <ul class="benefits-list">
+      <li><i class="fa-solid fa-circle-check"></i> Anúncios em destaque</li>
+      <li><i class="fa-solid fa-circle-check"></i> Perfil verificado (Selo Dourado)</li>
+      <li><i class="fa-solid fa-circle-check"></i> Suporte prioritário</li>
+    </ul>
+    <button class="btn-assinar normal" onclick="ativarPremium('mensal')">Assinar Agora</button>
+  </div>
+
+  <!-- PLANO TRIMESTRAL (MAIS POPULAR) -->
+  <div class="plan-card popular">
+    <div class="popular-badge">🔥 Mais Popular</div>
+    <div class="plan-title" style="color: #a855f7;">Plano Trimestral</div>
+    <div class="plan-price">Kz 6.500 <span>/3 meses</span></div>
+    <ul class="benefits-list">
+      <li><i class="fa-solid fa-circle-check" style="color: #a855f7;"></i> Todos os benefícios do mensal</li>
+      <li><i class="fa-solid fa-circle-check" style="color: #a855f7;"></i> + 10% de desconto</li>
+      <li><i class="fa-solid fa-circle-check" style="color: #a855f7;"></i> Destaque no topo do Mercado</li>
+    </ul>
+    <button class="btn-assinar popular" onclick="ativarPremium('trimestral')">Assinar Agora</button>
+  </div>
+
+  <!-- PLANO ANUAL -->
+  <div class="plan-card">
+    <div class="plan-title">Plano Anual</div>
+    <div class="plan-price">Kz 20.000 <span>/ano</span></div>
+    <ul class="benefits-list">
+      <li><i class="fa-solid fa-circle-check"></i> Todos os benefícios do trimestral</li>
+      <li><i class="fa-solid fa-circle-check"></i> + 30% de desconto</li>
+      <li><i class="fa-solid fa-circle-check"></i> Acesso VIP exclusivo</li>
+    </ul>
+    <button class="btn-assinar normal" onclick="ativarPremium('anual')">Assinar Agora</button>
+  </div>
+
+  <div class="payment-methods">
+    <h3>Formas de Pagamento (Simulação)</h3>
+    <div class="pay-grid">
+      <div class="pay-btn" style="color: #ff4d4d;"><i class="fa-solid fa-phone"></i> Airtel Money</div>
+      <div class="pay-btn" style="color: #00ccff;"><i class="fa-solid fa-wallet"></i> m-pesa</div>
+      <div class="pay-btn"><i class="fa-solid fa-building-columns"></i> Banco</div>
+      <div class="pay-btn"><i class="fa-solid fa-credit-card"></i> Cartão</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    async function ativarPremium(plano) {
+      const confirmar = confirm(`Confirmas a assinatura do plano ${plano.toUpperCase()}?\n\n(Nota: Este é um ambiente de teste. O Premium será ativado instantaneamente sem cobrança real).`);
+      if (!confirmar) return;
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+
+      // Atualiza o perfil do utilizador para Premium
+      const { error } = await supabaseClient.from('profiles').update({ is_premium: true }).eq('id', session.user.id);
+
+      if (error) {
+        alert('Erro ao ativar: ' + error.message);
+      } else {
+        alert('Parabéns! Agora és um utilizador Premium FLY. 🎉👑');
+        window.location.href = 'perfil.html';
+      }
+    }
+  </script>
+</body>
+</html>

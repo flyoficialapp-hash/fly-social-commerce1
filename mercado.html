@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Mercado</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header-logo { font-size: 1.5rem; font-weight: 800; font-style: italic; color: white; display: flex; align-items: center; gap: 10px;}
+    .header-logo img { height: 35px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 204, 255, 0.3); }
+    .header-icons i { font-size: 1.4rem; margin-left: 15px; color: white; cursor: pointer;}
+    .search-bar { padding: 0 15px 15px 15px; display: flex; gap: 10px; }
+    .search-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 30px; padding: 12px 20px; color: white; outline: none; }
+    .categories { display: flex; gap: 15px; padding: 0 15px 20px 15px; overflow-x: auto; scrollbar-width: none; }
+    .category-item { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
+    .category-icon { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; border: 1px solid var(--glass-border); transition: 0.2s; }
+    .category-item.active .category-icon { background: var(--primary); color: white; border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 204, 255, 0.5); }
+    .category-item.active { color: white; }
+    .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 15px 90px 15px; }
+    .product-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; position: relative;}
+    .product-card.premium { border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+    .premium-tag { position: absolute; top: 10px; left: 10px; background: linear-gradient(90deg, #b8860b, #ffd700); color: #000; font-size: 0.65rem; font-weight: bold; padding: 4px 8px; border-radius: 10px; z-index: 10; display: flex; align-items: center; gap: 3px; }
+    .fav-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; cursor: pointer; z-index: 10; backdrop-filter: blur(5px); border: 1px solid var(--glass-border); }
+    .fav-btn.active { color: #ff3366; border-color: #ff3366; box-shadow: 0 0 10px rgba(255,51,102,0.5); }
+    .product-image { width: 100%; height: 150px; object-fit: cover; background: #000; }
+    .product-info { padding: 10px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+    .product-title { font-size: 0.9rem; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .product-price { font-size: 1rem; font-weight: bold; color: var(--neon); }
+    .product-location { font-size: 0.7rem; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
+    .btn-buy { margin-top: auto; width: 100%; padding: 8px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 0.8rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-logo"><img src="assets/logo.png" alt="FLY"> FLY</div>
+    <div class="header-icons"><i class="fa-solid fa-magnifying-glass"></i><i class="fa-regular fa-bell"></i></div>
+  </header>
+  <div class="search-bar">
+    <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar produtos..." onkeyup="filterProducts()">
+    <button style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50%; width: 45px; height: 45px; color: var(--neon); font-size: 1.2rem;"><i class="fa-solid fa-sliders"></i></button>
+  </div>
+  <div class="categories" id="categoriesContainer">
+    <div class="category-item active" onclick="setCategory('Tudo', this)"><div class="category-icon"><i class="fa-solid fa-bag-shopping"></i></div><span>Tudo</span></div>
+    <div class="category-item" onclick="setCategory('Eletrónicos', this)"><div class="category-icon"><i class="fa-solid fa-mobile-screen"></i></div><span>Eletrónicos</span></div>
+    <div class="category-item" onclick="setCategory('Moda', this)"><div class="category-icon"><i class="fa-solid fa-shirt"></i></div><span>Moda</span></div>
+    <div class="category-item" onclick="setCategory('Casa', this)"><div class="category-icon"><i class="fa-solid fa-house"></i></div><span>Casa</span></div>
+    <div class="category-item" onclick="setCategory('Veículos', this)"><div class="category-icon"><i class="fa-solid fa-car"></i></div><span>Veículos</span></div>
+  </div>
+  <div class="products-grid" id="productsGrid"></div>
+  
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
+    <a href="mercado.html" class="nav-item active"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="chat.html" class="nav-item">
+      <i class="fa-solid fa-comment-dots"></i><span>Chat</span>
+      <span class="nav-badge" id="chat-badge">0</span>
+    </a>
+    <a href="gerenciar_vendas.html" class="nav-item">
+      <i class="fa-solid fa-briefcase"></i><span>Negócio</span>
+      <span class="nav-badge" id="negocio-badge">0</span>
+    </a>
+    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let currentUser = null; let allProducts = []; let currentCategory = 'Tudo'; let userFavorites = [];
+
+    async function updateBadges() {
+      if (!currentUser) return;
+      const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser).eq('is_read', false);
+      const chatBadge = document.getElementById('chat-badge');
+      if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; }
+
+      const { count: orderCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('seller_id', currentUser).eq('status', 'pendente');
+      const negocioBadge = document.getElementById('negocio-badge');
+      if (orderCount > 0) { negocioBadge.innerText = orderCount; negocioBadge.style.display = 'flex'; } else { negocioBadge.style.display = 'none'; }
+    }
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+      updateBadges(); setInterval(updateBadges, 10000);
+      await loadFavorites();
+      await loadProducts();
+    }
+
+    function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
+
+    async function loadFavorites() {
+      const { data } = await supabaseClient.from('favorites').select('product_id').eq('user_id', currentUser);
+      if (data) userFavorites = data.map(f => f.product_id);
+    }
+
+    async function loadProducts() {
+      const grid = document.getElementById('productsGrid');
+      const { data: products, error } = await supabaseClient.from('products').select('id, name, price, image_url, category, profiles(is_premium)').order('created_at', { ascending: false });
+      if (error) { grid.innerHTML = `<p style="color: #ff3366; grid-column: span 2; text-align: center;">Erro: ${error.message}</p>`; return; }
+      allProducts = products || [];
+      applyFilters();
+    }
+
+    function filterProducts() { applyFilters(); }
+
+    function setCategory(category, element) {
+      currentCategory = category;
+      document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
+      element.classList.add('active');
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const grid = document.getElementById('productsGrid');
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      let filtered = allProducts;
+      if (currentCategory !== 'Tudo') filtered = filtered.filter(p => p.category === currentCategory);
+      if (searchTerm) filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm));
+      
+      filtered.sort((a, b) => {
+        const aPrem = a.profiles && a.profiles.is_premium ? 1 : 0;
+        const bPrem = b.profiles && b.profiles.is_premium ? 1 : 0;
+        return bPrem - aPrem;
+      });
+
+      if (filtered.length === 0) { grid.innerHTML = '<p style="color: white; grid-column: span 2; text-align: center;">Nenhum produto encontrado.</p>'; return; }
+
+      grid.innerHTML = ''; 
+      filtered.forEach(product => {
+        const isSellerPremium = product.profiles && product.profiles.is_premium;
+        const isFav = userFavorites.includes(product.id);
+        const card = document.createElement('div'); card.className = isSellerPremium ? 'product-card premium' : 'product-card';
+        const imgUrl = product.image_url || 'https://via.placeholder.com/150?text=Sem+Foto';
+        const premiumTag = isSellerPremium ? `<div class="premium-tag"><i class="fa-solid fa-crown"></i> Destaque</div>` : '';
+
+        card.innerHTML = `
+          ${premiumTag}
+          <div class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${product.id}', this)"><i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i></div>
+          <img src="${imgUrl}" alt="${product.name}" class="product-image">
+          <div class="product-info">
+            <div class="product-title">${product.name}</div>
+            <div class="product-price">${formatKz(product.price)}</div>
+            <div class="product-location"><i class="fa-solid fa-location-dot"></i> Luanda</div>
+            <button class="btn-buy" onclick="window.location.href='produto.html?id=${product.id}'"><i class="fa-solid fa-cart-shopping"></i> Comprar</button>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
+
+    async function toggleFavorite(event, productId, btnElement) {
+      event.stopPropagation();
+      const isFav = userFavorites.includes(productId);
+      if (isFav) {
+        await supabaseClient.from('favorites').delete().eq('product_id', productId).eq('user_id', currentUser);
+        userFavorites = userFavorites.filter(id => id !== productId);
+        btnElement.classList.remove('active'); btnElement.innerHTML = '<i class="fa-regular fa-heart"></i>';
+      } else {
+        await supabaseClient.from('favorites').insert([{ product_id: productId, user_id: currentUser }]);
+        userFavorites.push(productId);
+        btnElement.classList.add('active'); btnElement.innerHTML = '<i class="fa-solid fa-heart"></i>';
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

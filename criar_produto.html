@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Criar/Editar Produto</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px;}
+    .header-title img { height: 30px; }
+    .form-container { padding: 15px; padding-bottom: 100px; }
+    .upload-box { border: 2px dashed var(--glass-border); border-radius: 15px; height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted); cursor: pointer; background: rgba(255,255,255,0.02); position: relative; overflow: hidden; margin-bottom: 20px;}
+    .upload-box input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;}
+    .upload-box i { font-size: 2.5rem; color: var(--neon); margin-bottom: 10px; }
+    .preview-image { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; display: none; z-index: 5;}
+    .input-row { display: flex; gap: 15px; }
+    .input-row .input-group { flex: 1; }
+    .toggle-group { display: flex; justify-content: space-between; align-items: center; background: var(--glass-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 15px; }
+    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(24px); }
+    .btn-publish { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: rgba(3, 7, 18, 0.95); border-top: 1px solid var(--glass-border); z-index: 1000;}
+    select.input-glass { background-color: #0a1f44; color: white; }
+    select.input-glass option { background-color: #0a1f44; color: white; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.history.back()" style="font-size: 1.5rem; cursor: pointer;"></i>
+    <div class="header-title"><img src="assets/logo.png" alt="FLY"> <span id="pageTitle">Criar Produto</span></div>
+    <div style="width: 24px;"></div>
+  </header>
+  
+  <div class="form-container">
+    <div class="upload-box" onclick="document.getElementById('productImage').click()">
+      <input type="file" id="productImage" accept="image/*" onchange="previewImage(event)">
+      <img id="previewImg" class="preview-image" src="" alt="Preview">
+      <div id="uploadText" style="text-align: center; padding: 20px;"><i class="fa-solid fa-cloud-arrow-up"></i><p>Toque para adicionar a imagem</p></div>
+    </div>
+    <div class="input-group"><label>Nome do Produto</label><input type="text" id="pName" class="input-glass" placeholder="Ex: iPhone 15 Pro Max"></div>
+    <div class="input-group">
+      <label>Categoria</label>
+      <select id="pCategory" class="input-glass">
+        <option value="Eletrónicos">Eletrónicos</option><option value="Moda">Moda</option><option value="Casa">Casa</option><option value="Veículos">Veículos</option>
+      </select>
+    </div>
+    <div class="input-group"><label>Descrição</label><textarea id="pDescription" class="input-glass" rows="3" placeholder="Descreva o seu produto..."></textarea></div>
+    <div class="input-row">
+      <div class="input-group"><label>Preço (Kz)</label><input type="number" id="pPrice" class="input-glass" placeholder="Ex: 120000"></div>
+      <div class="input-group"><label>Estoque</label><input type="number" id="pStock" class="input-glass" placeholder="Ex: 10"></div>
+    </div>
+    <div class="toggle-group">
+      <div style="display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-fire" style="color: #ff3366;"></i><span>Destacar Produto</span></div>
+      <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
+    </div>
+    <p id="message" style="text-align: center; margin-top: 15px; font-weight: bold;"></p>
+  </div>
+  <div class="btn-publish"><button class="btn-primary" onclick="saveProduct()" id="btnPublish"><i class="fa-solid fa-paper-plane"></i> Publicar Produto</button></div>
+  
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
+    <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócio</span></a>
+    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let selectedFile = null;
+    let editProductId = null;
+    let currentImageUrl = null;
+
+    // Verifica se estamos a editar
+    async function init() {
+      const urlParams = new URLSearchParams(window.location.search);
+      editProductId = urlParams.get('id');
+
+      if (editProductId) {
+        document.getElementById('pageTitle').innerText = "Editar Produto";
+        document.getElementById('btnPublish').innerHTML = '<i class="fa-solid fa-check"></i> Guardar Alterações';
+        
+        // Vai buscar os dados do produto para preencher o formulário
+        const { data: product, error } = await supabaseClient.from('products').select('*').eq('id', editProductId).single();
+        if (product) {
+          document.getElementById('pName').value = product.name;
+          document.getElementById('pCategory').value = product.category;
+          document.getElementById('pDescription').value = product.description;
+          document.getElementById('pPrice').value = product.price;
+          
+          if (product.image_url) {
+            currentImageUrl = product.image_url;
+            const preview = document.getElementById('previewImg');
+            preview.src = product.image_url;
+            preview.style.display = 'block';
+            document.getElementById('uploadText').style.display = 'none';
+          }
+        }
+      }
+    }
+
+    function previewImage(event) {
+      const input = event.target;
+      if (input.files && input.files[0]) {
+        selectedFile = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.getElementById('previewImg');
+          preview.src = e.target.result; preview.style.display = 'block';
+          document.getElementById('uploadText').style.display = 'none';
+        }
+        reader.readAsDataURL(selectedFile);
+      }
+    }
+
+    async function saveProduct() {
+      const btn = document.getElementById('btnPublish'); const msg = document.getElementById('message');
+      const name = document.getElementById('pName').value; const category = document.getElementById('pCategory').value;
+      const description = document.getElementById('pDescription').value; const price = parseFloat(document.getElementById('pPrice').value);
+      
+      if (!name || !price) { msg.style.color = 'var(--danger)'; msg.innerText = 'Preencha o nome e o preço.'; return; }
+      if (!selectedFile && !currentImageUrl) { msg.style.color = 'var(--danger)'; msg.innerText = 'Selecione uma imagem.'; return; }
+      
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A processar...'; btn.disabled = true;
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      const userId = session.user.id;
+
+      let finalImageUrl = currentImageUrl;
+
+      // Se escolheu uma foto nova, faz upload
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop(); const fileName = `${Date.now()}.${fileExt}`; const filePath = `produtos/${fileName}`;
+        const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(filePath, selectedFile);
+        if (uploadError) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro upload: ' + uploadError.message; btn.innerHTML = 'Publicar'; btn.disabled = false; return; }
+        const { data: publicUrlData } = supabaseClient.storage.from('fly_bucket').getPublicUrl(filePath);
+        finalImageUrl = publicUrlData.publicUrl;
+      }
+
+      if (editProductId) {
+        // MODO EDIÇÃO
+        const { error: dbError } = await supabaseClient.from('products').update({ name, description, price, category, image_url: finalImageUrl }).eq('id', editProductId);
+        if (dbError) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro ao salvar: ' + dbError.message; btn.innerHTML = 'Guardar'; btn.disabled = false; return; }
+        msg.style.color = 'var(--success)'; msg.innerText = 'Produto atualizado com sucesso!';
+      } else {
+        // MODO CRIAÇÃO
+        const { error: dbError } = await supabaseClient.from('products').insert([{ seller_id: userId, name, description, price, category, image_url: finalImageUrl }]);
+        if (dbError) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro ao salvar: ' + dbError.message; btn.innerHTML = 'Publicar'; btn.disabled = false; return; }
+        msg.style.color = 'var(--success)'; msg.innerText = 'Produto publicado com sucesso!';
+      }
+
+      setTimeout(() => { window.location.href = 'mercado.html'; }, 1500);
+    }
+
+    init();
+  </script>
+</body>
+</html>
