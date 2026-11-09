@@ -30,14 +30,15 @@
       display: flex;
       justify-content: center;
       margin-bottom: 15px;
-      margin-top: -20px;
+      margin-top: -20px; /* Puxa o vídeo um pouco para cima */
     }
     
-    .gif-hero {
-      width: 100%;
-      max-width: 380px;
+    /* VALORES EXATOS QUE ESTÁVAMOS A USAR */
+    .login-video {
+      width: 100%; 
+      max-width: 380px; 
       height: auto;
-      max-height: 350px;
+      max-height: 350px; 
       object-fit: contain;
       filter: drop-shadow(0 0 25px rgba(0, 204, 255, 0.5));
     }
@@ -54,9 +55,19 @@
 
   <div class="login-wrapper">
     
-    <!-- IMAGEM CORRIGIDA AQUI (sem a pasta assets/) -->
+    <!-- VÍDEO COM AS MEDIDAS CORRIGIDAS -->
     <div class="gif-hero-container">
-      <img src="fundo_login.gif" alt="FLY - Conecta-te. Partilha. Voa mais alto!" class="gif-hero">
+      <video class="login-video"
+             autoplay
+             muted
+             loop
+             playsinline
+             webkit-playsinline
+             preload="metadata"
+             aria-label="Animação de apresentação da FLY">
+        <source src="fundo_login.mp4" type="video/mp4">
+        O teu navegador não suporta vídeo HTML5.
+      </video>
     </div>
 
     <div class="glass-panel login-panel">
