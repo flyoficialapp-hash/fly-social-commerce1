@@ -6,152 +6,81 @@
   <title>FLY - Chamada</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- BIBLIOTECA PEERJS PARA VIDEOCHAMADAS REAIS -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     body { height: 100vh; overflow: hidden; background: #030712; display: flex; flex-direction: column; font-family: 'Inter', sans-serif; }
-    
-    /* FUNDO NEON */
     .bg-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.15) 0%, #030712 70%); z-index: 0; pointer-events: none; }
 
-    /* UI DE CHAMADA DE VOZ */
+    /* UI DE VOZ */
     .voice-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .top-bar { position: absolute; top: 40px; left: 20px; width: 90%; display: flex; justify-content: space-between; align-items: center; color: white; font-size: 1.5rem; z-index: 20;}
-    .top-bar i { cursor: pointer; }
-    
     .avatar-container { position: relative; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; }
-    
-    /* ANIMAÇÃO DE ONDAS SONORAS */
     .pulse-ring { position: absolute; width: 220px; height: 220px; border-radius: 50%; border: 2px solid var(--neon); animation: pulse 2s infinite ease-out; opacity: 0; }
-    .pulse-ring:nth-child(1) { animation-delay: 0s; }
-    .pulse-ring:nth-child(2) { animation-delay: 0.5s; }
-    .pulse-ring:nth-child(3) { animation-delay: 1s; }
+    .pulse-ring:nth-child(1) { animation-delay: 0s; } .pulse-ring:nth-child(2) { animation-delay: 0.5s; } .pulse-ring:nth-child(3) { animation-delay: 1s; }
     @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.8); opacity: 0; } }
-    
     .call-avatar { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 3px solid var(--neon); box-shadow: 0 0 30px rgba(0, 204, 255, 0.5); z-index: 2; }
-    
     .call-info { text-align: center; z-index: 2; }
     .call-info h2 { font-size: 1.8rem; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px; }
     .call-info p { color: var(--text-muted); font-size: 1rem; margin-bottom: 5px; }
     .call-timer { color: var(--neon); font-size: 1.2rem; font-weight: bold; margin-bottom: 40px; letter-spacing: 1px;}
-    
     .voice-controls { display: flex; gap: 30px; z-index: 20; }
     .btn-ctrl-voice { display: flex; flex-direction: column; align-items: center; gap: 10px; color: white; font-size: 0.8rem; cursor: pointer; }
     .icon-circle { width: 65px; height: 65px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; transition: 0.3s; backdrop-filter: blur(10px); }
-    .btn-ctrl-voice:hover .icon-circle { background: rgba(255,255,255,0.2); }
     .btn-end-call .icon-circle { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 20px rgba(255, 51, 102, 0.5); width: 70px; height: 70px; font-size: 1.8rem; }
     .btn-mute.active .icon-circle { background: white; color: #000; }
 
-    /* UI DE CHAMADA DE VÍDEO */
+    /* UI DE VÍDEO */
     .video-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none; flex-direction: column; background: #000; }
-    
-    /* VÍDEO REMOTO */
     #remoteVideo { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 1; }
     .remote-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #111; z-index: 1; }
-    .remote-placeholder img { width: 120px; height: 120px; border-radius: 50%; opacity: 0.5; }
-    
-    /* VÍDEO LOCAL (PIP) */
     .local-video-container { position: absolute; top: 40px; left: 20px; width: 100px; height: 150px; border-radius: 15px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); z-index: 20; background: #222; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     #localVideo { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
     .local-video-placeholder { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; color: var(--text-muted); }
-    
-    /* TOPO DO VÍDEO */
     .video-top-right { position: absolute; top: 50px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 15px; z-index: 20; }
     .timer-pill { background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(5px); font-weight: bold; }
     .timer-pill .dot { width: 10px; height: 10px; background: var(--danger); border-radius: 50%; }
-    .btn-add-person { width: 45px; height: 45px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; backdrop-filter: blur(5px); cursor: pointer;}
-    
-    /* CONTROLES DO VÍDEO (RODAPÉ) */
     .video-controls-bar { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 20; padding: 0 10px; }
     .btn-ctrl-vid { display: flex; flex-direction: column; align-items: center; gap: 8px; color: white; font-size: 0.75rem; cursor: pointer; }
     .btn-ctrl-vid .icon-circle { width: 55px; height: 55px; font-size: 1.3rem; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); }
     .btn-ctrl-vid.active .icon-circle { background: white; color: #000; }
     .btn-ctrl-vid.end .icon-circle { background: var(--danger); border-color: var(--danger); width: 60px; height: 60px; font-size: 1.5rem;}
-
   </style>
 </head>
 <body>
-
   <div class="bg-glow"></div>
 
-  <!-- ======================= UI DE CHAMADA DE VOZ ======================= -->
+  <!-- UI DE VOZ -->
   <div class="voice-ui" id="voiceUI">
-    <div class="top-bar">
-      <i class="fa-solid fa-chevron-down" onclick="endCall()"></i>
-      <i class="fa-solid fa-expand"></i>
-    </div>
-
-    <div class="avatar-container">
-      <div class="pulse-ring"></div>
-      <div class="pulse-ring"></div>
-      <div class="pulse-ring"></div>
-      <img id="voiceAvatar" src="default-avatar.png" class="call-avatar">
-    </div>
-
+    <div class="top-bar"><i class="fa-solid fa-chevron-down" onclick="endCall()"></i><i class="fa-solid fa-expand"></i></div>
+    <div class="avatar-container"><div class="pulse-ring"></div><div class="pulse-ring"></div><div class="pulse-ring"></div><img id="voiceAvatar" src="default-avatar.png" class="call-avatar"></div>
     <div class="call-info">
       <h2 id="voiceName">A ligar... <i class="fa-solid fa-circle-check" style="color: var(--neon); font-size: 1rem;"></i></h2>
       <p>Chamada de voz...</p>
       <div class="call-timer" id="voiceTimer">00:00</div>
     </div>
-
     <div class="voice-controls">
-      <div class="btn-ctrl-voice btn-mute" id="btnMuteVoice" onclick="toggleMute()">
-        <div class="icon-circle"><i class="fa-solid fa-microphone"></i></div>
-        <span>Silenciar</span>
-      </div>
-      <div class="btn-ctrl-voice btn-end-call" onclick="endCall()">
-        <div class="icon-circle"><i class="fa-solid fa-phone-slash"></i></div>
-        <span>Desligar</span>
-      </div>
-      <div class="btn-ctrl-voice btn-speaker" onclick="alert('Altifalante em breve')">
-        <div class="icon-circle"><i class="fa-solid fa-volume-high"></i></div>
-        <span>Altifalante</span>
-      </div>
+      <div class="btn-ctrl-voice btn-mute" id="btnMuteVoice" onclick="toggleMute()"><div class="icon-circle"><i class="fa-solid fa-microphone"></i></div><span>Silenciar</span></div>
+      <div class="btn-ctrl-voice btn-end-call" onclick="endCall()"><div class="icon-circle"><i class="fa-solid fa-phone-slash"></i></div><span>Desligar</span></div>
     </div>
   </div>
 
-  <!-- ======================= UI DE CHAMADA DE VÍDEO ======================= -->
+  <!-- UI DE VÍDEO -->
   <div class="video-ui" id="videoUI">
-    <!-- Vídeo Remoto -->
-    <video id="remoteVideo" autoplay playsinline style="display:none;"></video>
-    <div class="remote-placeholder" id="remotePlaceholder">
-      <img id="remoteVideoAvatar" src="default-avatar.png">
-    </div>
-
-    <!-- Vídeo Local (PiP) -->
+    <video id="remoteVideo" autoplay playsinline></video>
+    <div class="remote-placeholder" id="remotePlaceholder"><img id="remoteVideoAvatar" src="default-avatar.png" style="width:120px; height:120px; border-radius:50%; opacity:0.5;"></div>
+    
     <div class="local-video-container">
       <video id="localVideo" autoplay playsinline muted></video>
-      <div class="local-video-placeholder" id="localVideoPlaceholder">
-        <i class="fa-solid fa-video-slash"></i>
-      </div>
+      <div class="local-video-placeholder" id="localVideoPlaceholder"><i class="fa-solid fa-video-slash"></i></div>
     </div>
 
-    <!-- Topo Direito -->
-    <div class="video-top-right">
-      <div class="timer-pill"><div class="dot"></div> <span id="videoTimer">00:00</span></div>
-      <div class="btn-add-person"><i class="fa-solid fa-user-plus"></i></div>
-    </div>
+    <div class="video-top-right"><div class="timer-pill"><div class="dot"></div> <span id="videoTimer">00:00</span></div></div>
 
-    <!-- Controles Inferiores -->
     <div class="video-controls-bar">
-      <div class="btn-ctrl-vid active" id="btnVideoCam" onclick="toggleVideo()">
-        <div class="icon-circle"><i class="fa-solid fa-video"></i></div>
-        <span>Câmara</span>
-      </div>
-      <div class="btn-ctrl-vid" id="btnMuteVideo" onclick="toggleMute()">
-        <div class="icon-circle"><i class="fa-solid fa-microphone"></i></div>
-        <span>Microfone</span>
-      </div>
-      <div class="btn-ctrl-vid end" onclick="endCall()">
-        <div class="icon-circle"><i class="fa-solid fa-phone-slash"></i></div>
-        <span>Desligar</span>
-      </div>
-      <div class="btn-ctrl-vid" onclick="switchCamera()">
-        <div class="icon-circle"><i class="fa-solid fa-camera-rotate"></i></div>
-        <span>Inverter</span>
-      </div>
-      <div class="btn-ctrl-vid" onclick="alert('Mais opções em breve')">
-        <div class="icon-circle"><i class="fa-solid fa-ellipsis"></i></div>
-        <span>Mais</span>
-      </div>
+      <div class="btn-ctrl-vid active" id="btnVideoCam" onclick="toggleVideo()"><div class="icon-circle"><i class="fa-solid fa-video"></i></div><span>Câmara</span></div>
+      <div class="btn-ctrl-vid" id="btnMuteVideo" onclick="toggleMute()"><div class="icon-circle"><i class="fa-solid fa-microphone"></i></div><span>Microfone</span></div>
+      <div class="btn-ctrl-vid end" onclick="endCall()"><div class="icon-circle"><i class="fa-solid fa-phone-slash"></i></div><span>Desligar</span></div>
     </div>
   </div>
 
@@ -159,136 +88,148 @@
   <script src="js/supabase.js"></script>
   <script>
     let localStream = null;
+    let currentUser = null;
+    let targetUserId = null;
+    let callType = 'video';
+    let callId = null;
+    let role = 'caller'; // 'caller' ou 'receiver'
+    let peer = null;
+    let currentCall = null;
+    
     let isMuted = false;
     let isVideoOn = true;
-    let currentFacingMode = 'user';
-    let targetUserId = null;
     let callTimerInterval = null;
     let secondsElapsed = 0;
 
-    function formatTime(seconds) {
-      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-      const s = (seconds % 60).toString().padStart(2, '0');
-      return `${m}:${s}`;
-    }
-
+    function formatTime(seconds) { const m = Math.floor(seconds / 60).toString().padStart(2, '0'); const s = (seconds % 60).toString().padStart(2, '0'); return `${m}:${s}`; }
     function startTimer(elementId) {
-      clearInterval(callTimerInterval);
-      secondsElapsed = 0;
-      document.getElementById(elementId).innerText = "00:00";
-      callTimerInterval = setInterval(() => {
-        secondsElapsed++;
-        document.getElementById(elementId).innerText = formatTime(secondsElapsed);
-      }, 1000);
+      clearInterval(callTimerInterval); secondsElapsed = 0; document.getElementById(elementId).innerText = "00:00";
+      callTimerInterval = setInterval(() => { secondsElapsed++; document.getElementById(elementId).innerText = formatTime(secondsElapsed); }, 1000);
     }
 
     async function initCall() {
       const urlParams = new URLSearchParams(window.location.search);
       targetUserId = urlParams.get('user_id');
-      const type = urlParams.get('type') || 'video'; // 'audio' ou 'video'
-      
-      if (!targetUserId) { alert('Utilizador não encontrado.'); window.history.back(); return; }
+      callType = urlParams.get('type') || 'video';
+      callId = urlParams.get('call_id');
+      role = urlParams.get('role') || 'caller';
 
-      // Buscar dados do utilizador
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+
+      // Buscar dados do outro utilizador
       const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', targetUserId).single();
       const avatarUrl = profile && profile.avatar_url ? profile.avatar_url : 'default-avatar.png';
       const userName = profile ? profile.username : 'Utilizador FLY';
 
       // Configurar UI
-      if (type === 'audio') {
+      if (callType === 'audio') {
         document.getElementById('voiceUI').style.display = 'flex';
         document.getElementById('videoUI').style.display = 'none';
         document.getElementById('voiceName').innerHTML = `${userName} <i class="fa-solid fa-circle-check" style="color: var(--neon); font-size: 1rem;"></i>`;
         document.getElementById('voiceAvatar').src = avatarUrl;
-        startTimer('voiceTimer');
       } else {
         document.getElementById('voiceUI').style.display = 'none';
         document.getElementById('videoUI').style.display = 'flex';
         document.getElementById('remoteVideoAvatar').src = avatarUrl;
-        startTimer('videoTimer');
       }
 
-      // Tentar ligar a câmara
+      // 1. Ligar a câmara/microfone local
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
-          video: type === 'video' ? { facingMode: currentFacingMode } : false,
+          video: callType === 'video' ? { facingMode: 'user' } : false,
           audio: true
         });
-
-        if (type === 'video') {
+        if (callType === 'video') {
           document.getElementById('localVideo').srcObject = localStream;
           document.getElementById('localVideo').style.display = 'block';
           document.getElementById('localVideoPlaceholder').style.display = 'none';
         }
       } catch (err) {
-        console.error("Erro ao aceder à câmara:", err);
-        // Visual de falha elegante
-        if (type === 'video') {
+        console.error("Erro câmara:", err);
+        if (callType === 'video') {
           document.getElementById('localVideoPlaceholder').innerHTML = '<i class="fa-solid fa-video-slash"></i><br><span style="font-size:0.6rem">Sem Câmara</span>';
-          document.getElementById('btnVideoCam').classList.remove('active');
-          document.getElementById('btnVideoCam').innerHTML = '<div class="icon-circle"><i class="fa-solid fa-video-slash"></i></div><span>Câmara</span>';
         }
       }
+
+      // 2. Iniciar PeerJS (WebRTC)
+      // O nosso ID de Peer será o ID do Supabase do utilizador (para o outro saber para onde ligar)
+      peer = new Peer(currentUser, { debug: 2 });
+
+      peer.on('open', async (id) => {
+        console.log('PeerJS ligado com ID:', id);
+        
+        if (role === 'caller') {
+          // Se sou o que está a ligar, inicia a chamada para o outro
+          document.getElementById(callType === 'video' ? 'videoTimer' : 'voiceTimer').innerText = "A tocar...";
+          currentCall = peer.call(targetUserId, localStream);
+          setupCallEvents(currentCall);
+          
+          // Marcar chamada como 'accepted' (simplificação para 1 utilizador aceitar)
+          await supabaseClient.from('calls').update({ status: 'accepted' }).eq('id', callId);
+        } else {
+          // Se sou o que recebe, espero pela chamada
+          document.getElementById(callType === 'video' ? 'videoTimer' : 'voiceTimer').innerText = "Conectado!";
+          startTimer(callType === 'video' ? 'videoTimer' : 'voiceTimer');
+        }
+      });
+
+      // Se receber uma chamada (só acontece no lado do receiver)
+      peer.on('call', (call) => {
+        call.answer(localStream); // Aceita e envia a nossa câmara
+        currentCall = call;
+        setupCallEvents(currentCall);
+        startTimer(callType === 'video' ? 'videoTimer' : 'voiceTimer');
+      });
+    }
+
+    function setupCallEvents(call) {
+      call.on('stream', (remoteStream) => {
+        if (callType === 'video') {
+          const remoteVideo = document.getElementById('remoteVideo');
+          remoteVideo.srcObject = remoteStream;
+          remoteVideo.style.display = 'block';
+          document.getElementById('remotePlaceholder').style.display = 'none';
+        } else {
+          // Para chamada de voz, o áudio toca no fundo (sem mostrar vídeo)
+          const audio = new Audio();
+          audio.srcObject = remoteStream;
+          audio.play();
+        }
+        startTimer(callType === 'video' ? 'videoTimer' : 'voiceTimer');
+      });
+      
+      call.on('close', () => { endCall(); });
     }
 
     function toggleMute() {
       if (!localStream) return;
       const audioTrack = localStream.getAudioTracks()[0];
-      isMuted = !isMuted;
-      audioTrack.enabled = !isMuted;
-      
-      // Atualizar botões de mute (Voz e Vídeo)
-      const btnMuteVoice = document.getElementById('btnMuteVoice');
-      const btnMuteVideo = document.getElementById('btnMuteVideo');
-
-      if (isMuted) {
-        if(btnMuteVoice) { btnMuteVoice.classList.add('active'); btnMuteVoice.innerHTML = '<div class="icon-circle" style="background:var(--danger); border-color:var(--danger)"><i class="fa-solid fa-microphone-slash"></i></div><span>Silenciado</span>'; }
-        if(btnMuteVideo) { btnMuteVideo.classList.add('active'); btnMuteVideo.querySelector('i').className = 'fa-solid fa-microphone-slash'; }
-      } else {
-        if(btnMuteVoice) { btnMuteVoice.classList.remove('active'); btnMuteVoice.innerHTML = '<div class="icon-circle"><i class="fa-solid fa-microphone"></i></div><span>Silenciar</span>'; }
-        if(btnMuteVideo) { btnMuteVideo.classList.remove('active'); btnMuteVideo.querySelector('i').className = 'fa-solid fa-microphone'; }
-      }
+      isMuted = !isMuted; audioTrack.enabled = !isMuted;
+      document.getElementById('btnMuteVoice')?.classList.toggle('active', isMuted);
+      document.getElementById('btnMuteVideo')?.classList.toggle('active', isMuted);
     }
 
     function toggleVideo() {
       if (!localStream) return;
       const videoTrack = localStream.getVideoTracks()[0];
       if (!videoTrack) return;
-      
-      isVideoOn = !isVideoOn;
-      videoTrack.enabled = isVideoOn;
-      
-      const btn = document.getElementById('btnVideoCam');
-      const localVid = document.getElementById('localVideo');
-      const localPlaceholder = document.getElementById('localVideoPlaceholder');
-
-      if (isVideoOn) {
-        btn.classList.add('active');
-        btn.querySelector('i').className = 'fa-solid fa-video';
-        localVid.style.display = 'block';
-        localPlaceholder.style.display = 'none';
-      } else {
-        btn.classList.remove('active');
-        btn.querySelector('i').className = 'fa-solid fa-video-slash';
-        localVid.style.display = 'none';
-        localPlaceholder.style.display = 'flex';
-      }
+      isVideoOn = !isVideoOn; videoTrack.enabled = isVideoOn;
+      document.getElementById('localVideo').style.display = isVideoOn ? 'block' : 'none';
+      document.getElementById('localVideoPlaceholder').style.display = isVideoOn ? 'none' : 'flex';
+      document.getElementById('btnVideoCam').classList.toggle('active', isVideoOn);
     }
 
-    async function switchCamera() {
-      if (!localStream || !isVideoOn) return;
-      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-      localStream.getVideoTracks().forEach(track => track.stop());
-      try {
-        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
-        localStream = newStream;
-        document.getElementById('localVideo').srcObject = localStream;
-      } catch (err) { console.error(err); }
-    }
-
-    function endCall() {
-      if (localStream) { localStream.getTracks().forEach(track => track.stop()); }
+    async function endCall() {
+      if (currentCall) currentCall.close();
+      if (peer) peer.destroy();
+      if (localStream) localStream.getTracks().forEach(track => track.stop());
       clearInterval(callTimerInterval);
+      
+      if (callId) {
+        await supabaseClient.from('calls').update({ status: 'ended' }).eq('id', callId);
+      }
       window.location.href = `conversa.html?seller_id=${targetUserId}`;
     }
 

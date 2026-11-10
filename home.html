@@ -1,310 +1,54 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FLY - Início</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--glass-border); }
-    .header-logo { font-size: 1.5rem; font-weight: 800; font-style: italic; color: white; display: flex; align-items: center; gap: 10px;}
-    .header-logo img { height: 35px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 204, 255, 0.3); }
-    .header-icons { display: flex; align-items: center; gap: 15px; }
-    .header-icons i { font-size: 1.4rem; color: white; cursor: pointer;}
-    .notification-badge { position: absolute; top: 10px; right: 45px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; display: none; }
-    .menu-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 5px; cursor: pointer; }
-    .menu-drawer { position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: rgba(3, 7, 18, 0.98); backdrop-filter: blur(15px); z-index: 3000; border-right: 1px solid var(--neon); transition: 0.3s ease-in-out; display: flex; flex-direction: column; padding: 20px; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
-    .menu-drawer.open { left: 0; }
-    .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2500; display: none; }
-    .menu-overlay.open { display: block; }
-    .menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border); }
-    .menu-header img { height: 40px; }
-    .menu-header i { font-size: 1.5rem; cursor: pointer; color: white; }
-    .menu-item { display: flex; align-items: center; gap: 15px; padding: 15px; color: white; text-decoration: none; font-weight: 500; border-radius: 12px; transition: 0.2s; margin-bottom: 5px; }
-    .menu-item:hover { background: rgba(0, 204, 255, 0.1); color: var(--neon); }
-    .menu-item i { font-size: 1.2rem; width: 20px; text-align: center; }
-    .menu-item.danger { color: #ff3366; margin-top: auto; }
-    .stories { display: flex; gap: 15px; padding: 15px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .story { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.8rem; cursor: pointer; }
-    .story-ring { width: 65px; height: 65px; border-radius: 50%; background: linear-gradient(45deg, var(--primary), var(--neon)); padding: 3px; }
-    .story-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--bg-color); }
-    .story-ring.create { background: rgba(255,255,255,0.1); display: flex; justify-content: center; align-items: center; border: 1px dashed var(--neon); }
-    .story-viewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3500; display: none; flex-direction: column; }
-    .story-progress { display: flex; gap: 5px; padding: 10px; position: absolute; top: 0; width: 100%; z-index: 10; }
-    .progress-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.3); border-radius: 3px; }
-    .progress-bar.active { background: white; animation: fillBar 5s linear forwards; }
-    @keyframes fillBar { 0% { width: 0%; } 100% { width: 100%; } }
-    .story-viewer img, .story-viewer video { width: 100%; height: 100%; object-fit: contain; }
-    .story-close { position: absolute; top: 20px; right: 20px; font-size: 2rem; color: white; cursor: pointer; z-index: 10; }
-    .create-post { padding: 15px; }
-    .post-input-container { display: flex; align-items: center; gap: 10px; padding: 12px 15px; border-radius: 30px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); cursor: pointer; }
-    .post-input-container span { flex: 1; color: var(--text-muted); font-size: 0.95rem; }
-    .feed { padding: 0 15px 90px 15px; }
-    .post-card { margin-bottom: 20px; padding-bottom: 5px; }
-    .post-header { display: flex; align-items: center; gap: 10px; padding: 15px; }
-    .post-header img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--neon); background: #000; object-fit: cover; cursor: pointer;}
-    .post-header-info { flex: 1; }
-    .post-header-info h4 { font-size: 1rem; display: flex; align-items: center; gap: 5px; cursor: pointer;}
-    .post-header-info span { font-size: 0.8rem; color: var(--text-muted); }
-    .post-options { cursor: pointer; font-size: 1.2rem; color: var(--text-muted); padding: 5px; }
-    .post-content { padding: 0 15px 15px 15px; font-size: 0.95rem; line-height: 1.4; }
-    .post-media { width: 100%; max-height: 450px; object-fit: cover; border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); background: #000; }
-    .post-actions { padding: 10px 15px; display: flex; justify-content: space-between; font-size: 1.3rem; }
-    .action-group { display: flex; gap: 20px; }
-    .post-actions i { cursor: pointer; transition: 0.2s; color: var(--text-main); }
-    .post-actions i.active { color: #ff3366; text-shadow: 0 0 10px rgba(255,51,102,0.5); }
-    .post-actions i.saved { color: var(--neon); text-shadow: 0 0 10px rgba(0,204,255,0.5); }
-    .comments-section { display: none; padding: 0 15px 15px 15px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 5px; }
-    .comment-item { display: flex; gap: 10px; margin-top: 10px; font-size: 0.9rem; }
-    .comment-item strong { color: var(--neon); }
-    .comment-input-area { display: flex; gap: 10px; margin-top: 15px; }
-    .comment-input-area input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 20px; padding: 8px 15px; color: white; outline: none; }
-    .comment-input-area button { background: var(--primary); border: none; border-radius: 50%; width: 35px; height: 35px; color: white; cursor: pointer; }
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
-    .modal-content { background: var(--bg-color); border: 1px solid var(--neon); border-radius: 20px; width: 100%; max-width: 500px; padding: 20px; box-shadow: 0 0 30px rgba(0, 204, 255, 0.2); max-height: 80vh; overflow-y: auto; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .modal-header h3 { color: var(--neon); }
-    .modal-header i { cursor: pointer; font-size: 1.5rem; }
-    .modal-textarea { width: 100%; height: 100px; background: transparent; border: none; color: white; font-size: 1.1rem; resize: none; outline: none; margin-bottom: 15px; }
-    .modal-preview { width: 100%; max-height: 200px; object-fit: contain; border-radius: 10px; margin-bottom: 15px; display: none; background: #000; }
-    .modal-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--glass-border); padding-top: 15px; }
-    .btn-attach { background: transparent; border: none; color: var(--neon); font-size: 1.5rem; cursor: pointer; margin-right: 10px; }
-    .btn-publish-post { background: linear-gradient(90deg, var(--primary), var(--neon)); border: none; padding: 10px 25px; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; }
-    .search-input-modal { width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: none; border-radius: 10px; color: white; font-size: 1rem; outline: none; margin-bottom: 15px; }
-    .action-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 4000; display: none; align-items: flex-end; justify-content: center; backdrop-filter: blur(3px); }
-    .action-sheet { background: #0a1f44; width: 100%; max-width: 500px; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 20px; padding-bottom: 40px; border-top: 1px solid var(--neon); animation: slideUp 0.3s ease-out; }
-    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .action-sheet-handle { width: 40px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 5px; margin: 0 auto 20px auto; }
-    .action-sheet-title { text-align: center; color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem; }
-    .action-btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 1rem; font-weight: bold; display: flex; align-items: center; gap: 15px; cursor: pointer; margin-bottom: 10px; transition: 0.2s; background: transparent; color: white; border: 1px solid var(--glass-border); }
-    .action-btn.edit { color: #ffb300; border-color: #ffb300; }
-    .action-btn.delete { color: var(--danger); border-color: var(--danger); }
-    .action-btn.cancel { justify-content: center; margin-top: 10px; color: white; background: rgba(255,255,255,0.1); border: none; }
-  </style>
-</head>
-<body>
-
-  <header class="header">
-    <div class="header-logo"><img src="logo.png" alt="FLY"> FLY</div>
-    <button class="menu-btn" onclick="openMenu()"><i class="fa-solid fa-bars"></i> MENU</button>
-    <div class="header-icons">
-      <i class="fa-solid fa-magnifying-glass" onclick="openSearch()"></i>
-      <div style="position: relative;" onclick="window.location.href='notificacoes.html'">
-        <i class="fa-regular fa-bell"></i>
-        <div class="notification-badge" id="notifBadge"></div>
-      </div>
-    </div>
-  </header>
-
-  <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
-  <div class="menu-drawer" id="menuDrawer">
-    <div class="menu-header"><img src="logo.png" alt="FLY"><i class="fa-solid fa-xmark" onclick="closeMenu()"></i></div>
-    <a href="perfil.html" class="menu-item"><i class="fa-solid fa-user"></i> Meu Perfil</a>
-    <a href="criar_produto.html" class="menu-item"><i class="fa-solid fa-plus-circle"></i> Criar Anúncio</a>
-    <a href="favoritos.html" class="menu-item"><i class="fa-solid fa-bookmark"></i> Guardados</a>
-    <a href="premium.html" class="menu-item"><i class="fa-solid fa-crown" style="color: #ffd700;"></i> Loja Premium</a>
-    <a href="#" class="menu-item danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Terminar Sessão</a>
+<!-- POP-UP DE CHAMADA A RECEBER -->
+<div id="incomingCallOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:5000; flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(10px);">
+  <img id="incomingAvatar" src="default-avatar.png" style="width:120px; height:120px; border-radius:50%; border:3px solid var(--neon); animation: pulse 1.5s infinite;">
+  <h2 id="incomingName" style="color:white; margin-top:20px;">A ligar...</h2>
+  <p id="incomingType" style="color:var(--text-muted); margin-bottom:40px;">Chamada de vídeo...</p>
+  <div style="display:flex; gap:30px;">
+    <button onclick="declineCall()" style="width:70px; height:70px; border-radius:50%; background:var(--danger); color:white; border:none; font-size:1.8rem; cursor:pointer; box-shadow:0 0 20px rgba(255,51,102,0.5);"><i class="fa-solid fa-phone-slash"></i></button>
+    <button onclick="acceptCall()" style="width:70px; height:70px; border-radius:50%; background:var(--success); color:white; border:none; font-size:1.8rem; cursor:pointer; box-shadow:0 0 20px rgba(0,230,118,0.5);"><i class="fa-solid fa-phone"></i></button>
   </div>
+</div>
 
-  <div class="stories" id="storiesContainer"></div>
-  <div class="create-post"><div class="post-input-container" onclick="openModal()"><i class="fa-solid fa-user-circle" style="color: var(--neon); font-size: 1.5rem;"></i><span>No que estás a pensar?</span><i class="fa-regular fa-image" style="color: var(--neon); font-size: 1.2rem;"></i></div></div>
-  <div class="feed" id="feedContainer"></div>
+<script>
+// --- LÓGICA DE RECEBER CHAMADAS ---
+let incomingCallData = null;
 
-  <div class="modal-overlay" id="createModal">
-    <div class="modal-content">
-      <div class="modal-header"><h3 id="modalTitle">Criar Publicação</h3><i class="fa-solid fa-xmark" onclick="closeModal()"></i></div>
-      <textarea id="postContent" class="modal-textarea" placeholder="O que estás a pensar, irmão?"></textarea>
-      <img id="mediaPreviewImg" class="modal-preview" src="">
-      <video id="mediaPreviewVideo" class="modal-preview" controls></video>
-      <p id="coverText" style="display: none; font-size: 0.8rem; color: #ffb300; margin-bottom: 10px;"><i class="fa-solid fa-image"></i> Capa escolhida!</p>
-      <div class="modal-footer">
-        <div>
-          <input type="file" id="postMedia" accept="image/*,video/*" style="display: none;" onchange="previewMedia(event)">
-          <input type="file" id="postCover" accept="image/*" style="display: none;" onchange="previewCover(event)">
-          <button class="btn-attach" onclick="document.getElementById('postMedia').click()"><i class="fa-solid fa-photo-film"></i></button>
-          <button class="btn-attach" id="btnCover" onclick="document.getElementById('postCover').click()" style="color:#ffb300; display:none;"><i class="fa-solid fa-image"></i></button>
-        </div>
-        <button class="btn-publish-post" onclick="publishPost()" id="btnPublishPost">Publicar</button>
-      </div>
-    </div>
-  </div>
+async function listenForCalls() {
+  supabaseClient.channel('incoming-calls')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'calls', filter: `receiver_id=eq.${currentUser}` }, async payload => {
+      const call = payload.new;
+      if (call.status === 'ringing') {
+        // Toca o som de chamada (opcional)
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3'); // Som de toque
+        audio.loop = true; audio.play();
 
-  <div class="modal-overlay" id="searchModal">
-    <div class="modal-content">
-      <div class="modal-header"><h3>Pesquisar</h3><i class="fa-solid fa-xmark" onclick="document.getElementById('searchModal').style.display='none'"></i></div>
-      <input type="text" class="search-input-modal" placeholder="Escreve para pesquisar..." onkeyup="filterPosts(this.value)">
-      <div id="searchResults" style="color: var(--text-muted); text-align: center; font-size: 0.9rem;">Escreve algo.</div>
-    </div>
-  </div>
-
-  <div class="story-viewer" id="storyViewer">
-    <div class="story-progress" id="storyProgress"></div>
-    <i class="fa-solid fa-xmark story-close" onclick="closeStory()"></i>
-    <img id="storyImg" src="" style="display: none;">
-    <video id="storyVid" controls style="display: none;"></video>
-  </div>
-
-  <div class="action-sheet-overlay" id="actionSheetOverlay" onclick="closeActionSheet(event)">
-    <div class="action-sheet" onclick="event.stopPropagation()">
-      <div class="action-sheet-handle"></div>
-      <div class="action-sheet-title">Opções da Publicação</div>
-      <button class="action-btn edit" onclick="triggerEdit()"><i class="fa-solid fa-pen"></i> Editar Texto/Mídia</button>
-      <button class="action-btn delete" onclick="triggerDelete()"><i class="fa-solid fa-trash"></i> Apagar Publicação</button>
-      <button class="action-btn cancel" onclick="closeActionSheet()">Cancelar</button>
-    </div>
-  </div>
-
-  <nav class="bottom-nav">
-    <a href="home.html" class="nav-item active"><i class="fa-solid fa-house"></i><span>Início</span></a>
-    <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
-    <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge">0</span></a>
-    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócio</span><span class="nav-badge" id="negocio-badge">0</span></a>
-    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
-  </nav>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase.js"></script>
-  <script>
-    let currentUser = null;
-    let selectedMediaFile = null; let selectedMediaType = null; let selectedCoverFile = null; let allPosts = []; let storyTimer;
-    let editingPostId = null; let originalMediaUrl = null; let originalMediaType = null; let actionSheetPostId = null;
-
-    function openMenu() { document.getElementById('menuDrawer').classList.add('open'); document.getElementById('menuOverlay').classList.add('open'); }
-    function closeMenu() { document.getElementById('menuDrawer').classList.remove('open'); document.getElementById('menuOverlay').classList.remove('open'); }
-    async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
-
-    async function checkUser() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) { window.location.href = 'index.html'; return; }
-      currentUser = session.user.id;
-      loadStories(); loadFeed(); 
-      updateBadges(); setInterval(updateBadges, 10000);
-    }
-
-    async function updateBadges() {
-      if (!currentUser) return;
-      const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser).eq('is_read', false);
-      const chatBadge = document.getElementById('chat-badge');
-      if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
-
-      const { count: orderCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('seller_id', currentUser).eq('status', 'pendente');
-      const negocioBadge = document.getElementById('negocio-badge');
-      if (negocioBadge) { if (orderCount > 0) { negocioBadge.innerText = orderCount; negocioBadge.style.display = 'flex'; } else { negocioBadge.style.display = 'none'; } }
-
-      const { count: notifCount } = await supabaseClient.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', currentUser).eq('is_read', false);
-      const notifBadge = document.getElementById('notifBadge');
-      if (notifBadge) { if (notifCount > 0) { notifBadge.style.display = 'block'; } else { notifBadge.style.display = 'none'; } }
-    }
-
-    function timeAgo(dateString) { const date = new Date(dateString); const now = new Date(); const seconds = Math.floor((now - date) / 1000); if (seconds < 60) return 'Agora mesmo'; const minutes = Math.floor(seconds / 60); if (minutes < 60) return `Há ${minutes} min`; const hours = Math.floor(minutes / 60); if (hours < 24) return `Há ${hours}h`; return date.toLocaleDateString('pt-PT'); }
-
-    async function loadStories() { 
-      const container = document.getElementById('storiesContainer'); 
-      let html = `<div class="story" onclick="document.getElementById('storyMedia').click()"><div class="story-ring create"><i class="fa-solid fa-plus" style="color: var(--neon); font-size: 1.5rem;"></i></div><span>Criar</span></div><input type="file" id="storyMedia" accept="image/*,video/*" style="display:none;" onchange="uploadStory(event)">`; 
-      const { data: stories } = await supabaseClient.from('stories').select('*, profiles(username, avatar_url)').gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false }); 
-      if (stories) { 
-        stories.forEach(story => { 
-          const author = story.profiles ? story.profiles.username : 'User'; 
-          const img = story.profiles && story.profiles.avatar_url ? story.profiles.avatar_url : 'default-avatar.png'; 
-          html += `<div class="story" onclick="openStory('${story.media_url}', '${story.media_type}')"><div class="story-ring"><img src="${img}"></div><span>${author.split(' ')[0]}</span></div>`; 
-        }); 
-      } 
-      container.innerHTML = html; 
-    }
-    
-    async function uploadStory(event) { const file = event.target.files[0]; if (!file) return; const isVideo = file.type.startsWith('video/'); const ext = file.name.split('.').pop(); const fileName = `stories/${Date.now()}.${ext}`; alert("A carregar..."); const { error: upErr } = await supabaseClient.storage.from('fly_bucket').upload(fileName, file); if (upErr) { alert("Erro: " + upErr.message); return; } const { data } = supabaseClient.storage.from('fly_bucket').getPublicUrl(fileName); await supabaseClient.from('stories').insert([{ user_id: currentUser, media_url: data.publicUrl, media_type: isVideo ? 'video' : 'image' }]); loadStories(); }
-    function openStory(url, type) { const viewer = document.getElementById('storyViewer'); const img = document.getElementById('storyImg'); const vid = document.getElementById('storyVid'); const progress = document.getElementById('storyProgress'); viewer.style.display = 'flex'; progress.innerHTML = '<div class="progress-bar active"></div>'; if (type === 'video') { img.style.display = 'none'; vid.style.display = 'block'; vid.src = url; vid.play(); vid.onended = closeStory; } else { vid.style.display = 'none'; img.style.display = 'block'; img.src = url; storyTimer = setTimeout(closeStory, 5000); } }
-    function closeStory() { document.getElementById('storyViewer').style.display = 'none'; document.getElementById('storyVid').pause(); clearTimeout(storyTimer); }
-
-    async function loadFeed() {
-      const feed = document.getElementById('feedContainer');
-      feed.innerHTML = '<p style="text-align: center; color: var(--text-muted); margin-top: 20px;">A carregar...</p>';
-      
-      const { data: follows } = await supabaseClient.from('follows').select('following_id').eq('follower_id', currentUser);
-      
-      let query = supabaseClient.from('posts').select(`*, profiles ( username, avatar_url, is_premium )`).order('created_at', { ascending: false });
-
-      if (follows && follows.length > 0) {
-        const followingIds = follows.map(f => f.following_id);
-        followingIds.push(currentUser);
-        query = query.in('user_id', followingIds);
+        // Busca dados de quem está a ligar
+        const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', call.caller_id).single();
+        
+        document.getElementById('incomingAvatar').src = profile?.avatar_url || 'default-avatar.png';
+        document.getElementById('incomingName').innerText = profile?.username || 'Alguém';
+        document.getElementById('incomingType').innerText = call.type === 'video' ? 'Chamada de vídeo...' : 'Chamada de voz...';
+        
+        incomingCallData = call;
+        document.getElementById('incomingCallOverlay').style.display = 'flex';
       }
+    }).subscribe();
+}
 
-      const { data: posts, error } = await query;
+function acceptCall() {
+  document.getElementById('incomingCallOverlay').style.display = 'none';
+  if (!incomingCallData) return;
+  window.location.href = `chamada.html?user_id=${incomingCallData.caller_id}&type=${incomingCallData.type}&call_id=${incomingCallData.id}&role=receiver`;
+}
 
-      if (error) { feed.innerHTML = `<p style="color:red; text-align:center;">Erro: ${error.message}</p>`; return; }
-      if (posts.length === 0) { feed.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Nenhum post ainda. Sê o primeiro a publicar!</p>'; return; }
-      
-      allPosts = posts; renderFeed(posts);
-    }
+async function declineCall() {
+  document.getElementById('incomingCallOverlay').style.display = 'none';
+  if (incomingCallData) {
+    await supabaseClient.from('calls').update({ status: 'declined' }).eq('id', incomingCallData.id);
+    incomingCallData = null;
+  }
+}
 
-    async function renderFeed(postsToRender) {
-      const feed = document.getElementById('feedContainer'); feed.innerHTML = '';
-      for (const post of postsToRender) {
-        const { data: likes } = await supabaseClient.from('likes').select('user_id').eq('post_id', post.id);
-        const isLiked = likes.some(l => l.user_id === currentUser); const likeCount = likes.length;
-        const { data: saved } = await supabaseClient.from('saved_posts').select('id').eq('post_id', post.id).eq('user_id', currentUser); const isSaved = saved && saved.length > 0;
-        
-        const authorName = post.profiles ? post.profiles.username : 'Utilizador FLY'; 
-        const authorAvatar = post.profiles && post.profiles.avatar_url ? post.profiles.avatar_url : 'default-avatar.png';
-        const isPremium = post.profiles && post.profiles.is_premium;
-        const verifiedIcon = isPremium ? '<i class="fa-solid fa-crown" style="color: #ffd700; font-size: 0.8rem;" title="Premium"></i>' : '<i class="fa-solid fa-circle-check" style="color: var(--neon); font-size: 0.8rem;"></i>';
-        
-        const isMyPost = post.user_id === currentUser;
-        const optionsBtn = isMyPost ? `<div class="post-options" onclick="openActionSheet('${post.id}', '${post.content || ''}', '${post.media_url || ''}', '${post.media_type || ''}')"><i class="fa-solid fa-ellipsis-vertical"></i></div>` : '';
-
-        let mediaHtml = '';
-        if (post.media_url) { if (post.media_type === 'video') { const posterAttr = post.thumbnail_url ? `poster="${post.thumbnail_url}"` : ''; mediaHtml = `<video src="${post.media_url}" ${posterAttr} controls class="post-media"></video>`; } else { mediaHtml = `<img src="${post.media_url}" class="post-media">`; } }
-        
-        const card = document.createElement('div'); card.className = 'glass-panel post-card';
-        card.innerHTML = `
-          <div class="post-header">
-            <img src="${authorAvatar}" onclick="window.location.href='perfil.html?id=${post.user_id}'">
-            <div class="post-header-info" onclick="window.location.href='perfil.html?id=${post.user_id}'"><h4>${authorName} ${verifiedIcon}</h4><span>${timeAgo(post.created_at)} • <i class="fa-solid fa-globe"></i></span></div>
-            ${optionsBtn}
-          </div>
-          ${post.content ? `<div class="post-content" id="content-${post.id}">${post.content}</div>` : ''}
-          ${mediaHtml}
-          <div class="post-actions">
-            <div class="action-group">
-              <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart ${isLiked ? 'active' : ''}" id="like-icon-${post.id}" onclick="toggleLike('${post.id}', ${isLiked}, '${post.user_id}')"></i>
-              <span id="like-count-${post.id}" style="font-size: 0.9rem; color: var(--text-muted); align-self: center; margin-left: -10px;">${likeCount}</span>
-              <i class="fa-regular fa-comment" onclick="toggleComments('${post.id}')"></i>
-            </div>
-            <div class="action-group">
-              <i class="${isSaved ? 'fa-solid' : 'fa-regular'} fa-bookmark ${isSaved ? 'saved' : ''}" id="save-icon-${post.id}" onclick="toggleSave('${post.id}', ${isSaved})"></i>
-              <i class="fa-solid fa-share" onclick="sharePost('${post.content}', '${post.media_url || ''}')"></i>
-            </div>
-          </div>
-          <div class="comments-section" id="comments-${post.id}"><div id="comments-list-${post.id}"></div>
-            <div class="comment-input-area"><input type="text" id="comment-input-${post.id}" placeholder="Escreve um comentário..."><button onclick="addComment('${post.id}', '${post.user_id}')"><i class="fa-solid fa-paper-plane"></i></button></div>
-          </div>`;
-        feed.appendChild(card);
-      }
-    }
-
-    let currentActionSheetData = null;
-    function openActionSheet(postId, content, mediaUrl, mediaType) { actionSheetPostId = postId; currentActionSheetData = { content, mediaUrl, mediaType }; document.getElementById('actionSheetOverlay').style.display = 'flex'; }
-    function closeActionSheet(event) { if (event && event.target !== event.currentTarget) return; document.getElementById('actionSheetOverlay').style.display = 'none'; }
-    function triggerEdit() { closeActionSheet(); editingPostId = actionSheetPostId; originalMediaUrl = currentActionSheetData.mediaUrl; originalMediaType = currentActionSheetData.mediaType; document.getElementById('modalTitle').innerText = 'Editar Publicação'; document.getElementById('postContent').value = currentActionSheetData.content; resetPreview(); if (originalMediaUrl) { if (originalMediaType === 'video') { const vid = document.getElementById('mediaPreviewVideo'); vid.src = originalMediaUrl; vid.style.display = 'block'; document.getElementById('btnCover').style.display = 'inline-block'; } else { const img = document.getElementById('mediaPreviewImg'); img.src = originalMediaUrl; img.style.display = 'block'; } } document.getElementById('createModal').style.display = 'flex'; }
-    async function triggerDelete() { closeActionSheet(); if (confirm("Tens a certeza que queres apagar esta publicação?")) { const { error } = await supabaseClient.from('posts').delete().eq('id', actionSheetPostId); if (error) { alert('Erro: ' + error.message); } else { loadFeed(); } } }
-    function openModal() { editingPostId = null; originalMediaUrl = null; originalMediaType = null; document.getElementById('modalTitle').innerText = 'Criar Publicação'; document.getElementById('postContent').value = ''; resetPreview(); document.getElementById('createModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('createModal').style.display = 'none'; resetPreview(); }
-    function resetPreview() { selectedMediaFile = null; selectedMediaType = null; selectedCoverFile = null; document.getElementById('postMedia').value = ''; document.getElementById('postCover').value = ''; document.getElementById('mediaPreviewImg').style.display = 'none'; document.getElementById('mediaPreviewVideo').style.display = 'none'; document.getElementById('mediaPreviewImg').src = ''; document.getElementById('mediaPreviewVideo').src = ''; document.getElementById('btnCover').style.display = 'none'; document.getElementById('coverText').style.display = 'none'; }
-    function previewMedia(event) { const file = event.target.files[0]; if (!file) return; selectedMediaFile = file; selectedMediaType = file.type.startsWith('video/') ? 'video' : 'image'; const url = URL.createObjectURL(file); const img = document.getElementById('mediaPreviewImg'); const vid = document.getElementById('mediaPreviewVideo'); const btnCover = document.getElementById('btnCover'); if (selectedMediaType === 'video') { img.style.display = 'none'; vid.src = url; vid.style.display = 'block'; btnCover.style.display = 'inline-block'; } else { vid.style.display = 'none'; img.src = url; img.style.display = 'block'; btnCover.style.display = 'none'; selectedCoverFile = null; } }
-    function previewCover(event) { const file = event.target.files[0]; if (!file) return; selectedCoverFile = file; document.getElementById('coverText').style.display = 'block'; }
-    async function publishPost() { const content = document.getElementById('postContent').value.trim(); const btn = document.getElementById('btnPublishPost'); if (!content && !selectedMediaFile && !originalMediaUrl) { alert('Escreve algo!'); return; } btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true; let mediaUrl = originalMediaUrl; let thumbnailUrl = null; let finalMediaType = originalMediaType; if (selectedMediaFile) { const fileExt = selectedMediaFile.name.split('.').pop(); const fileName = `posts/${Date.now()}.${fileExt}`; const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(fileName, selectedMediaFile); if (uploadError) { alert('Erro: ' + uploadError.message); btn.innerHTML = 'Publicar'; btn.disabled = false; return; } const { data: publicUrl } = supabaseClient.storage.from('fly_bucket').getPublicUrl(fileName); mediaUrl = publicUrl.publicUrl; finalMediaType = selectedMediaType; } if (selectedCoverFile) { const coverExt = selectedCoverFile.name.split('.').pop(); const coverName = `posts/cover_${Date.now()}.${coverExt}`; const { error: coverError } = await supabaseClient.storage.from('fly_bucket').upload(coverName, selectedCoverFile); if (!coverError) { const { data: coverUrl } = supabaseClient.storage.from('fly_bucket').getPublicUrl(coverName); thumbnailUrl = coverUrl.publicUrl; } } if (editingPostId) { const { error: dbError } = await supabaseClient.from('posts').update({ content, media_url: mediaUrl, media_type: finalMediaType, thumbnail_url: thumbnailUrl }).eq('id', editingPostId); if (dbError) { alert('Erro: ' + dbError.message); btn.innerHTML = 'Guardar'; btn.disabled = false; return; } } else { const { error: dbError } = await supabaseClient.from('posts').insert([{ user_id: currentUser, content, media_url: mediaUrl, media_type: finalMediaType, thumbnail_url: thumbnailUrl }]); if (dbError) { alert('Erro: ' + dbError.message); btn.innerHTML = 'Publicar'; btn.disabled = false; return; } } closeModal(); btn.innerHTML = 'Publicar'; btn.disabled = false; loadFeed(); }
-    async function toggleLike(postId, isLiked, postOwnerId) { const icon = document.getElementById(`like-icon-${postId}`); const countSpan = document.getElementById(`like-count-${postId}`); let count = parseInt(countSpan.innerText); if (isLiked) { await supabaseClient.from('likes').delete().eq('post_id', postId).eq('user_id', currentUser); icon.classList.remove('fa-solid', 'active'); icon.classList.add('fa-regular'); countSpan.innerText = count - 1; icon.setAttribute('onclick', `toggleLike('${postId}', false, '${postOwnerId}')`); } else { await supabaseClient.from('likes').insert([{ post_id: postId, user_id: currentUser }]); icon.classList.remove('fa-regular'); icon.classList.add('fa-solid', 'active'); countSpan.innerText = count + 1; icon.setAttribute('onclick', `toggleLike('${postId}', true, '${postOwnerId}')`); if (postOwnerId !== currentUser) { await supabaseClient.from('notifications').insert([{ user_id: postOwnerId, sender_id: currentUser, type: 'like', post_id: postId }]); } } }
-    async function addComment(postId, postOwnerId) { const input = document.getElementById(`comment-input-${postId}`); const text = input.value.trim(); if (!text) return; input.value = ''; await supabaseClient.from('comments').insert([{ post_id: postId, user_id: currentUser, content: text }]); if (postOwnerId !== currentUser) { await supabaseClient.from('notifications').insert([{ user_id: postOwnerId, sender_id: currentUser, type: 'comment', post_id: postId }]); } loadComments(postId); }
-    async function toggleSave(postId, isSaved) { const icon = document.getElementById(`save-icon-${postId}`); if (isSaved) { await supabaseClient.from('saved_posts').delete().eq('post_id', postId).eq('user_id', currentUser); icon.classList.remove('fa-solid', 'saved'); icon.classList.add('fa-regular'); icon.setAttribute('onclick', `toggleSave('${postId}', false)`); } else { await supabaseClient.from('saved_posts').insert([{ post_id: postId, user_id: currentUser }]); icon.classList.remove('fa-regular'); icon.classList.add('fa-solid', 'saved'); icon.setAttribute('onclick', `toggleSave('${postId}', true)`); } }
-    async function sharePost(content, mediaUrl) { const urlToShare = mediaUrl ? mediaUrl : window.location.href; const textToShare = content ? `${content}\n\nVê no FLY: ${urlToShare}` : `Vê esta publicação no FLY: ${urlToShare}`; if (navigator.share) { try { await navigator.share({ title: 'FLY', text: content || 'Vê isto no FLY!', url: urlToShare }); return; } catch (err) {} } try { await navigator.clipboard.writeText(textToShare); const irParaWhatsApp = confirm('Link copiado!\n\nPartilhar pelo WhatsApp?'); if (irParaWhatsApp) { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textToShare)}`, '_blank'); } } catch (err) { alert('Copia o link:\n\n' + urlToShare); } }
-    async function toggleComments(postId) { const section = document.getElementById(`comments-${postId}`); if (section.style.display === 'block') { section.style.display = 'none'; return; } section.style.display = 'block'; loadComments(postId); }
-    async function loadComments(postId) { const list = document.getElementById(`comments-list-${postId}`); list.innerHTML = 'A carregar...'; const { data: comments, error } = await supabaseClient.from('comments').select(`*, profiles ( username, avatar_url )`).eq('post_id', postId).order('created_at', { ascending: true }); if (error) { list.innerHTML = 'Erro.'; return; } list.innerHTML = ''; if (comments.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); font-size: 0.8rem;">Sem comentários.</p>'; return; } comments.forEach(c => { const author = c.profiles ? c.profiles.username : 'User'; const avatar = c.profiles && c.profiles.avatar_url ? c.profiles.avatar_url : 'default-avatar.png'; list.innerHTML += `<div class="comment-item"><img src="${avatar}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;"><div><strong>${author}</strong> ${c.content}</div></div>`; }); }
-    function openSearch() { document.getElementById('searchModal').style.display = 'flex'; }
-    function filterPosts(query) { const resultsDiv = document.getElementById('searchResults'); if (!query) { resultsDiv.innerHTML = "Escreve algo."; return; } const filtered = allPosts.filter(p => p.content && p.content.toLowerCase().includes(query.toLowerCase())); if (filtered.length === 0) { resultsDiv.innerHTML = "Nenhum post encontrado."; return; } resultsDiv.innerHTML = ''; filtered.forEach(p => { const author = p.profiles ? p.profiles.username : 'User'; resultsDiv.innerHTML += `<div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; margin-bottom:10px; text-align:left;"><strong style="color:var(--neon)">${author}:</strong> ${p.content}</div>`; }); }
-
-    checkUser();
-  </script>
-</body>
-</html>
+// Chama a escuta assim que o utilizador entrar
+// (Adicione a chamada a listenForCalls() dentro da função checkUser() ou init() do home.html)
+</script>
