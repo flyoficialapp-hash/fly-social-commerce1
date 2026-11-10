@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    
     .chat-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: rgba(3, 7, 18, 0.95); border-bottom: 1px solid var(--glass-border); z-index: 10; }
     .header-left { display: flex; align-items: center; gap: 10px; }
     .header-left i { font-size: 1.5rem; cursor: pointer; color: white; }
@@ -17,23 +18,40 @@
     .header-actions { display: flex; gap: 15px; }
     .header-actions i { font-size: 1.3rem; color: var(--neon); cursor: pointer; transition: 0.2s; }
     
-    .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 90px; }
+    /* AQUI ESTÁ A CORREÇÃO DO ESPAÇO DAS MENSAGENS */
+    .chat-messages { 
+      flex: 1; 
+      padding: 20px; 
+      padding-bottom: 100px; /* Espaço suficiente para a caixa de texto não tapar */
+      overflow-y: auto; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px; 
+      scroll-behavior: smooth;
+    }
+    
     .message-row { display: flex; align-items: flex-end; gap: 8px; max-width: 85%; }
     .message-row.sent { align-self: flex-end; flex-direction: row-reverse; }
     .message-row.received { align-self: flex-start; }
+    
     .msg-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--glass-border); margin-bottom: 18px;}
+    
     .message { padding: 12px 16px; border-radius: 15px; font-size: 0.95rem; line-height: 1.4; position: relative; word-wrap: break-word;}
     .message-row.sent .message { background: linear-gradient(90deg, var(--primary), var(--neon)); color: white; border-bottom-right-radius: 4px; }
     .message-row.received .message { background: var(--glass-bg); border: 1px solid var(--glass-border); color: white; border-bottom-left-radius: 4px; }
+    
     .message-image { max-width: 100%; border-radius: 10px; margin-bottom: 5px; cursor: pointer; }
     .message-time { font-size: 0.65rem; color: rgba(255,255,255,0.7); text-align: right; margin-top: 5px; display: block; }
+    
     .translated-tag { display: inline-block; font-size: 0.65rem; color: #a855f7; background: rgba(168, 85, 247, 0.15); padding: 2px 6px; border-radius: 4px; margin-bottom: 5px; font-weight: bold; }
     .translated-text { font-style: italic; color: #e0e0e0; }
+
     .chat-input-area { position: fixed; bottom: 0; left: 0; width: 100%; padding: 10px 15px; background: rgba(3, 7, 18, 0.95); border-top: 1px solid var(--glass-border); display: flex; gap: 8px; align-items: center; z-index: 20; }
     .input-actions { display: flex; gap: 10px; align-items: center; }
     .input-actions i { font-size: 1.5rem; color: var(--neon); cursor: pointer; }
     .chat-input { flex: 1; min-width: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 30px; padding: 12px 15px; color: white; outline: none; font-size: 0.95rem;}
     .btn-send { width: 45px; height: 45px; flex-shrink: 0; border-radius: 50%; background: var(--primary); border: none; color: white; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
+    
     .emoji-panel { position: fixed; bottom: 80px; left: 15px; background: var(--bg-color); border: 1px solid var(--neon); border-radius: 15px; padding: 10px; display: none; grid-template-columns: repeat(5, 1fr); gap: 10px; z-index: 30; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
     .emoji-panel span { font-size: 1.5rem; cursor: pointer; transition: 0.2s; text-align: center; }
     .emoji-panel span:hover { transform: scale(1.3); }
@@ -87,7 +105,7 @@
     async function initChat() {
       const urlParams = new URLSearchParams(window.location.search);
       sellerId = urlParams.get('seller_id');
-      if (!sellerId) { alert('Vendedor não encontrado.'); window.location.href = 'chat.html'; return; }
+      if (!sellerId) { window.location.href = 'chat.html'; return; }
       
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
@@ -107,9 +125,6 @@
         document.getElementById('chatAvatar').src = otherAvatarUrl;
       }
 
-      // 🔍 ALERTA DE DIAGNÓSTICO AQUI
-      alert(`RAIO-X DO CHAT:\n\nMeu Idioma: ${myLanguage}\nIdioma do Outro: ${otherLanguage}\n\n(Se forem iguais, a tradução não acontece)`);
-
       await loadMessages(); 
       
       supabaseClient.channel('chat-room').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
@@ -124,9 +139,14 @@
       const { data: messages, error } = await supabaseClient.from('messages').select('*').or(`and(sender_id.eq.${currentUser},receiver_id.eq.${sellerId}),and(sender_id.eq.${sellerId},receiver_id.eq.${currentUser})`).order('created_at', { ascending: true });
       if (error) return;
       const chatBox = document.getElementById('chatMessages'); chatBox.innerHTML = '';
-      for (const msg of messages) { await appendMessage(msg); }
+      
+      for (const msg of messages) {
+        await appendMessage(msg);
+      }
       await markAsRead();
-      chatBox.scrollTop = chatBox.scrollHeight;
+      
+      // Força o scroll para o fundo após carregar tudo
+      setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
     }
 
     async function markAsRead() { await supabaseClient.from('messages').update({ is_read: true }).eq('receiver_id', currentUser).eq('sender_id', sellerId).eq('is_read', false); }
@@ -164,7 +184,10 @@
           <span class="message-time">${time}</span>
         </div>
       `;
-      chatBox.appendChild(row); chatBox.scrollTop = chatBox.scrollHeight;
+      chatBox.appendChild(row); 
+      
+      // Auto-scroll para a última mensagem
+      chatBox.scrollTop = chatBox.scrollHeight;
 
       if (shouldTranslate) {
         translateMessage(msg.content, otherLanguage, myLanguage, row.id);
@@ -180,9 +203,8 @@
         const tag = document.getElementById(`tag-${rowId}`);
         const textDiv = document.getElementById(`text-${rowId}`);
 
-        // 🔍 ALERTA DE ERRO NA FUNÇÃO AQUI
         if (error || !data || data.error) {
-          alert("ERRO NA FUNÇÃO SUPABASE:\n" + JSON.stringify(error || data));
+          console.error("Erro na tradução:", error || data);
           if (tag) tag.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Falha`;
           if (textDiv) textDiv.innerText = text; 
           return;
@@ -193,7 +215,7 @@
         if (textDiv) textDiv.innerText = data.translated;
 
       } catch (err) {
-        alert("ERRO NO CÓDIGO: " + err.message);
+        console.error("Erro de tradução:", err);
       }
     }
 
@@ -203,8 +225,9 @@
       const receiver = (currentUser === sellerId) ? currentUser : sellerId;
       const tempMsg = { sender_id: currentUser, receiver_id: receiver, content: text };
       appendMessage(tempMsg);
+      
       const { error } = await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: receiver, content: text, is_read: false }]);
-      if (error) { alert(`Erro ao enviar: ${error.message}`); }
+      if (error) { console.error(`Erro ao enviar: ${error.message}`); }
     }
 
     async function uploadMedia(event) {
@@ -212,14 +235,18 @@
       const receiver = (currentUser === sellerId) ? currentUser : sellerId;
       const fileExt = file.name.split('.').pop();
       const fileName = `chats/${currentUser}_${Date.now()}.${fileExt}`;
+
       const chatBox = document.getElementById('chatMessages');
       const tempRow = document.createElement('div'); tempRow.className = 'message-row sent';
       tempRow.innerHTML = `<div class="message"><i class="fa-solid fa-spinner fa-spin"></i> A enviar...</div>`;
       chatBox.appendChild(tempRow); chatBox.scrollTop = chatBox.scrollHeight;
+
       const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(fileName, file);
       if (uploadError) { alert('Erro: ' + uploadError.message); tempRow.remove(); return; }
+
       const { data: publicUrl } = supabaseClient.storage.from('fly_bucket').getPublicUrl(fileName);
       const { error: dbError } = await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: receiver, content: '', file_url: publicUrl.publicUrl, file_type: file.type, is_read: false }]);
+
       tempRow.remove();
       if (dbError) { alert('Erro: ' + dbError.message); } else { loadMessages(); }
     }
