@@ -6,7 +6,6 @@
   <title>FLY - Chamada</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- BIBLIOTECA PEERJS -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     body { height: 100vh; overflow: hidden; background: #030712; display: flex; flex-direction: column; font-family: 'Inter', sans-serif; }
@@ -34,12 +33,18 @@
     .video-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none; flex-direction: column; background: #000; }
     #remoteVideo { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 1; }
     .remote-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #111; z-index: 1; }
+    
     .local-video-container { position: absolute; top: 40px; left: 20px; width: 100px; height: 150px; border-radius: 15px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); z-index: 20; background: #222; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     #localVideo { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
     .local-video-placeholder { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; color: var(--text-muted); }
+    
+    /* NOVO: TOPO DIREITO COM 3 PONTINHOS */
     .video-top-right { position: absolute; top: 50px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 15px; z-index: 20; }
     .timer-pill { background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(5px); font-weight: bold; }
     .timer-pill .dot { width: 10px; height: 10px; background: var(--danger); border-radius: 50%; }
+    .btn-menu-dots { width: 45px; height: 45px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; backdrop-filter: blur(5px); cursor: pointer;}
+
+    /* NOVO: BOTÕES DO FUNDO COM INVERTER */
     .video-controls-bar { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 20; padding: 0 10px; }
     .btn-ctrl-vid { display: flex; flex-direction: column; align-items: center; gap: 8px; color: white; font-size: 0.75rem; cursor: pointer; }
     .btn-ctrl-vid .icon-circle { width: 55px; height: 55px; font-size: 1.3rem; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); }
@@ -75,31 +80,31 @@
       <div class="local-video-placeholder" id="localVideoPlaceholder"><i class="fa-solid fa-video-slash"></i></div>
     </div>
 
-    <div class="video-top-right"><div class="timer-pill"><div class="dot"></div> <span id="videoTimer">00:00</span></div></div>
+    <!-- MENU 3 PONTINHOS -->
+    <div class="video-top-right">
+      <div class="timer-pill"><div class="dot"></div> <span id="videoTimer">00:00</span></div>
+      <div class="btn-menu-dots" onclick="alert('Menu de opções da chamada em breve.')"><i class="fa-solid fa-ellipsis-vertical"></i></div>
+    </div>
 
+    <!-- BOTÕES DE CONTROLO COM INVERTER -->
     <div class="video-controls-bar">
       <div class="btn-ctrl-vid active" id="btnVideoCam" onclick="toggleVideo()"><div class="icon-circle"><i class="fa-solid fa-video"></i></div><span>Câmara</span></div>
       <div class="btn-ctrl-vid" id="btnMuteVideo" onclick="toggleMute()"><div class="icon-circle"><i class="fa-solid fa-microphone"></i></div><span>Microfone</span></div>
       <div class="btn-ctrl-vid end" onclick="endCall()"><div class="icon-circle"><i class="fa-solid fa-phone-slash"></i></div><span>Desligar</span></div>
+      
+      <!-- NOVO BOTÃO DE INVERTER -->
+      <div class="btn-ctrl-vid" onclick="switchCamera()"><div class="icon-circle"><i class="fa-solid fa-camera-rotate"></i></div><span>Inverter</span></div>
+      
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <script>
-    let localStream = null;
-    let currentUser = null;
-    let targetUserId = null;
-    let callType = 'video';
-    let callId = null;
-    let role = 'caller';
-    let peer = null;
-    let currentCall = null;
-    
-    let isMuted = false;
-    let isVideoOn = true;
-    let callTimerInterval = null;
-    let secondsElapsed = 0;
+    let localStream = null; let currentUser = null; let targetUserId = null;
+    let callType = 'video'; let callId = null; let role = 'caller';
+    let peer = null; let currentCall = null; let facingMode = 'user';
+    let isMuted = false; let isVideoOn = true; let callTimerInterval = null; let secondsElapsed = 0;
 
     function formatTime(seconds) { const m = Math.floor(seconds / 60).toString().padStart(2, '0'); const s = (seconds % 60).toString().padStart(2, '0'); return `${m}:${s}`; }
     function startTimer(elementId) {
@@ -109,10 +114,8 @@
 
     async function initCall() {
       const urlParams = new URLSearchParams(window.location.search);
-      targetUserId = urlParams.get('user_id');
-      callType = urlParams.get('type') || 'video';
-      callId = urlParams.get('call_id');
-      role = urlParams.get('role') || 'caller';
+      targetUserId = urlParams.get('user_id'); callType = urlParams.get('type') || 'video';
+      callId = urlParams.get('call_id'); role = urlParams.get('role') || 'caller';
 
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
@@ -123,20 +126,17 @@
       const userName = profile ? profile.username : 'Utilizador FLY';
 
       if (callType === 'audio') {
-        document.getElementById('voiceUI').style.display = 'flex';
-        document.getElementById('videoUI').style.display = 'none';
+        document.getElementById('voiceUI').style.display = 'flex'; document.getElementById('videoUI').style.display = 'none';
         document.getElementById('voiceName').innerHTML = `${userName} <i class="fa-solid fa-circle-check" style="color: var(--neon); font-size: 1rem;"></i>`;
         document.getElementById('voiceAvatar').src = avatarUrl;
       } else {
-        document.getElementById('voiceUI').style.display = 'none';
-        document.getElementById('videoUI').style.display = 'flex';
+        document.getElementById('voiceUI').style.display = 'none'; document.getElementById('videoUI').style.display = 'flex';
         document.getElementById('remoteVideoAvatar').src = avatarUrl;
       }
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
-          video: callType === 'video' ? { facingMode: 'user' } : false,
-          audio: true
+          video: callType === 'video' ? { facingMode: facingMode } : false, audio: true
         });
         if (callType === 'video') {
           document.getElementById('localVideo').srcObject = localStream;
@@ -144,42 +144,16 @@
           document.getElementById('localVideoPlaceholder').style.display = 'none';
         }
       } catch (err) {
-        console.error("Erro câmara:", err);
-        if (callType === 'video') {
-          document.getElementById('localVideoPlaceholder').innerHTML = '<i class="fa-solid fa-video-slash"></i><br><span style="font-size:0.6rem">Sem Câmara</span>';
-        }
+        if (callType === 'video') document.getElementById('localVideoPlaceholder').innerHTML = '<i class="fa-solid fa-video-slash"></i><br><span style="font-size:0.6rem">Sem Câmara</span>';
       }
 
-      // --- CONFIGURAÇÃO DO PEERJS COM STUN E TURN (Para funcionar em redes diferentes) ---
-      const peerOptions = {
-        debug: 2,
-        config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { 
-              urls: 'turn:openrelay.metered.ca:80',
-              username: 'openrelayproject',
-              credential: 'openrelayproject'
-            },
-            { 
-              urls: 'turn:openrelay.metered.ca:443',
-              username: 'openrelayproject',
-              credential: 'openrelayproject'
-            }
-          ]
-        }
-      };
-      
+      const peerOptions = { debug: 2, config: { iceServers: [ { urls: 'stun:stun.l.google.com:19302' }, { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' }, { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' } ] } };
       peer = new Peer(currentUser, peerOptions);
 
       peer.on('open', async (id) => {
-        console.log('PeerJS ligado com ID:', id);
-        
         if (role === 'caller') {
           document.getElementById(callType === 'video' ? 'videoTimer' : 'voiceTimer').innerText = "A tocar...";
-          currentCall = peer.call(targetUserId, localStream);
-          setupCallEvents(currentCall);
-          
+          currentCall = peer.call(targetUserId, localStream); setupCallEvents(currentCall);
           await supabaseClient.from('calls').update({ status: 'accepted' }).eq('id', callId);
         } else {
           document.getElementById(callType === 'video' ? 'videoTimer' : 'voiceTimer').innerText = "Conectado!";
@@ -188,9 +162,7 @@
       });
 
       peer.on('call', (call) => {
-        call.answer(localStream);
-        currentCall = call;
-        setupCallEvents(currentCall);
+        call.answer(localStream); currentCall = call; setupCallEvents(currentCall);
         startTimer(callType === 'video' ? 'videoTimer' : 'voiceTimer');
       });
     }
@@ -199,17 +171,13 @@
       call.on('stream', (remoteStream) => {
         if (callType === 'video') {
           const remoteVideo = document.getElementById('remoteVideo');
-          remoteVideo.srcObject = remoteStream;
-          remoteVideo.style.display = 'block';
+          remoteVideo.srcObject = remoteStream; remoteVideo.style.display = 'block';
           document.getElementById('remotePlaceholder').style.display = 'none';
         } else {
-          const audio = new Audio();
-          audio.srcObject = remoteStream;
-          audio.play();
+          const audio = new Audio(); audio.srcObject = remoteStream; audio.play();
         }
         startTimer(callType === 'video' ? 'videoTimer' : 'voiceTimer');
       });
-      
       call.on('close', () => { endCall(); });
     }
 
@@ -223,23 +191,36 @@
 
     function toggleVideo() {
       if (!localStream) return;
-      const videoTrack = localStream.getVideoTracks()[0];
-      if (!videoTrack) return;
+      const videoTrack = localStream.getVideoTracks()[0]; if (!videoTrack) return;
       isVideoOn = !isVideoOn; videoTrack.enabled = isVideoOn;
       document.getElementById('localVideo').style.display = isVideoOn ? 'block' : 'none';
       document.getElementById('localVideoPlaceholder').style.display = isVideoOn ? 'none' : 'flex';
       document.getElementById('btnVideoCam').classList.toggle('active', isVideoOn);
     }
 
+    // FUNÇÃO PARA INVERTER A CÂMARA
+    async function switchCamera() {
+      if (!localStream || !isVideoOn) return;
+      facingMode = facingMode === 'user' ? 'environment' : 'user';
+      
+      // Parar a câmara atual
+      localStream.getVideoTracks().forEach(track => track.stop());
+      
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode }, audio: true });
+        localStream = newStream;
+        document.getElementById('localVideo').srcObject = localStream;
+        
+        // Se houver uma chamada ativa, atualizar a stream enviada
+        if (currentCall) { currentCall.peerConnection.getSenders().forEach(sender => { if (sender.track.kind === 'video') sender.replaceTrack(newStream.getVideoTracks()[0]); }); }
+      } catch (err) { alert('Erro ao inverter câmara: ' + err.message); }
+    }
+
     async function endCall() {
-      if (currentCall) currentCall.close();
-      if (peer) peer.destroy();
+      if (currentCall) currentCall.close(); if (peer) peer.destroy();
       if (localStream) localStream.getTracks().forEach(track => track.stop());
       clearInterval(callTimerInterval);
-      
-      if (callId) {
-        await supabaseClient.from('calls').update({ status: 'ended' }).eq('id', callId);
-      }
+      if (callId) await supabaseClient.from('calls').update({ status: 'ended' }).eq('id', callId);
       window.location.href = `conversa.html?seller_id=${targetUserId}`;
     }
 

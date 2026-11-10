@@ -10,9 +10,12 @@
     .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--glass-border); }
     .header-logo { font-size: 1.5rem; font-weight: 800; font-style: italic; color: white; display: flex; align-items: center; gap: 10px;}
     .header-logo img { height: 35px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 204, 255, 0.3); }
-    .header-icons { display: flex; align-items: center; gap: 15px; }
+    .header-icons { display: flex; align-items: center; gap: 20px; }
     .header-icons i { font-size: 1.4rem; color: white; cursor: pointer;}
-    .notification-badge { position: absolute; top: 10px; right: 45px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; display: none; }
+    
+    .bell-container { position: relative; display: flex; align-items: center; justify-content: center; }
+    .notification-badge { position: absolute; top: -4px; right: -4px; width: 10px; height: 10px; background: var(--danger); border-radius: 50%; display: none; box-shadow: 0 0 5px var(--danger); }
+    
     .menu-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 5px; cursor: pointer; }
     .menu-drawer { position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: rgba(3, 7, 18, 0.98); backdrop-filter: blur(15px); z-index: 3000; border-right: 1px solid var(--neon); transition: 0.3s ease-in-out; display: flex; flex-direction: column; padding: 20px; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
     .menu-drawer.open { left: 0; }
@@ -25,6 +28,7 @@
     .menu-item:hover { background: rgba(0, 204, 255, 0.1); color: var(--neon); }
     .menu-item i { font-size: 1.2rem; width: 20px; text-align: center; }
     .menu-item.danger { color: #ff3366; margin-top: auto; }
+    
     .stories { display: flex; gap: 15px; padding: 15px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .story { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.8rem; cursor: pointer; }
     .story-ring { width: 65px; height: 65px; border-radius: 50%; background: linear-gradient(45deg, var(--primary), var(--neon)); padding: 3px; }
@@ -37,9 +41,11 @@
     @keyframes fillBar { 0% { width: 0%; } 100% { width: 100%; } }
     .story-viewer img, .story-viewer video { width: 100%; height: 100%; object-fit: contain; }
     .story-close { position: absolute; top: 20px; right: 20px; font-size: 2rem; color: white; cursor: pointer; z-index: 10; }
+    
     .create-post { padding: 15px; }
     .post-input-container { display: flex; align-items: center; gap: 10px; padding: 12px 15px; border-radius: 30px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); cursor: pointer; }
     .post-input-container span { flex: 1; color: var(--text-muted); font-size: 0.95rem; }
+    
     .feed { padding: 0 15px 90px 15px; }
     .post-card { margin-bottom: 20px; padding-bottom: 5px; }
     .post-header { display: flex; align-items: center; gap: 10px; padding: 15px; }
@@ -55,12 +61,14 @@
     .post-actions i { cursor: pointer; transition: 0.2s; color: var(--text-main); }
     .post-actions i.active { color: #ff3366; text-shadow: 0 0 10px rgba(255,51,102,0.5); }
     .post-actions i.saved { color: var(--neon); text-shadow: 0 0 10px rgba(0,204,255,0.5); }
+    
     .comments-section { display: none; padding: 0 15px 15px 15px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 5px; }
     .comment-item { display: flex; gap: 10px; margin-top: 10px; font-size: 0.9rem; }
     .comment-item strong { color: var(--neon); }
     .comment-input-area { display: flex; gap: 10px; margin-top: 15px; }
     .comment-input-area input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 20px; padding: 8px 15px; color: white; outline: none; }
     .comment-input-area button { background: var(--primary); border: none; border-radius: 50%; width: 35px; height: 35px; color: white; cursor: pointer; }
+    
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
     .modal-content { background: var(--bg-color); border: 1px solid var(--neon); border-radius: 20px; width: 100%; max-width: 500px; padding: 20px; box-shadow: 0 0 30px rgba(0, 204, 255, 0.2); max-height: 80vh; overflow-y: auto; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -90,7 +98,7 @@
     <button class="menu-btn" onclick="openMenu()"><i class="fa-solid fa-bars"></i> MENU</button>
     <div class="header-icons">
       <i class="fa-solid fa-magnifying-glass" onclick="openSearch()"></i>
-      <div style="position: relative;" onclick="window.location.href='notificacoes.html'">
+      <div class="bell-container" onclick="window.location.href='notificacoes.html'">
         <i class="fa-regular fa-bell"></i>
         <div class="notification-badge" id="notifBadge"></div>
       </div>
@@ -158,8 +166,8 @@
   <nav class="bottom-nav">
     <a href="home.html" class="nav-item active"><i class="fa-solid fa-house"></i><span>Início</span></a>
     <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
-    <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge">0</span></a>
-    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócio</span><span class="nav-badge" id="negocio-badge">0</span></a>
+    <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge" style="display:none;">0</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócio</span><span class="nav-badge" id="negocio-badge" style="display:none;">0</span></a>
     <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
@@ -234,7 +242,7 @@
       const { data: posts, error } = await query;
 
       if (error) { feed.innerHTML = `<p style="color:red; text-align:center;">Erro: ${error.message}</p>`; return; }
-      if (posts.length === 0) { feed.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Nenhum post ainda. Sê o primeiro a publicar!</p>'; return; }
+      if (!posts || posts.length === 0) { feed.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Nenhum post ainda. Sê o primeiro a publicar!</p>'; return; }
       
       allPosts = posts; renderFeed(posts);
     }
@@ -243,7 +251,7 @@
       const feed = document.getElementById('feedContainer'); feed.innerHTML = '';
       for (const post of postsToRender) {
         const { data: likes } = await supabaseClient.from('likes').select('user_id').eq('post_id', post.id);
-        const isLiked = likes.some(l => l.user_id === currentUser); const likeCount = likes.length;
+        const isLiked = likes && likes.some(l => l.user_id === currentUser); const likeCount = likes ? likes.length : 0;
         const { data: saved } = await supabaseClient.from('saved_posts').select('id').eq('post_id', post.id).eq('user_id', currentUser); const isSaved = saved && saved.length > 0;
         
         const authorName = post.profiles ? post.profiles.username : 'Utilizador FLY'; 

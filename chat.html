@@ -85,8 +85,8 @@
   <nav class="bottom-nav">
     <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
     <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
-    <a href="chat.html" class="nav-item active"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge">0</span></a>
-    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócio</span><span class="nav-badge" id="negocio-badge">0</span></a>
+    <a href="chat.html" class="nav-item active"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge" style="display:none;">0</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócio</span><span class="nav-badge" id="negocio-badge" style="display:none;">0</span></a>
     <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
@@ -101,6 +101,7 @@
 
     async function updateBadges() {
       if (!currentUser) return;
+      
       const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser).eq('is_read', false);
       const chatBadge = document.getElementById('chat-badge');
       if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
@@ -133,7 +134,7 @@
       }
       
       loadChats();
-      listenForCalls(); // Começa a escutar por chamadas
+      listenForCalls();
     }
 
     function switchTab(tab) {
@@ -211,21 +212,14 @@
       }
     }
 
-    // --- FUNÇÃO PARA LIGAR ---
     async function startCall(receiverId, type) {
       const { data: call, error } = await supabaseClient.from('calls').insert([{
-        caller_id: currentUser,
-        receiver_id: receiverId,
-        type: type,
-        status: 'ringing'
+        caller_id: currentUser, receiver_id: receiverId, type: type, status: 'ringing'
       }]).select().single();
-
       if (error) { alert('Erro ao ligar: ' + error.message); return; }
-
       window.location.href = `chamada.html?user_id=${receiverId}&type=${type}&call_id=${call.id}&role=caller`;
     }
 
-    // --- FUNÇÃO PARA ESCUTAR CHAMADAS ---
     function listenForCalls() {
       supabaseClient.channel('incoming-calls')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'calls', filter: `receiver_id=eq.${currentUser}` }, async payload => {
@@ -234,6 +228,7 @@
             ringtone = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
             ringtone.loop = true; 
             ringtone.play().catch(e => console.log("Erro ao tocar som:", e));
+            if (navigator.vibrate) navigator.vibrate([500, 500, 500, 500, 500, 500, 500, 500]);
 
             const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', call.caller_id).single();
             
@@ -247,18 +242,18 @@
         }).subscribe();
     }
 
-    // --- ACEITAR / RECUSAR CHAMADA ---
     function acceptCall() {
       document.getElementById('incomingCallOverlay').style.display = 'none';
       if (ringtone) { ringtone.pause(); ringtone.currentTime = 0; }
+      if (navigator.vibrate) navigator.vibrate(0);
       if (!incomingCallData) return;
-      
       window.location.href = `chamada.html?user_id=${incomingCallData.caller_id}&type=${incomingCallData.type}&call_id=${incomingCallData.id}&role=receiver`;
     }
 
     async function declineCall() {
       document.getElementById('incomingCallOverlay').style.display = 'none';
       if (ringtone) { ringtone.pause(); ringtone.currentTime = 0; }
+      if (navigator.vibrate) navigator.vibrate(0);
       if (incomingCallData) {
         await supabaseClient.from('calls').update({ status: 'declined' }).eq('id', incomingCallData.id);
         incomingCallData = null;

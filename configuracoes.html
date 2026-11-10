@@ -37,6 +37,10 @@
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .modal-header h3 { color: var(--neon); }
     .modal-header i { cursor: pointer; font-size: 1.5rem; }
+    
+    /* ESTILO DO SELECT DE IDIOMAS */
+    select.input-glass { background-color: #0a1f44; color: white; appearance: none; padding: 12px; }
+    select.input-glass option { background-color: #0a1f44; color: white; }
   </style>
 </head>
 <body>
@@ -48,6 +52,24 @@
   </header>
 
   <div class="settings-container">
+    
+    <!-- SECÇÃO DE IDIOMA -->
+    <p class="settings-group-title">Idioma e Região</p>
+    <div class="settings-group">
+      <div class="settings-item" style="cursor: default;">
+        <div class="settings-item-left">
+          <div class="settings-icon icon-blue"><i class="fa-solid fa-globe"></i></div>
+          <div class="settings-text">
+            <h4>Idioma Padrão</h4>
+            <p>Para traduções automáticas no chat</p>
+          </div>
+        </div>
+        <select id="languageSelect" class="input-glass" onchange="saveLanguage(this.value)" style="width: auto; max-width: 120px; font-size: 0.85rem;">
+          <!-- Opções preenchidas via JS -->
+        </select>
+      </div>
+    </div>
+
     <p class="settings-group-title">Conta e Segurança</p>
     <div class="settings-group">
       <div class="settings-item" onclick="window.location.href='perfil.html'">
@@ -102,25 +124,6 @@
         <div class="settings-item-left"><div class="settings-icon icon-green"><i class="fa-solid fa-credit-card"></i></div><div class="settings-text"><h4>Dados de Pagamento</h4><p>Como recebes o teu dinheiro</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
-      <div class="settings-item" onclick="alert('Em breve: Gerir os teus endereços de entrega.')">
-        <div class="settings-item-left"><div class="settings-icon icon-green"><i class="fa-solid fa-location-dot"></i></div><div class="settings-text"><h4>Endereço de Entrega</h4><p>Onde recebes as tuas compras</p></div></div>
-        <i class="fa-solid fa-chevron-right chevron"></i>
-      </div>
-    </div>
-
-    <p class="settings-group-title">Suporte e Sobre</p>
-    <div class="settings-group">
-      <div class="settings-item" onclick="alert('Em breve: Centro de Ajuda FLY.')">
-        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-circle-question"></i></div><div class="settings-text"><h4>Centro de Ajuda</h4><p>Perguntas frequentes</p></div></div>
-        <i class="fa-solid fa-chevron-right chevron"></i>
-      </div>
-      <div class="settings-item" onclick="alert('Em breve: Termos e Políticas de Privacidade.')">
-        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-file-contract"></i></div><div class="settings-text"><h4>Termos e Políticas</h4><p>Regras da comunidade</p></div></div>
-        <i class="fa-solid fa-chevron-right chevron"></i>
-      </div>
-      <div class="settings-item" onclick="alert('FLY Versão 1.0.0\nFeito com 💙 em Angola.')">
-        <div class="settings-item-left"><div class="settings-icon icon-purple"><i class="fa-solid fa-circle-info"></i></div><div class="settings-text"><h4>Versão da App</h4><p>v1.0.0</p></div></div>
-      </div>
     </div>
 
     <p class="settings-group-title">Sessão e Conta</p>
@@ -128,12 +131,10 @@
       <div class="settings-item" onclick="logout()">
         <div class="settings-item-left"><div class="settings-icon icon-red"><i class="fa-solid fa-right-from-bracket"></i></div><div class="settings-text"><h4 style="color: var(--danger);">Terminar Sessão</h4><p>Sair da conta neste dispositivo</p></div></div>
       </div>
-      <div class="settings-item" onclick="deleteAccountAlert()">
-        <div class="settings-item-left"><div class="settings-icon icon-red"><i class="fa-solid fa-trash"></i></div><div class="settings-text"><h4 style="color: var(--danger);">Apagar Conta</h4><p>Eliminar permanentemente a conta</p></div></div>
-      </div>
     </div>
   </div>
 
+  <!-- MODAIS MANTIDOS -->
   <div class="modal-overlay" id="passwordModal">
     <div class="modal-content">
       <div class="modal-header"><h3>Nova Palavra-passe</h3><i class="fa-solid fa-xmark" onclick="document.getElementById('passwordModal').style.display='none'"></i></div>
@@ -159,20 +160,52 @@
   <script>
     let currentUser = null;
 
+    // LISTA DE IDIOMAS
+    const LANGS = [
+      { code: 'pt', name: 'Português' }, { code: 'en', name: 'Inglês' }, { code: 'es', name: 'Espanhol' },
+      { code: 'fr', name: 'Francês' }, { code: 'de', name: 'Alemão' }, { code: 'it', name: 'Italiano' },
+      { code: 'nl', name: 'Holandês' }, { code: 'ru', name: 'Russo' }, { code: 'ar', name: 'Árabe' },
+      { code: 'ja', name: 'Japonês' }, { code: 'ko', name: 'Coreano' }, { code: 'zh-CN', name: 'Chinês' },
+      { code: 'hi', name: 'Hindi' }, { code: 'sw', name: 'Suaíli' }, { code: 'tr', name: 'Turco' }
+    ];
+
+    function fillLanguageSelect() {
+      const select = document.getElementById('languageSelect');
+      select.innerHTML = '';
+      LANGS.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.code;
+        opt.innerText = l.name;
+        select.appendChild(opt);
+      });
+    }
+
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user.id;
       document.getElementById('displayEmail').innerText = session.user.email;
 
-      const { data: profile } = await supabaseClient.from('profiles').select('settings').eq('id', currentUser).single();
-      if (profile && profile.settings) {
-        const s = profile.settings;
-        if(s.private_account) document.getElementById('togglePrivate').checked = true;
-        if(s.notif_push !== undefined) document.getElementById('togglePush').checked = s.notif_push;
-        if(s.notif_email) document.getElementById('toggleEmailNotif').checked = true;
-        if(s.vacation_mode) document.getElementById('toggleVacation').checked = true;
+      fillLanguageSelect();
+
+      const { data: profile } = await supabaseClient.from('profiles').select('settings, language').eq('id', currentUser).single();
+      
+      if (profile) {
+        if (profile.language) document.getElementById('languageSelect').value = profile.language;
+        if (profile.settings) {
+          const s = profile.settings;
+          if(s.private_account) document.getElementById('togglePrivate').checked = true;
+          if(s.notif_push !== undefined) document.getElementById('togglePush').checked = s.notif_push;
+          if(s.notif_email) document.getElementById('toggleEmailNotif').checked = true;
+          if(s.vacation_mode) document.getElementById('toggleVacation').checked = true;
+        }
       }
+    }
+
+    async function saveLanguage(code) {
+      const { error } = await supabaseClient.from('profiles').update({ language: code }).eq('id', currentUser);
+      if (error) { alert('Erro ao guardar idioma: ' + error.message); }
+      else { alert('Idioma atualizado com sucesso!'); }
     }
 
     async function saveSetting(key, value) {
@@ -187,8 +220,6 @@
       const newStatus = isVacation ? 'pausado' : 'ativo';
       const { error } = await supabaseClient.from('products').update({ status: newStatus }).eq('seller_id', currentUser);
       if (error) { alert('Erro ao pausar anúncios: ' + error.message); return; }
-      if (isVacation) alert('Modo de Férias ativado! Todos os teus anúncios foram pausados.');
-      else alert('Modo de Férias desativado! Os teus anúncios estão ativos novamente.');
     }
 
     function openPasswordModal() { document.getElementById('passwordModal').style.display = 'flex'; document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; document.getElementById('pwdMsg').innerText = ''; }
@@ -210,10 +241,9 @@
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
       const { error } = await supabaseClient.auth.updateUser({ email: newEmail });
       if (error) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro: ' + error.message; btn.innerHTML = 'Atualizar E-mail'; btn.disabled = false; } 
-      else { msg.style.color = 'var(--success)'; msg.innerText = 'Link enviado para o novo e-mail! Verifica a caixa de entrada.'; btn.innerHTML = 'Atualizar E-mail'; btn.disabled = false; }
+      else { msg.style.color = 'var(--success)'; msg.innerText = 'Link enviado para o novo e-mail!'; btn.innerHTML = 'Atualizar E-mail'; btn.disabled = false; }
     }
 
-    function deleteAccountAlert() { alert('Atenção: A exclusão permanente de conta estará disponível numa próxima atualização por motivos de segurança.'); }
     async function logout() { if(confirm('Tens a certeza que queres terminar a sessão?')) { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; } }
     init();
   </script>
