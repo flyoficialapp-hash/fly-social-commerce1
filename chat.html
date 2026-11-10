@@ -41,6 +41,11 @@
     
     .empty-state { text-align: center; color: var(--text-muted); padding: 50px 20px; }
     .empty-state i { font-size: 3rem; margin-bottom: 15px; color: var(--glass-border); }
+
+    /* POP-UP DE CHAMADA A RECEBER */
+    .incoming-call-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.95); z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(15px); }
+    .incoming-avatar { width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--neon); animation: pulse 1.5s infinite; object-fit: cover;}
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 204, 255, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(0, 204, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 204, 255, 0); } }
   </style>
 </head>
 <body>
@@ -65,7 +70,18 @@
   <div class="chat-list" id="chatList">
     <div class="empty-state"><i class="fa-solid fa-comments"></i><p>A carregar as suas conversas...</p></div>
   </div>
-  
+
+  <!-- POP-UP A RECEBER CHAMADA -->
+  <div class="incoming-call-overlay" id="incomingCallOverlay">
+    <img id="incomingAvatar" src="default-avatar.png" class="incoming-avatar">
+    <h2 id="incomingName" style="color:white; margin-top:20px;">A ligar...</h2>
+    <p id="incomingType" style="color:var(--text-muted); margin-bottom:40px;">Chamada de vídeo...</p>
+    <div style="display:flex; gap:30px;">
+      <button onclick="declineCall()" style="width:70px; height:70px; border-radius:50%; background:var(--danger); color:white; border:none; font-size:1.8rem; cursor:pointer; box-shadow:0 0 20px rgba(255,51,102,0.5);"><i class="fa-solid fa-phone-slash"></i></button>
+      <button onclick="acceptCall()" style="width:70px; height:70px; border-radius:50%; background:var(--success); color:white; border:none; font-size:1.8rem; cursor:pointer; box-shadow:0 0 20px rgba(0,230,118,0.5);"><i class="fa-solid fa-phone"></i></button>
+    </div>
+  </div>
+
   <nav class="bottom-nav">
     <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
     <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
@@ -80,6 +96,8 @@
     let currentUser = null;
     let currentTab = 'todos';
     let myFollowingIds = []; let myFollowerIds = []; let myFriendIds = []; let myClientIds = []; let mySellerIds = [];
+    let incomingCallData = null;
+    let ringtone = null;
 
     async function updateBadges() {
       if (!currentUser) return;
@@ -113,7 +131,9 @@
           if (o.buyer_id === currentUser) mySellerIds.push(o.seller_id);
         });
       }
+      
       loadChats();
+      listenForCalls(); // Começa a escutar por chamadas
     }
 
     function switchTab(tab) {
@@ -181,7 +201,6 @@
           </div>
           <div class="chat-actions-right">
             <div class="action-icons">
-              <!-- AQUI ESTÃO AS CHAMADAS PARA A NOVA FUNÇÃO -->
               <i class="fa-solid fa-phone" onclick="event.stopPropagation(); startCall('${contactId}', 'audio')"></i>
               <i class="fa-solid fa-video" onclick="event.stopPropagation(); startCall('${contactId}', 'video')"></i>
             </div>
@@ -192,9 +211,8 @@
       }
     }
 
-    // --- A FUNÇÃO DE LIGAR (AGORA DENTRO DO SCRIPT) ---
+    // --- FUNÇÃO PARA LIGAR ---
     async function startCall(receiverId, type) {
-      // 1. Criar o pedido de chamada na base de dados
       const { data: call, error } = await supabaseClient.from('calls').insert([{
         caller_id: currentUser,
         receiver_id: receiverId,
@@ -204,8 +222,47 @@
 
       if (error) { alert('Erro ao ligar: ' + error.message); return; }
 
-      // 2. Redirecionar para a tela de chamada como "caller"
       window.location.href = `chamada.html?user_id=${receiverId}&type=${type}&call_id=${call.id}&role=caller`;
+    }
+
+    // --- FUNÇÃO PARA ESCUTAR CHAMADAS ---
+    function listenForCalls() {
+      supabaseClient.channel('incoming-calls')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'calls', filter: `receiver_id=eq.${currentUser}` }, async payload => {
+          const call = payload.new;
+          if (call.status === 'ringing') {
+            ringtone = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+            ringtone.loop = true; 
+            ringtone.play().catch(e => console.log("Erro ao tocar som:", e));
+
+            const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', call.caller_id).single();
+            
+            document.getElementById('incomingAvatar').src = profile?.avatar_url || 'default-avatar.png';
+            document.getElementById('incomingName').innerText = profile?.username || 'Alguém';
+            document.getElementById('incomingType').innerText = call.type === 'video' ? 'Chamada de vídeo...' : 'Chamada de voz...';
+            
+            incomingCallData = call;
+            document.getElementById('incomingCallOverlay').style.display = 'flex';
+          }
+        }).subscribe();
+    }
+
+    // --- ACEITAR / RECUSAR CHAMADA ---
+    function acceptCall() {
+      document.getElementById('incomingCallOverlay').style.display = 'none';
+      if (ringtone) { ringtone.pause(); ringtone.currentTime = 0; }
+      if (!incomingCallData) return;
+      
+      window.location.href = `chamada.html?user_id=${incomingCallData.caller_id}&type=${incomingCallData.type}&call_id=${incomingCallData.id}&role=receiver`;
+    }
+
+    async function declineCall() {
+      document.getElementById('incomingCallOverlay').style.display = 'none';
+      if (ringtone) { ringtone.pause(); ringtone.currentTime = 0; }
+      if (incomingCallData) {
+        await supabaseClient.from('calls').update({ status: 'declined' }).eq('id', incomingCallData.id);
+        incomingCallData = null;
+      }
     }
 
     init();

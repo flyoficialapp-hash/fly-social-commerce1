@@ -6,7 +6,7 @@
   <title>FLY - Chamada</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- BIBLIOTECA PEERJS PARA VIDEOCHAMADAS REAIS -->
+  <!-- BIBLIOTECA PEERJS -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     body { height: 100vh; overflow: hidden; background: #030712; display: flex; flex-direction: column; font-family: 'Inter', sans-serif; }
@@ -92,7 +92,7 @@
     let targetUserId = null;
     let callType = 'video';
     let callId = null;
-    let role = 'caller'; // 'caller' ou 'receiver'
+    let role = 'caller';
     let peer = null;
     let currentCall = null;
     
@@ -118,12 +118,10 @@
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user.id;
 
-      // Buscar dados do outro utilizador
       const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', targetUserId).single();
       const avatarUrl = profile && profile.avatar_url ? profile.avatar_url : 'default-avatar.png';
       const userName = profile ? profile.username : 'Utilizador FLY';
 
-      // Configurar UI
       if (callType === 'audio') {
         document.getElementById('voiceUI').style.display = 'flex';
         document.getElementById('videoUI').style.display = 'none';
@@ -135,7 +133,6 @@
         document.getElementById('remoteVideoAvatar').src = avatarUrl;
       }
 
-      // 1. Ligar a câmara/microfone local
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
           video: callType === 'video' ? { facingMode: 'user' } : false,
@@ -153,31 +150,45 @@
         }
       }
 
-      // 2. Iniciar PeerJS (WebRTC)
-      // O nosso ID de Peer será o ID do Supabase do utilizador (para o outro saber para onde ligar)
-      peer = new Peer(currentUser, { debug: 2 });
+      // --- CONFIGURAÇÃO DO PEERJS COM STUN E TURN (Para funcionar em redes diferentes) ---
+      const peerOptions = {
+        debug: 2,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { 
+              urls: 'turn:openrelay.metered.ca:80',
+              username: 'openrelayproject',
+              credential: 'openrelayproject'
+            },
+            { 
+              urls: 'turn:openrelay.metered.ca:443',
+              username: 'openrelayproject',
+              credential: 'openrelayproject'
+            }
+          ]
+        }
+      };
+      
+      peer = new Peer(currentUser, peerOptions);
 
       peer.on('open', async (id) => {
         console.log('PeerJS ligado com ID:', id);
         
         if (role === 'caller') {
-          // Se sou o que está a ligar, inicia a chamada para o outro
           document.getElementById(callType === 'video' ? 'videoTimer' : 'voiceTimer').innerText = "A tocar...";
           currentCall = peer.call(targetUserId, localStream);
           setupCallEvents(currentCall);
           
-          // Marcar chamada como 'accepted' (simplificação para 1 utilizador aceitar)
           await supabaseClient.from('calls').update({ status: 'accepted' }).eq('id', callId);
         } else {
-          // Se sou o que recebe, espero pela chamada
           document.getElementById(callType === 'video' ? 'videoTimer' : 'voiceTimer').innerText = "Conectado!";
           startTimer(callType === 'video' ? 'videoTimer' : 'voiceTimer');
         }
       });
 
-      // Se receber uma chamada (só acontece no lado do receiver)
       peer.on('call', (call) => {
-        call.answer(localStream); // Aceita e envia a nossa câmara
+        call.answer(localStream);
         currentCall = call;
         setupCallEvents(currentCall);
         startTimer(callType === 'video' ? 'videoTimer' : 'voiceTimer');
@@ -192,7 +203,6 @@
           remoteVideo.style.display = 'block';
           document.getElementById('remotePlaceholder').style.display = 'none';
         } else {
-          // Para chamada de voz, o áudio toca no fundo (sem mostrar vídeo)
           const audio = new Audio();
           audio.srcObject = remoteStream;
           audio.play();
