@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>FLY - Entrar</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,58 +13,56 @@
       background: var(--bg-gradient);
       justify-content: center;
       align-items: center;
-      padding: clamp(12px, 3vw, 28px);
+      padding: 20px;
       position: relative;
       min-height: 100vh;
-      min-height: 100svh;
+      min-height: 100dvh;
       overflow-x: hidden;
     }
 
     .login-wrapper {
       width: 100%;
-      max-width: 420px;
+      max-width: 420px; /* Largura máxima da tela toda */
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 15px;
       z-index: 10;
       margin: auto;
     }
 
     .gif-hero-container {
-      width: 100%;
+      width: 100%; /* Ocupa toda a largura */
       display: flex;
       justify-content: center;
       align-items: center;
-      margin: 0;
     }
 
+    /* VÍDEO AJUSTADO PARA ALINHAR COM O PAINEL */
     .login-video {
       display: block;
-      width: min(100%, 380px);
-      aspect-ratio: 1 / 1;
+      width: 100%; /* Mesma largura do formulário */
       height: auto;
-      max-height: min(42vh, 350px);
-      object-fit: contain;
-      border-radius: 18px;
-      filter: drop-shadow(0 0 25px rgba(0, 204, 255, 0.38));
+      max-height: 40vh; /* Limite de altura para não empurrar o form para fora */
+      object-fit: cover; /* Preenche o espaço sem distorcer */
+      border-radius: 20px; /* Mesmo arredondamento do formulário */
+      filter: drop-shadow(0 0 20px rgba(0, 204, 255, 0.3));
     }
 
     .login-panel {
-      background: rgba(10, 25, 50, 0.72) !important;
+      background: rgba(10, 25, 50, 0.75) !important;
       border: 1px solid var(--glass-border) !important;
       padding: 25px 20px !important;
       width: 100%;
-      min-width: 0;
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
+      border-radius: 20px; /* Garantindo o arredondamento igual */
     }
 
+    /* Ajuste para ecrãs menores */
     @media (max-width: 600px) {
-      body { padding: 12px; }
-      .login-wrapper { max-width: 440px; gap: 8px; }
-      .login-video { width: min(100%, 310px); max-height: 32svh; }
-      .login-panel { padding: 22px 16px !important; }
+      .login-video { max-height: 35vh; }
+      .login-panel { padding: 20px 15px !important; }
     }
   </style>
 </head>
@@ -72,21 +70,12 @@
 
   <div class="login-wrapper">
     
-    <!-- VÍDEO DA FLY -->
     <div class="gif-hero-container">
-      <video class="login-video"
-             autoplay
-             muted
-             loop
-             playsinline
-             webkit-playsinline
-             preload="metadata">
+      <video class="login-video" autoplay muted loop playsinline webkit-playsinline preload="metadata">
         <source src="fundo_login.mp4" type="video/mp4">
-        O teu navegador não suporta vídeo HTML5.
       </video>
     </div>
 
-    <!-- FORMULÁRIO -->
     <div class="glass-panel login-panel">
       <h2 style="text-align: center; margin-bottom: 20px; font-weight: 500; font-size: 1.1rem; color: white;">Bem-vindo de volta!</h2>
 
@@ -160,7 +149,6 @@
     const registerForm = document.getElementById('registerForm');
     const toggleAuth = document.getElementById('toggleAuth');
     const messageEl = document.getElementById('message');
-
     let isLogin = true;
 
     toggleAuth.addEventListener('click', () => {
@@ -203,9 +191,7 @@
       messageEl.innerText = 'A criar conta...';
 
       const { data: authData, error: authError } = await supabaseClient.auth.signUp({ 
-        email, 
-        password,
-        options: { data: { username: username } }
+        email, password, options: { data: { username: username } }
       });
 
       if (authError) {
@@ -213,7 +199,7 @@
         messageEl.innerText = authError.message;
       } else {
         messageEl.style.color = 'var(--success)';
-        messageEl.innerText = 'Conta criada com sucesso! A entrar...';
+        messageEl.innerText = 'Conta criada! A entrar...';
         setTimeout(() => window.location.href = 'home.html', 1500);
       }
     });

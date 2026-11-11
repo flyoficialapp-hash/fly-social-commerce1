@@ -2,62 +2,39 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- ESTA É A META TAG MÁGICA PARA TECLADOS MOBILE -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>FLY - Chat</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* A MÁGICA ACONTECE AQUI: 100dvh adapta-se ao teclado e à barra do browser */
-    html, body { 
-      height: 100%; 
-      margin: 0; 
-      padding: 0; 
-      overflow: hidden; 
-      background: var(--bg-color);
-    }
+    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--bg-color); }
+    body { height: 100dvh; display: flex; flex-direction: column; }
     
-    body { 
-      height: 100dvh; /* Dynamic Viewport Height */
-      display: flex; 
-      flex-direction: column; 
-      font-family: 'Inter', sans-serif;
-    }
-    
-    /* CABEÇALHO FIXO */
-    .chat-header { 
-      flex-shrink: 0; 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      padding: 10px 15px; 
-      background: rgba(3, 7, 18, 0.95); 
-      border-bottom: 1px solid var(--glass-border); 
-      z-index: 10; 
-    }
+    .chat-header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: rgba(3, 7, 18, 0.95); border-bottom: 1px solid var(--glass-border); z-index: 10; }
     .header-left { display: flex; align-items: center; gap: 10px; }
     .header-left i { font-size: 1.5rem; cursor: pointer; color: white; }
     .chat-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--primary); border: 2px solid var(--glass-border); }
     .chat-user-name { font-weight: bold; font-size: 1rem; color: white;}
     .chat-status { font-size: 0.75rem; color: var(--success); }
     .header-actions { display: flex; gap: 15px; }
-    .header-actions i { font-size: 1.3rem; color: var(--neon); cursor: pointer; transition: 0.2s; }
+    .header-actions i { font-size: 1.3rem; color: var(--neon); cursor: pointer; }
     
-    /* ÁREA DE MENSAGENS (CRESCE E FAZ SCROLL) */
+    /* MENSAGENS - CRESCEM E FAZEM SCROLL */
     .chat-messages { 
-      flex: 1; /* Ocupa todo o espaço restante */
+      flex: 1; 
       overflow-y: auto; 
       padding: 20px; 
+      padding-bottom: 10px;
       display: flex; 
       flex-direction: column; 
       gap: 15px; 
       scroll-behavior: smooth;
-      /* NÃO precisamos de padding-bottom grande porque o input já empurra */
     }
     
     .message-row { display: flex; align-items: flex-end; gap: 8px; max-width: 85%; }
     .message-row.sent { align-self: flex-end; flex-direction: row-reverse; }
     .message-row.received { align-self: flex-start; }
-    
     .msg-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--glass-border); margin-bottom: 18px;}
     
     .message { padding: 12px 16px; border-radius: 15px; font-size: 0.95rem; line-height: 1.4; position: relative; word-wrap: break-word;}
@@ -66,21 +43,20 @@
     
     .message-image { max-width: 100%; border-radius: 10px; margin-bottom: 5px; cursor: pointer; }
     .message-time { font-size: 0.65rem; color: rgba(255,255,255,0.7); text-align: right; margin-top: 5px; display: block; }
-    
     .translated-tag { display: inline-block; font-size: 0.65rem; color: #a855f7; background: rgba(168, 85, 247, 0.15); padding: 2px 6px; border-radius: 4px; margin-bottom: 5px; font-weight: bold; }
     .translated-text { font-style: italic; color: #e0e0e0; }
 
-    /* BARRA DE INPUT (SEMPRE NO FUNDO DO FLUXO, SEM FIXED) */
+    /* INPUT - FICA NO FUNDO, MAS NÃO FLUTUA POR CIMA */
     .chat-input-area { 
-      flex-shrink: 0; /* Não encolhe */
+      flex-shrink: 0; 
       padding: 10px 15px; 
-      padding-bottom: calc(10px + env(safe-area-inset-bottom)); /* Suporte para iPhone */
+      padding-bottom: calc(10px + env(safe-area-inset-bottom)); /* Para iPhones */
       background: rgba(3, 7, 18, 0.95); 
       border-top: 1px solid var(--glass-border); 
       display: flex; 
       gap: 8px; 
       align-items: center; 
-      position: relative;
+      position: relative; 
       z-index: 20; 
     }
     
@@ -89,22 +65,8 @@
     .chat-input { flex: 1; min-width: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 30px; padding: 12px 15px; color: white; outline: none; font-size: 0.95rem;}
     .btn-send { width: 45px; height: 45px; flex-shrink: 0; border-radius: 50%; background: var(--primary); border: none; color: white; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
     
-    .emoji-panel { 
-      position: absolute; 
-      bottom: 70px; 
-      left: 15px; 
-      background: var(--bg-color); 
-      border: 1px solid var(--neon); 
-      border-radius: 15px; 
-      padding: 10px; 
-      display: none; 
-      grid-template-columns: repeat(5, 1fr); 
-      gap: 10px; 
-      z-index: 30; 
-      box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
-    }
-    .emoji-panel span { font-size: 1.5rem; cursor: pointer; transition: 0.2s; text-align: center; }
-    .emoji-panel span:hover { transform: scale(1.3); }
+    .emoji-panel { position: absolute; bottom: 70px; left: 15px; background: var(--bg-color); border: 1px solid var(--neon); border-radius: 15px; padding: 10px; display: none; grid-template-columns: repeat(5, 1fr); gap: 10px; z-index: 30; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+    .emoji-panel span { font-size: 1.5rem; cursor: pointer; text-align: center; }
   </style>
 </head>
 <body>
@@ -129,7 +91,6 @@
     <div class="emoji-panel" id="emojiPanel">
       <span onclick="addEmoji('😀')">😀</span><span onclick="addEmoji('😂')">😂</span><span onclick="addEmoji('❤️')">❤️</span><span onclick="addEmoji('👍')">👍</span><span onclick="addEmoji('🔥')">🔥</span>
       <span onclick="addEmoji('😮')">😮</span><span onclick="addEmoji('😢')">😢</span><span onclick="addEmoji('🙏')">🙏</span><span onclick="addEmoji('💪')">💪</span><span onclick="addEmoji('🎉')">🎉</span>
-      <span onclick="addEmoji('🙌')">🙌</span><span onclick="addEmoji('😍')">😍</span><span onclick="addEmoji('🤔')">🤔</span><span onclick="addEmoji('👏')">👏</span><span onclick="addEmoji('💯')">💯</span>
     </div>
 
     <div class="input-actions">
@@ -147,9 +108,7 @@
     let currentUser = null; let sellerId = null;
     let myAvatarUrl = 'default-avatar.png';
     let otherAvatarUrl = 'default-avatar.png';
-    let myLanguage = 'pt';
-    let otherLanguage = 'pt';
-
+    let myLanguage = 'pt'; let otherLanguage = 'pt';
     const LANGS = { 'pt': 'Português', 'en': 'Inglês', 'es': 'Espanhol', 'fr': 'Francês', 'de': 'Alemão', 'it': 'Italiano', 'ru': 'Russo', 'ja': 'Japonês', 'zh-CN': 'Chinês', 'ar': 'Árabe', 'sw': 'Suaíli', 'ko': 'Coreano', 'nl': 'Holandês', 'tr': 'Turco', 'hi': 'Hindi' };
 
     async function initChat() {
@@ -162,10 +121,7 @@
       currentUser = session.user.id;
 
       const { data: me } = await supabaseClient.from('profiles').select('avatar_url, language').eq('id', currentUser).single();
-      if (me) { 
-        if (me.avatar_url) myAvatarUrl = me.avatar_url; 
-        if (me.language) myLanguage = me.language;
-      }
+      if (me) { if (me.avatar_url) myAvatarUrl = me.avatar_url; if (me.language) myLanguage = me.language; }
 
       const { data: other } = await supabaseClient.from('profiles').select('username, avatar_url, language').eq('id', sellerId).single();
       if (other) {
@@ -189,13 +145,8 @@
       const { data: messages, error } = await supabaseClient.from('messages').select('*').or(`and(sender_id.eq.${currentUser},receiver_id.eq.${sellerId}),and(sender_id.eq.${sellerId},receiver_id.eq.${currentUser})`).order('created_at', { ascending: true });
       if (error) return;
       const chatBox = document.getElementById('chatMessages'); chatBox.innerHTML = '';
-      
-      for (const msg of messages) {
-        await appendMessage(msg);
-      }
+      for (const msg of messages) { await appendMessage(msg); }
       await markAsRead();
-      
-      // Força o scroll para o fundo após carregar tudo
       setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 150);
     }
 
@@ -204,9 +155,7 @@
     async function appendMessage(msg) {
       const chatBox = document.getElementById('chatMessages');
       const isSent = msg.sender_id === currentUser;
-      const timeDate = msg.created_at ? new Date(msg.created_at) : new Date();
-      const time = timeDate.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-      
+      const time = new Date(msg.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
       const row = document.createElement('div');
       row.className = `message-row ${isSent ? 'sent' : 'received'}`;
       row.id = `msg-${msg.id || Date.now()}`;
@@ -221,52 +170,31 @@
       const shouldTranslate = !isSent && myLanguage !== otherLanguage && msg.content;
 
       if (shouldTranslate) {
-        textHtml = `
-          <div class="translated-tag" id="tag-${row.id}"><i class="fa-solid fa-spinner fa-spin"></i> A traduzir...</div>
-          <div class="translated-text" id="text-${row.id}">${msg.content}</div>
-        `;
+        textHtml = `<div class="translated-tag" id="tag-${row.id}"><i class="fa-solid fa-spinner fa-spin"></i> A traduzir...</div><div class="translated-text" id="text-${row.id}">${msg.content}</div>`;
       }
       
       row.innerHTML = `
         <img src="${isSent ? myAvatarUrl : otherAvatarUrl}" class="msg-avatar">
-        <div class="message">
-          ${contentHtml}${textHtml}
-          <span class="message-time">${time}</span>
-        </div>
+        <div class="message">${contentHtml}${textHtml}<span class="message-time">${time}</span></div>
       `;
       chatBox.appendChild(row); 
-      
-      // Auto-scroll para a última mensagem
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      if (shouldTranslate) {
-        translateMessage(msg.content, otherLanguage, myLanguage, row.id);
-      }
+      if (shouldTranslate) { translateMessage(msg.content, otherLanguage, myLanguage, row.id); }
     }
 
     async function translateMessage(text, source, target, rowId) {
       try {
-        const { data, error } = await supabaseClient.functions.invoke('translate-message', {
-          body: { text, source, target }
-        });
-
+        const { data, error } = await supabaseClient.functions.invoke('translate-message', { body: { text, source, target } });
         const tag = document.getElementById(`tag-${rowId}`);
         const textDiv = document.getElementById(`text-${rowId}`);
-
         if (error || !data || data.error) {
-          console.error("Erro na tradução:", error || data);
           if (tag) tag.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Falha`;
-          if (textDiv) textDiv.innerText = text; 
-          return;
+          if (textDiv) textDiv.innerText = text; return;
         }
-
-        const sourceLangName = LANGS[source] || source;
-        if (tag) tag.innerHTML = `<i class="fa-solid fa-language"></i> Traduzido de ${sourceLangName}`;
+        if (tag) tag.innerHTML = `<i class="fa-solid fa-language"></i> Traduzido de ${LANGS[source] || source}`;
         if (textDiv) textDiv.innerText = data.translated;
-
-      } catch (err) {
-        console.error("Erro de tradução:", err);
-      }
+      } catch (err) { console.error(err); }
     }
 
     async function sendMessage() {
@@ -275,43 +203,30 @@
       const receiver = (currentUser === sellerId) ? currentUser : sellerId;
       const tempMsg = { sender_id: currentUser, receiver_id: receiver, content: text };
       appendMessage(tempMsg);
-      
-      const { error } = await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: receiver, content: text, is_read: false }]);
-      if (error) { console.error(`Erro ao enviar: ${error.message}`); }
+      await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: receiver, content: text, is_read: false }]);
     }
 
     async function uploadMedia(event) {
       const file = event.target.files[0]; if (!file) return;
       const receiver = (currentUser === sellerId) ? currentUser : sellerId;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `chats/${currentUser}_${Date.now()}.${fileExt}`;
-
+      const fileExt = file.name.split('.').pop(); const fileName = `chats/${currentUser}_${Date.now()}.${fileExt}`;
       const chatBox = document.getElementById('chatMessages');
       const tempRow = document.createElement('div'); tempRow.className = 'message-row sent';
       tempRow.innerHTML = `<div class="message"><i class="fa-solid fa-spinner fa-spin"></i> A enviar...</div>`;
       chatBox.appendChild(tempRow); chatBox.scrollTop = chatBox.scrollHeight;
-
       const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(fileName, file);
       if (uploadError) { alert('Erro: ' + uploadError.message); tempRow.remove(); return; }
-
       const { data: publicUrl } = supabaseClient.storage.from('fly_bucket').getPublicUrl(fileName);
-      const { error: dbError } = await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: receiver, content: '', file_url: publicUrl.publicUrl, file_type: file.type, is_read: false }]);
-
-      tempRow.remove();
-      if (dbError) { alert('Erro: ' + dbError.message); } else { loadMessages(); }
+      await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: receiver, content: '', file_url: publicUrl.publicUrl, file_type: file.type, is_read: false }]);
+      tempRow.remove(); loadMessages();
     }
 
     function toggleEmojiPanel() { const panel = document.getElementById('emojiPanel'); panel.style.display = panel.style.display === 'grid' ? 'none' : 'grid'; }
     function addEmoji(emoji) { const input = document.getElementById('messageInput'); input.value += emoji; input.focus(); }
-    
     async function startCall(type) {
-      const { data: call, error } = await supabaseClient.from('calls').insert([{
-        caller_id: currentUser, receiver_id: sellerId, type: type, status: 'ringing'
-      }]).select().single();
-      if (error) { alert('Erro ao ligar: ' + error.message); return; }
+      const { data: call } = await supabaseClient.from('calls').insert([{ caller_id: currentUser, receiver_id: sellerId, type: type, status: 'ringing' }]).select().single();
       window.location.href = `chamada.html?user_id=${sellerId}&type=${type}&call_id=${call.id}&role=caller`;
     }
-
     function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
     initChat();
   </script>
