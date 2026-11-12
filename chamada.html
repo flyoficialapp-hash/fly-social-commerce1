@@ -10,6 +10,7 @@
   <style>
     body { height: 100vh; overflow: hidden; background: #030712; display: flex; flex-direction: column; font-family: 'Inter', sans-serif; }
     .bg-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.15) 0%, #030712 70%); z-index: 0; pointer-events: none; }
+    
     .voice-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .top-bar { position: absolute; top: 40px; left: 20px; width: 90%; display: flex; justify-content: space-between; align-items: center; color: white; font-size: 1.5rem; z-index: 20;}
     .avatar-container { position: relative; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; }
@@ -26,12 +27,14 @@
     .icon-circle { width: 65px; height: 65px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; transition: 0.3s; backdrop-filter: blur(10px); }
     .btn-end-call .icon-circle { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 20px rgba(255, 51, 102, 0.5); width: 70px; height: 70px; font-size: 1.8rem; }
     .btn-mute.active .icon-circle { background: white; color: #000; }
+
     .video-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: none; flex-direction: column; background: #000; }
     #remoteVideo { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 1; }
     .remote-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #111; z-index: 1; }
     .local-video-container { position: absolute; top: 40px; left: 20px; width: 100px; height: 150px; border-radius: 15px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); z-index: 20; background: #222; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     #localVideo { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
     .local-video-placeholder { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; color: var(--text-muted); }
+    
     .video-top-right { position: absolute; top: 50px; right: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 15px; z-index: 20; }
     .timer-pill { background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(5px); font-weight: bold; }
     .timer-pill .dot { width: 10px; height: 10px; background: var(--danger); border-radius: 50%; }
@@ -41,20 +44,11 @@
     .btn-ctrl-vid .icon-circle { width: 55px; height: 55px; font-size: 1.3rem; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); }
     .btn-ctrl-vid.active .icon-circle { background: white; color: #000; }
     .btn-ctrl-vid.end .icon-circle { background: var(--danger); border-color: var(--danger); width: 60px; height: 60px; font-size: 1.5rem;}
-    .error-banner { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 51, 102, 0.9); color: white; padding: 20px; border-radius: 15px; text-align: center; z-index: 999; display: none; flex-direction: column; gap: 10px; width: 80%; max-width: 300px; box-shadow: 0 0 20px rgba(255, 51, 102, 0.5); }
-    .error-banner i { font-size: 2.5rem; }
   </style>
 </head>
 <body>
   <div class="bg-glow"></div>
   
-  <div class="error-banner" id="mediaError">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <h3>Sem Acesso à Câmara/Micro</h3>
-    <p style="font-size: 0.85rem; margin-bottom: 10px;">Verifica as permissões do teu browser ou se outro app está a usar a câmara.</p>
-    <button onclick="endCall()" style="background:white; color:var(--danger); border:none; padding:10px; border-radius:10px; font-weight:bold;">Voltar</button>
-  </div>
-
   <div class="voice-ui" id="voiceUI">
     <div class="top-bar"><i class="fa-solid fa-chevron-down" onclick="endCall()"></i><i class="fa-solid fa-expand"></i></div>
     <div class="avatar-container"><div class="pulse-ring"></div><div class="pulse-ring"></div><div class="pulse-ring"></div><img id="voiceAvatar" src="default-avatar.png" class="call-avatar"></div>
@@ -91,24 +85,55 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <script>
-    let localStream = null; let currentUser = null; let targetUserId = null;
-    let callType = 'video'; let callId = null; let role = 'caller';
-    let peer = null; let currentCall = null; let facingMode = 'user';
-    let isMuted = false; let isVideoOn = true; let callTimerInterval = null; let secondsElapsed = 0;
+    let localStream = null;
+    let currentUser = null;
+    let targetUserId = null;
+    let callType = 'video';
+    let callId = null;
+    let role = 'caller';
+    let peer = null;
+    let currentCall = null;
+    let facingMode = 'user';
+    let isMuted = false;
+    let isVideoOn = true;
+    let callTimerInterval = null;
+    let secondsElapsed = 0;
     let timerStarted = false;
 
-    function formatTime(seconds) { const m = Math.floor(seconds / 60).toString().padStart(2, '0'); const s = (seconds % 60).toString().padStart(2, '0'); return `${m}:${s}`; }
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
     function startTimer(elementId) {
       if (timerStarted) return;
       timerStarted = true;
-      clearInterval(callTimerInterval); secondsElapsed = 0; document.getElementById(elementId).innerText = "00:00";
-      callTimerInterval = setInterval(() => { secondsElapsed++; document.getElementById(elementId).innerText = formatTime(secondsElapsed); }, 1000);
+      clearInterval(callTimerInterval);
+      secondsElapsed = 0;
+      document.getElementById(elementId).innerText = "00:00";
+      callTimerInterval = setInterval(() => {
+        secondsElapsed++;
+        document.getElementById(elementId).innerText = formatTime(secondsElapsed);
+      }, 1000);
     }
 
     async function initCall() {
       const urlParams = new URLSearchParams(window.location.search);
-      targetUserId = urlParams.get('user_id'); callType = urlParams.get('type') || 'video';
-      callId = urlParams.get('call_id'); role = urlParams.get('role') || 'caller';
+      targetUserId = urlParams.get('user_id');
+      callType = urlParams.get('type') || 'video';
+      callId = urlParams.get('call_id');
+      role = urlParams.get('role') || 'caller';
 
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
@@ -119,17 +144,20 @@
       const userName = profile ? profile.username : 'Utilizador FLY';
 
       if (callType === 'audio') {
-        document.getElementById('voiceUI').style.display = 'flex'; document.getElementById('videoUI').style.display = 'none';
+        document.getElementById('voiceUI').style.display = 'flex';
+        document.getElementById('videoUI').style.display = 'none';
         document.getElementById('voiceName').innerHTML = `${userName} <i class="fa-solid fa-circle-check" style="color: var(--neon); font-size: 1rem;"></i>`;
         document.getElementById('voiceAvatar').src = avatarUrl;
       } else {
-        document.getElementById('voiceUI').style.display = 'none'; document.getElementById('videoUI').style.display = 'flex';
+        document.getElementById('voiceUI').style.display = 'none';
+        document.getElementById('videoUI').style.display = 'flex';
         document.getElementById('remoteVideoAvatar').src = avatarUrl;
       }
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
-          video: callType === 'video' ? { facingMode: facingMode } : false, audio: true
+          video: callType === 'video' ? { facingMode: facingMode } : false,
+          audio: true
         });
         if (callType === 'video') {
           document.getElementById('localVideo').srcObject = localStream;
@@ -138,18 +166,28 @@
         }
       } catch (err) {
         console.error("Erro getUserMedia:", err);
-        document.getElementById('mediaError').style.display = 'flex';
-        return; // Para o fluxo para não quebrar o PeerJS
+        showToast("Não foi possível aceder à câmara/microfone. Verifica as permissões.", 'error');
+        if (callType === 'video') document.getElementById('localVideoPlaceholder').innerHTML = '<i class="fa-solid fa-video-slash"></i><br><span style="font-size:0.6rem">Sem Câmara</span>';
+        return;
       }
 
-      const peerOptions = { debug: 2, config: { iceServers: [ { urls: 'stun:stun.l.google.com:19302' }, { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' }, { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' } ] } };
+      const peerOptions = {
+        debug: 2,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
+          ]
+        }
+      };
       peer = new Peer(currentUser, peerOptions);
 
       peer.on('open', async (id) => {
         if (role === 'caller') {
           document.getElementById(callType === 'video' ? 'videoTimer' : 'voiceTimer').innerText = "A tocar...";
           if (localStream) {
-            currentCall = peer.call(targetUserId, localStream); 
+            currentCall = peer.call(targetUserId, localStream);
             setupCallEvents(currentCall);
           }
           await supabaseClient.from('calls').update({ status: 'accepted' }).eq('id', callId);
@@ -160,8 +198,8 @@
       });
 
       peer.on('call', (call) => {
-        if (localStream) call.answer(localStream); 
-        currentCall = call; 
+        if (localStream) call.answer(localStream);
+        currentCall = call;
         setupCallEvents(currentCall);
         startTimer(callType === 'video' ? 'videoTimer' : 'voiceTimer');
       });
@@ -172,10 +210,13 @@
       call.on('stream', (remoteStream) => {
         if (callType === 'video') {
           const remoteVideo = document.getElementById('remoteVideo');
-          remoteVideo.srcObject = remoteStream; remoteVideo.style.display = 'block';
+          remoteVideo.srcObject = remoteStream;
+          remoteVideo.style.display = 'block';
           document.getElementById('remotePlaceholder').style.display = 'none';
         } else {
-          const audio = new Audio(); audio.srcObject = remoteStream; audio.play();
+          const audio = new Audio();
+          audio.srcObject = remoteStream;
+          audio.play();
         }
         startTimer(callType === 'video' ? 'videoTimer' : 'voiceTimer');
       });
@@ -186,43 +227,91 @@
     function toggleMute() {
       if (!localStream) return;
       const audioTrack = localStream.getAudioTracks()[0];
-      isMuted = !isMuted; audioTrack.enabled = !isMuted;
+      isMuted = !isMuted;
+      audioTrack.enabled = !isMuted;
       document.getElementById('btnMuteVoice')?.classList.toggle('active', isMuted);
       document.getElementById('btnMuteVideo')?.classList.toggle('active', isMuted);
     }
 
     function toggleVideo() {
       if (!localStream) return;
-      const videoTrack = localStream.getVideoTracks()[0]; if (!videoTrack) return;
-      isVideoOn = !isVideoOn; videoTrack.enabled = isVideoOn;
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (!videoTrack) return;
+      isVideoOn = !isVideoOn;
+      videoTrack.enabled = isVideoOn;
       document.getElementById('localVideo').style.display = isVideoOn ? 'block' : 'none';
       document.getElementById('localVideoPlaceholder').style.display = isVideoOn ? 'none' : 'flex';
       document.getElementById('btnVideoCam').classList.toggle('active', isVideoOn);
     }
 
+    // ==========================================
+    // SOLUÇÃO: FUNÇÃO switchCamera CORRIGIDA
+    // ==========================================
     async function switchCamera() {
       if (!localStream || callType !== 'video') return;
+
+      // 1. Mostrar um aviso rápido de "A trocar..."
+      showToast('A trocar de câmara...', 'success');
+
+      // 2. Parar TODAS as tracks de vídeo antigas para libertar o hardware
+      localStream.getVideoTracks().forEach(track => track.stop());
+
+      // 3. Escolher o novo modo (inverte entre 'user' e 'environment')
       facingMode = facingMode === 'user' ? 'environment' : 'user';
+
       try {
-        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode }, audio: false });
+        // 4. Pedir o novo stream. No Android, o ideal é não usar 'exact' no facingMode.
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: facingMode } },
+          audio: false // O áudio não precisa ser recapturado
+        });
+
         const newVideoTrack = newStream.getVideoTracks()[0];
+
+        // 5. Substituir a track no PeerJS sem parar a chamada
         if (currentCall && currentCall.peerConnection) {
           const senders = currentCall.peerConnection.getSenders();
           const videoSender = senders.find(s => s.track && s.track.kind === 'video');
           if (videoSender) await videoSender.replaceTrack(newVideoTrack);
         }
+
+        // 6. Atualizar o stream local e a interface
         const oldVideoTrack = localStream.getVideoTracks()[0];
-        if (oldVideoTrack) { oldVideoTrack.stop(); localStream.removeTrack(oldVideoTrack); }
+        if (oldVideoTrack) localStream.removeTrack(oldVideoTrack);
         localStream.addTrack(newVideoTrack);
+
         document.getElementById('localVideo').srcObject = localStream;
-      } catch (err) { 
-        alert('Erro ao inverter câmara: ' + err.message); 
-        facingMode = facingMode === 'user' ? 'environment' : 'user';
+        document.getElementById('localVideo').style.display = 'block';
+
+        showToast('Câmara invertida!', 'success');
+
+      } catch (err) {
+        console.error('Erro ao inverter câmara:', err);
+        // Se falhar, avisamos o utilizador e tentamos reverter para a câmara original
+        showToast('Não foi possível inverter a câmara. Tenta novamente.', 'error');
+        facingMode = facingMode === 'user' ? 'environment' : 'user'; // reverte o estado
+
+        // Tentar recuperar o stream antigo (opcional, mas seguro)
+        try {
+          const fallbackStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: facingMode } },
+            audio: true
+          });
+          localStream = fallbackStream;
+          document.getElementById('localVideo').srcObject = localStream;
+          if (currentCall && currentCall.peerConnection) {
+            const senders = currentCall.peerConnection.getSenders();
+            const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+            if (videoSender) await videoSender.replaceTrack(fallbackStream.getVideoTracks()[0]);
+          }
+        } catch (e) {
+          console.error('Falha ao recuperar câmara:', e);
+        }
       }
     }
 
     async function endCall() {
-      if (currentCall) currentCall.close(); 
+      if (currentCall) currentCall.close();
       if (peer) peer.destroy();
       if (localStream) localStream.getTracks().forEach(track => track.stop());
       clearInterval(callTimerInterval);

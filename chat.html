@@ -2,20 +2,44 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>FLY - Chat</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    body { background: var(--bg-color); background-image: var(--bg-gradient); min-height: 100vh; overflow-x: hidden; }
+    
+    /* HEADER */
     .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--glass-border); }
-    .header-logo { font-size: 1.5rem; font-weight: 800; font-style: italic; color: white; display: flex; align-items: center; gap: 10px;}
-    .header-logo img { height: 35px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 204, 255, 0.3); }
-    .header-icons i { font-size: 1.4rem; margin-left: 15px; color: white; cursor: pointer;}
-    .chat-tabs-container { padding: 0 15px 15px 15px; overflow-x: auto; scrollbar-width: none; }
+    .header-left { display: flex; align-items: center; gap: 15px; flex: 1; }
+    .my-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; cursor: pointer; }
+    .search-input-container { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 20px; display: flex; align-items: center; padding: 8px 15px; gap: 10px; flex: 1; max-width: 300px; }
+    .search-input-container i { color: var(--neon); }
+    .search-input-container input { background: transparent; border: none; color: white; outline: none; width: 100%; font-size: 0.9rem; }
+    .header-right { display: flex; align-items: center; gap: 15px; }
+    .header-right i { font-size: 1.5rem; color: white; cursor: pointer; }
+
+    /* AMIGOS ATIVOS */
+    .active-friends-section { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .section-title { color: white; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+    .section-title .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 5px var(--success); }
+    .section-link { color: #ffb300; font-size: 0.85rem; font-weight: bold; cursor: pointer; }
+    .active-friends-list { display: flex; gap: 15px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; }
+    .active-friend-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; min-width: 60px; }
+    .active-friend-avatar-container { position: relative; }
+    .active-friend-avatar { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); }
+    .active-friend-avatar.has-ring { border-color: #ffb300; }
+    .active-friend-dot { position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; background: var(--success); border-radius: 50%; border: 2px solid var(--bg-color); }
+    .active-friend-name { color: white; font-size: 0.75rem; text-align: center; width: 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* TABS */
+    .chat-tabs-container { padding: 15px 15px 10px 15px; overflow-x: auto; scrollbar-width: none; }
     .chat-tabs { display: flex; gap: 10px; }
-    .chat-tab { padding: 10px 18px; border-radius: 25px; background: var(--glass-bg); border: 1px solid var(--glass-border); font-size: 0.85rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 8px; transition: 0.3s; font-weight: bold; }
-    .chat-tab i { font-size: 1rem; }
-    .chat-tab.active { background: var(--primary); color: white; border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
+    .chat-tab { padding: 8px 16px; border-radius: 20px; background: var(--glass-bg); border: 1px solid var(--glass-border); font-size: 0.85rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; font-weight: bold; transition: 0.3s; }
+    .chat-tab.active { background: var(--primary); color: white; border-color: var(--neon); }
+
+    /* LISTA DE CONVERSAS */
     .chat-list { padding: 0 15px 90px 15px; display: flex; flex-direction: column; gap: 10px; }
     .chat-item { display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; cursor: pointer; transition: 0.3s; }
     .chat-item:hover { background: rgba(255,255,255,0.05); }
@@ -30,12 +54,27 @@
     .chat-actions-right { display: flex; align-items: center; gap: 10px; }
     .action-icons { display: flex; gap: 8px; color: var(--neon); font-size: 1.1rem; }
     .action-icons i { cursor: pointer; background: rgba(0, 204, 255, 0.1); padding: 8px; border-radius: 50%; transition: 0.2s; }
-    .action-icons i:hover { background: var(--primary); color: white; }
-    .unread-badge { background: var(--primary); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 0.75rem; font-weight: bold; box-shadow: 0 0 10px rgba(0, 204, 255, 0.5); }
+    .action-icons i.phone { color: var(--success); background: rgba(0, 230, 118, 0.1); }
+    .action-icons i.video { color: var(--primary); background: rgba(0, 102, 255, 0.1); }
+    .unread-badge { background: var(--primary); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 0.75rem; font-weight: bold; }
     .empty-state { text-align: center; color: var(--text-muted); padding: 50px 20px; }
     .empty-state i { font-size: 3rem; margin-bottom: 15px; color: var(--glass-border); }
 
-    /* SKELETONS PARA CHAT */
+    /* SIDEBAR MENU */
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: none; backdrop-filter: blur(3px); }
+    .sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; background: #0a1f44; z-index: 2001; transition: 0.3s ease-out; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.5); border-left: 1px solid var(--neon); }
+    .sidebar.open { right: 0; }
+    .sidebar-header { padding: 20px; display: flex; align-items: center; gap: 10px; background: rgba(255, 179, 0, 0.1); border-bottom: 1px solid rgba(255, 179, 0, 0.2); }
+    .sidebar-header i { color: #ffb300; font-size: 1.5rem; }
+    .sidebar-header h2 { color: #ffb300; font-size: 1.1rem; font-weight: bold; }
+    .sidebar-menu { padding: 10px 0; overflow-y: auto; flex: 1; }
+    .sidebar-item { display: flex; align-items: center; gap: 15px; padding: 15px 20px; color: white; text-decoration: none; font-weight: 500; transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02); }
+    .sidebar-item:hover { background: rgba(255,255,255,0.05); }
+    .sidebar-item i { width: 24px; text-align: center; font-size: 1.2rem; color: var(--text-muted); }
+    .sidebar-item span { flex: 1; font-size: 0.95rem; }
+    .sidebar-item .badge { background: var(--danger); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; }
+    
+    /* SKELETONS */
     .skeleton-chat-item { display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; margin-bottom: 10px; }
     .skeleton-chat-avatar { width: 55px; height: 55px; border-radius: 50%; background: #1a2235; }
     .skeleton-chat-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
@@ -44,21 +83,39 @@
   </style>
 </head>
 <body>
+
   <header class="header">
-    <div class="header-logo"><img src="logo.png" alt="FLY"> Chat</div>
-    <div class="header-icons">
-      <i class="fa-solid fa-magnifying-glass"></i>
-      <i class="fa-solid fa-plus" onclick="window.location.href='home.html'"></i>
+    <div class="header-left">
+      <img id="myHeaderAvatar" src="default-avatar.png" class="my-avatar" onclick="window.location.href='perfil.html'">
+      <div class="search-input-container">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Pesquisar mensagens, amigos..." onkeyup="searchChats(this.value)">
+      </div>
+    </div>
+    <div class="header-right">
+      <i class="fa-solid fa-gear" onclick="toggleSidebar()"></i>
     </div>
   </header>
 
+  <!-- AMIGOS ATIVOS -->
+  <div class="active-friends-section" id="activeFriendsSection">
+    <div class="section-header">
+      <div class="section-title"><div class="dot"></div> Amigos Ativos</div>
+      <div class="section-link" onclick="window.location.href='lista_usuarios.html?type=amigos'">Todos ></div>
+    </div>
+    <div class="active-friends-list" id="activeFriendsList">
+      <!-- Injetado via JS -->
+    </div>
+  </div>
+
+  <!-- TABS -->
   <div class="chat-tabs-container">
     <div class="chat-tabs">
-      <div class="chat-tab active" id="tab-todos" onclick="switchTab('todos')"><i class="fa-solid fa-layer-group"></i> Todos</div>
-      <div class="chat-tab" id="tab-clientes" onclick="switchTab('clientes')"><i class="fa-solid fa-users"></i> Clientes</div>
-      <div class="chat-tab" id="tab-vendedores" onclick="switchTab('vendedores')"><i class="fa-solid fa-store"></i> Vendedores</div>
-      <div class="chat-tab" id="tab-amigos" onclick="switchTab('amigos')"><i class="fa-solid fa-user-group"></i> Amigos</div>
-      <div class="chat-tab" id="tab-seguidores" onclick="switchTab('seguidores')"><i class="fa-solid fa-user-plus"></i> Seguidores</div>
+      <div class="chat-tab active" id="tab-todos" onclick="switchTab('todos')">Todos</div>
+      <div class="chat-tab" id="tab-clientes" onclick="window.location.href='lista_usuarios.html?type=clientes'">Clientes</div>
+      <div class="chat-tab" id="tab-vendedores" onclick="window.location.href='lista_usuarios.html?type=vendedores'">Vendedores</div>
+      <div class="chat-tab" id="tab-amigos" onclick="window.location.href='lista_usuarios.html?type=amigos'">Amigos</div>
+      <div class="chat-tab" id="tab-seguidores" onclick="window.location.href='lista_usuarios.html?type=seguidores'">Seguidores</div>
     </div>
   </div>
 
@@ -72,9 +129,31 @@
       <div class="skeleton-chat-avatar"></div>
       <div class="skeleton-chat-info"><div class="skeleton-chat-name"></div><div class="skeleton-chat-msg"></div></div>
     </div>
-    <div class="skeleton-chat-item">
-      <div class="skeleton-chat-avatar"></div>
-      <div class="skeleton-chat-info"><div class="skeleton-chat-name"></div><div class="skeleton-chat-msg"></div></div>
+  </div>
+
+  <!-- SIDEBAR MENU -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <i class="fa-solid fa-gear"></i>
+      <h2>Definições</h2>
+    </div>
+    <div class="sidebar-menu">
+      <a href="configuracoes.html" class="sidebar-item"><i class="fa-solid fa-sliders"></i> <span>Definições Gerais</span></a>
+      <a href="notificacoes.html" class="sidebar-item"><i class="fa-solid fa-envelope"></i> <span>Mensagens</span></a>
+      
+      <!-- PEDIDOS DE AMIZADE -->
+      <a href="notificacoes.html" class="sidebar-item"><i class="fa-solid fa-user-group"></i> <span>Pedidos de Amizade</span> <span class="badge" id="sidebarFriendRequests" style="display:none;">0</span></a>
+      
+      <!-- BLOQUEADOS -->
+      <a href="lista_usuarios.html?type=bloqueados" class="sidebar-item"><i class="fa-solid fa-ban"></i> <span>Bloqueados</span></a>
+      
+      <!-- AMIGOS, SEGUIDORES E A SEGUIR -->
+      <a href="lista_usuarios.html?type=amigos" class="sidebar-item"><i class="fa-solid fa-users"></i> <span>Amigos</span></a>
+      <a href="lista_usuarios.html?type=seguidores" class="sidebar-item"><i class="fa-solid fa-star"></i> <span>Seguidores</span></a>
+      <a href="lista_usuarios.html?type=a_seguir" class="sidebar-item"><i class="fa-solid fa-user-plus"></i> <span>A Seguir</span></a>
+      
+      <a href="configuracoes.html" class="sidebar-item"><i class="fa-solid fa-comment-dots"></i> <span>Definições de Mensagens</span></a>
     </div>
   </div>
 
@@ -94,6 +173,7 @@
     let currentUser = null;
     let currentTab = 'todos';
     let myFollowingIds = []; let myFollowerIds = []; let myFriendIds = []; let myClientIds = []; let mySellerIds = [];
+    let allChatItems = [];
 
     function showToast(message, type = 'success') {
       const toast = document.createElement('div');
@@ -105,18 +185,36 @@
       setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
     }
 
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('open');
+      if (sidebar.classList.contains('open')) { overlay.style.display = 'block'; }
+      else { overlay.style.display = 'none'; }
+    }
+
     async function updateBadges() {
       if (!currentUser) return;
       const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser).eq('is_read', false);
       const chatBadge = document.getElementById('chat-badge');
       if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
+
+      const { count: reqCount } = await supabaseClient.from('friendships').select('*', { count: 'exact', head: true }).eq('addressee_id', currentUser).eq('status', 'pendente');
+      const sidebarBadge = document.getElementById('sidebarFriendRequests');
+      if (sidebarBadge) {
+        if (reqCount > 0) { sidebarBadge.innerText = reqCount; sidebarBadge.style.display = 'inline-block'; }
+        else { sidebarBadge.style.display = 'none'; }
+      }
     }
 
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user.id;
-      
+
+      const { data: me } = await supabaseClient.from('profiles').select('avatar_url').eq('id', currentUser).single();
+      if (me && me.avatar_url) document.getElementById('myHeaderAvatar').src = me.avatar_url;
+
       updateBadges(); setInterval(updateBadges, 10000);
 
       const { data: follows } = await supabaseClient.from('follows').select('following_id').eq('follower_id', currentUser);
@@ -133,15 +231,42 @@
           if (o.buyer_id === currentUser) mySellerIds.push(o.seller_id);
         });
       }
+
+      await loadActiveFriends();
+      await loadChats();
+    }
+
+    async function loadActiveFriends() {
+      const container = document.getElementById('activeFriendsList');
+      if (myFriendIds.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Adiciona amigos para os veres aqui.</p>';
+        return;
+      }
+
+      const { data: profiles } = await supabaseClient.from('profiles').select('id, username, avatar_url').in('id', myFriendIds).limit(10);
       
-      loadChats();
+      container.innerHTML = '';
+      if (profiles) {
+        profiles.forEach((p, index) => {
+          const hasRing = index === 0 ? 'has-ring' : '';
+          container.innerHTML += `
+            <div class="active-friend-item" onclick="window.location.href='conversa.html?seller_id=${p.id}'">
+              <div class="active-friend-avatar-container">
+                <img src="${p.avatar_url || 'default-avatar.png'}" class="active-friend-avatar ${hasRing}">
+                <div class="active-friend-dot"></div>
+              </div>
+              <span class="active-friend-name">${p.username.split(' ')[0]}</span>
+            </div>
+          `;
+        });
+      }
     }
 
     function switchTab(tab) {
       currentTab = tab;
       document.querySelectorAll('.chat-tab').forEach(el => el.classList.remove('active'));
       document.getElementById(`tab-${tab}`).classList.add('active');
-      loadChats();
+      renderChats();
     }
 
     async function loadChats() {
@@ -149,11 +274,7 @@
       
       const { data: messages, error } = await supabaseClient.from('messages').select('*').or(`sender_id.eq.${currentUser},receiver_id.eq.${currentUser}`).order('created_at', { ascending: false });
       
-      if (error) { 
-        chatList.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar conversas.</p>`; 
-        showToast('Erro ao carregar conversas.', 'error');
-        return; 
-      }
+      if (error) { chatList.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar.</p>`; showToast('Erro ao carregar conversas.', 'error'); return; }
       
       if (!messages || messages.length === 0) { 
         chatList.innerHTML = `<div class="empty-state"><i class="fa-regular fa-comment-dots"></i><p>Ainda não tens conversas.</p></div>`; 
@@ -167,32 +288,54 @@
         if (msg.receiver_id === currentUser && msg.is_read === false) contacts[contactId].unread++;
       });
 
-      let filteredContacts = Object.entries(contacts);
+      const contactIds = Object.keys(contacts);
+      const { data: profiles } = await supabaseClient.from('profiles').select('id, username, avatar_url, is_premium').in('id', contactIds);
+      
+      const profileMap = {};
+      if (profiles) profiles.forEach(p => profileMap[p.id] = p);
 
-      if (currentTab === 'amigos') { filteredContacts = filteredContacts.filter(([id]) => myFriendIds.includes(id)); } 
-      else if (currentTab === 'seguidores') { filteredContacts = filteredContacts.filter(([id]) => myFollowingIds.includes(id) || myFollowerIds.includes(id)); } 
-      else if (currentTab === 'clientes') { filteredContacts = filteredContacts.filter(([id]) => myClientIds.includes(id)); } 
-      else if (currentTab === 'vendedores') { filteredContacts = filteredContacts.filter(([id]) => mySellerIds.includes(id)); }
+      allChatItems = Object.entries(contacts).map(([contactId, data]) => {
+        return {
+          contactId,
+          profile: profileMap[contactId] || { username: 'Utilizador FLY', avatar_url: 'default-avatar.png' },
+          lastMsg: data.lastMsg,
+          unread: data.unread
+        };
+      });
 
-      if (filteredContacts.length === 0) {
-        chatList.innerHTML = `<div class="empty-state"><i class="fa-regular fa-comments"></i><p>Nenhuma conversa nesta aba.</p></div>`;
+      renderChats();
+    }
+
+    function renderChats(searchQuery = '') {
+      const chatList = document.getElementById('chatList');
+      let filtered = allChatItems;
+
+      if (currentTab === 'amigos') { filtered = filtered.filter(c => myFriendIds.includes(c.contactId)); } 
+      else if (currentTab === 'seguidores') { filtered = filtered.filter(c => myFollowingIds.includes(c.contactId) || myFollowerIds.includes(c.contactId)); } 
+      else if (currentTab === 'clientes') { filtered = filtered.filter(c => myClientIds.includes(c.contactId)); } 
+      else if (currentTab === 'vendedores') { filtered = filtered.filter(c => mySellerIds.includes(c.contactId)); }
+
+      if (searchQuery) {
+        filtered = filtered.filter(c => c.profile.username.toLowerCase().includes(searchQuery.toLowerCase()));
+      }
+
+      if (filtered.length === 0) {
+        chatList.innerHTML = `<div class="empty-state"><i class="fa-regular fa-comments"></i><p>Nenhuma conversa encontrada.</p></div>`;
         return;
       }
 
       chatList.innerHTML = '';
-
-      for (const [contactId, data] of filteredContacts) {
-        const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_url, is_premium').eq('id', contactId).single();
-        const name = profile ? profile.username : 'Utilizador FLY';
-        const avatar = profile && profile.avatar_url ? profile.avatar_url : 'default-avatar.png';
-        const time = new Date(data.lastMsg.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-        const isPremium = profile && profile.is_premium;
+      filtered.forEach(item => {
+        const name = item.profile.username;
+        const avatar = item.profile.avatar_url || 'default-avatar.png';
+        const time = new Date(item.lastMsg.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+        const isPremium = item.profile.is_premium;
         const verifiedIcon = isPremium ? '<i class="fa-solid fa-crown" style="color: #ffd700; font-size: 0.8rem;"></i>' : '<i class="fa-solid fa-circle-check" style="color: var(--neon); font-size: 0.8rem;"></i>';
 
-        const item = document.createElement('div');
-        item.className = 'chat-item';
-        item.onclick = () => window.location.href = `conversa.html?seller_id=${contactId}`;
-        item.innerHTML = `
+        const chatItem = document.createElement('div');
+        chatItem.className = 'chat-item';
+        chatItem.onclick = () => window.location.href = `conversa.html?seller_id=${item.contactId}`;
+        chatItem.innerHTML = `
           <div class="chat-avatar-container">
             <img src="${avatar}" class="chat-avatar">
             <div class="online-dot"></div>
@@ -202,18 +345,22 @@
               <div class="chat-name">${name} ${verifiedIcon}</div>
               <div class="chat-time">${time}</div>
             </div>
-            <div class="chat-last-msg">${data.lastMsg.content || 'Enviou um ficheiro'}</div>
+            <div class="chat-last-msg">${item.lastMsg.content || 'Enviou um ficheiro'}</div>
           </div>
           <div class="chat-actions-right">
             <div class="action-icons">
-              <i class="fa-solid fa-phone" onclick="event.stopPropagation(); startCall('${contactId}', 'audio')"></i>
-              <i class="fa-solid fa-video" onclick="event.stopPropagation(); startCall('${contactId}', 'video')"></i>
+              <i class="fa-solid fa-phone phone" onclick="event.stopPropagation(); startCall('${item.contactId}', 'audio')"></i>
+              <i class="fa-solid fa-video video" onclick="event.stopPropagation(); startCall('${item.contactId}', 'video')"></i>
             </div>
-            ${data.unread > 0 ? `<div class="unread-badge">${data.unread}</div>` : ''}
+            ${item.unread > 0 ? `<div class="unread-badge">${item.unread}</div>` : ''}
           </div>
         `;
-        chatList.appendChild(item);
-      }
+        chatList.appendChild(chatItem);
+      });
+    }
+
+    function searchChats(query) {
+      renderChats(query);
     }
 
     async function startCall(receiverId, type) {

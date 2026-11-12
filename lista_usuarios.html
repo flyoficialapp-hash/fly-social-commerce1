@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Lista</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background: var(--bg-color); background-image: var(--bg-gradient); min-height: 100vh; }
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--glass-border); }
+    .header i { color: white; font-size: 1.5rem; cursor: pointer; }
+    .header-title { color: white; font-size: 1.2rem; font-weight: bold; }
+    
+    .user-list { padding: 15px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 90px; }
+    .user-item { display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; cursor: pointer; transition: 0.3s; }
+    .user-item:hover { background: rgba(255,255,255,0.05); }
+    .user-avatar { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--glass-border); }
+    .user-info { flex: 1; }
+    .user-name { font-weight: bold; font-size: 1rem; color: white; display: flex; align-items: center; gap: 5px; }
+    .user-username { font-size: 0.85rem; color: var(--text-muted); }
+    .user-action-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    
+    .empty-state { text-align: center; color: var(--text-muted); padding: 50px 20px; }
+    .empty-state i { font-size: 3rem; margin-bottom: 15px; color: var(--glass-border); }
+
+    /* Skeletons */
+    .skeleton-user-item { display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; margin-bottom: 10px; }
+    .skeleton-user-avatar { width: 55px; height: 55px; border-radius: 50%; background: #1a2235; }
+    .skeleton-user-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .skeleton-user-name { height: 16px; width: 40%; background: #1a2235; border-radius: 5px; }
+    .skeleton-user-username { height: 14px; width: 30%; background: #1a2235; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.history.back()"></i>
+    <div class="header-title" id="pageTitle">A carregar...</div>
+    <div style="width: 24px;"></div>
+  </header>
+
+  <div class="user-list" id="userList">
+    <!-- Skeletons -->
+    <div class="skeleton-user-item"><div class="skeleton-user-avatar"></div><div class="skeleton-user-info"><div class="skeleton-user-name"></div><div class="skeleton-user-username"></div></div></div>
+    <div class="skeleton-user-item"><div class="skeleton-user-avatar"></div><div class="skeleton-user-info"><div class="skeleton-user-name"></div><div class="skeleton-user-username"></div></div></div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
+    <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="duelos.html" class="nav-item" style="color: #ffd700; transform: scale(1.1);"><i class="fa-solid fa-trophy"></i><span style="font-weight: bold;">Duelo</span></a>
+    <a href="chat.html" class="nav-item active"><i class="fa-solid fa-comment-dots"></i><span>Chat</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócios</span></a>
+    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
+  <script>
+    let currentUser = null;
+
+    async function init() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const type = urlParams.get('type') || 'amigos';
+      const titleMap = {
+        'seguidores': 'Seguidores',
+        'a_seguir': 'A Seguir',
+        'amigos': 'Amigos',
+        'clientes': 'Clientes',
+        'vendedores': 'Vendedores',
+        'bloqueados': 'Bloqueados'
+      };
+      document.getElementById('pageTitle').innerText = titleMap[type] || 'Utilizadores';
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+
+      if (type === 'bloqueados') {
+        document.getElementById('userList').innerHTML = `<div class="empty-state"><i class="fa-solid fa-ban"></i><p>Ainda não bloqueaste ninguém.</p></div>`;
+        return;
+      }
+
+      let userIds = [];
+
+      if (type === 'seguidores') {
+        const { data } = await supabaseClient.from('follows').select('follower_id').eq('following_id', currentUser);
+        if (data) userIds = data.map(f => f.follower_id);
+      } 
+      else if (type === 'a_seguir') {
+        const { data } = await supabaseClient.from('follows').select('following_id').eq('follower_id', currentUser);
+        if (data) userIds = data.map(f => f.following_id);
+      } 
+      else if (type === 'amigos') {
+        const { data } = await supabaseClient.from('friendships').select('requester_id, addressee_id').eq('status', 'aceite').or(`requester_id.eq.${currentUser},addressee_id.eq.${currentUser}`);
+        if (data) userIds = data.map(f => f.requester_id === currentUser ? f.addressee_id : f.requester_id);
+      } 
+      else if (type === 'clientes') {
+        // Pessoas que compraram produtos meus
+        const { data } = await supabaseClient.from('orders').select('buyer_id').eq('seller_id', currentUser);
+        if (data) userIds = [...new Set(data.map(o => o.buyer_id))];
+      } 
+      else if (type === 'vendedores') {
+        // Pessoas a quem comprei produtos
+        const { data } = await supabaseClient.from('orders').select('seller_id').eq('buyer_id', currentUser);
+        if (data) userIds = [...new Set(data.map(o => o.seller_id))];
+      }
+
+      if (userIds.length === 0) {
+        document.getElementById('userList').innerHTML = `<div class="empty-state"><i class="fa-solid fa-users-slash"></i><p>Nenhum utilizador encontrado nesta lista.</p></div>`;
+        return;
+      }
+
+      // Puxar os perfis
+      const { data: profiles, error } = await supabaseClient.from('profiles').select('id, username, avatar_url, is_premium').in('id', userIds);
+      
+      const list = document.getElementById('userList');
+      list.innerHTML = '';
+
+      if (error || !profiles) {
+        list.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar utilizadores.</p>`;
+        return;
+      }
+
+      profiles.forEach(p => {
+        const isPremium = p.is_premium;
+        const verifiedIcon = isPremium ? '<i class="fa-solid fa-crown" style="color: #ffd700; font-size: 0.8rem;"></i>' : '';
+        const avatar = p.avatar_url || 'default-avatar.png';
+        
+        list.innerHTML += `
+          <div class="user-item" onclick="window.location.href='perfil.html?id=${p.id}'">
+            <img src="${avatar}" class="user-avatar">
+            <div class="user-info">
+              <div class="user-name">${p.username} ${verifiedIcon}</div>
+              <div class="user-username">@${p.username.toLowerCase().replace(/\s/g, '')}</div>
+            </div>
+            <button class="user-action-btn" onclick="event.stopPropagation(); window.location.href='conversa.html?seller_id=${p.id}'">
+              <i class="fa-solid fa-comment"></i> Mensagem
+            </button>
+          </div>
+        `;
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
