@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FLY - Votar no Duelo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background: var(--bg-color); background-image: var(--bg-gradient); min-height: 100vh; display: flex; flex-direction: column; }
+    .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(3, 7, 18, 0.95); border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
+    .header i { color: white; font-size: 1.5rem; cursor: pointer; }
+    .header-title { color: white; font-size: 1.2rem; font-weight: bold; }
+    
+    .duel-container { flex: 1; padding: 20px; display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; width: 100%; }
+    
+    .creator-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .creator-row img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; }
+    .creator-row .name { color: white; font-weight: bold; font-size: 1rem; }
+    .creator-row .time { color: var(--text-muted); font-size: 0.75rem; }
+
+    .question-title { font-size: 1.5rem; font-weight: 900; color: white; text-align: center; margin-bottom: 25px; line-height: 1.3; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
+    
+    .voting-area { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+    
+    .vote-card { position: relative; border-radius: 20px; overflow: hidden; border: 3px solid transparent; cursor: pointer; transition: 0.3s; background: #111; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .vote-card:hover { border-color: var(--neon); transform: scale(1.02); }
+    .vote-card img { width: 100%; height: 180px; object-fit: cover; display: block; }
+    .vote-card .opt-name { position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); color: white; font-size: 1.2rem; font-weight: bold; text-align: center; }
+    
+    .vs-circle { text-align: center; margin: -25px 0; position: relative; z-index: 10; }
+    .vs-circle span { background: linear-gradient(45deg, #7e22ce, #ec4899); color: white; font-weight: 900; font-style: italic; width: 50px; height: 50px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; border: 4px solid var(--bg-color); box-shadow: 0 0 20px rgba(236, 72, 153, 0.6); font-size: 1.2rem; }
+
+    .results-area { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+    .result-row { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; }
+    .result-header { display: flex; justify-content: space-between; color: white; font-weight: bold; margin-bottom: 8px; font-size: 1rem; }
+    .result-bar-bg { width: 100%; height: 15px; background: #222; border-radius: 10px; overflow: hidden; }
+    .result-bar-fill { height: 100%; width: 0%; transition: width 1s ease-out; }
+    .fill-a { background: linear-gradient(90deg, #0066ff, #00ccff); }
+    .fill-b { background: linear-gradient(90deg, #7e22ce, #ec4899); }
+
+    .stats-row { display: flex; justify-content: center; gap: 20px; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+    .stats-row i { color: var(--neon); }
+
+    .comments-section { background: var(--glass-bg); border-radius: 20px; padding: 15px; border: 1px solid var(--glass-border); margin-bottom: 30px; }
+    .comments-section h3 { color: white; font-size: 1rem; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+    .comment-input-area { display: flex; gap: 10px; margin-bottom: 15px; }
+    .comment-input-area input { flex: 1; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 20px; padding: 10px 15px; color: white; outline: none; }
+    .comment-input-area button { background: var(--primary); border: none; border-radius: 50%; width: 40px; height: 40px; color: white; cursor: pointer; }
+    .comment-item { display: flex; gap: 10px; margin-bottom: 15px; }
+    .comment-item img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+    .comment-item .text { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; color: #ccc; font-size: 0.85rem; flex: 1; }
+    .comment-item .text strong { color: var(--neon); display: block; margin-bottom: 3px; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.location.href='duelos.html'"></i>
+    <div class="header-title">Fly Duelo</div>
+    <div style="width: 24px;"></div>
+  </header>
+
+  <div class="duel-container" id="mainContainer">
+    <p style="text-align: center; color: var(--text-muted); margin-top: 50px;">A carregar duelo...</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
+  <script>
+    let currentUser = null;
+    let duelData = null;
+    let hasVoted = false;
+    let userVoteChoice = null;
+    let isExpired = false;
+
+    async function init() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const duelId = urlParams.get('id');
+      if (!duelId) { window.location.href = 'duelos.html'; return; }
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+
+      // 1. Carregar Duelo e Votos
+      const { data: duel, error } = await supabaseClient
+        .from('duels')
+        .select(`
+          *,
+          profiles:creator_id (username, avatar_url),
+          duel_votes (user_id, choice)
+        `)
+        .eq('id', duelId)
+        .single();
+
+      if (error || !duel) { alert('Duelo não encontrado.'); window.location.href = 'duelos.html'; return; }
+      
+      duelData = duel;
+      const now = new Date();
+      isExpired = now > new Date(duel.ends_at);
+
+      const myVote = duel.duel_votes.find(v => v.user_id === currentUser);
+      if (myVote) {
+        hasVoted = true;
+        userVoteChoice = myVote.choice;
+      }
+
+      renderDuel();
+
+      if (duel.allow_comments) {
+        loadComments();
+      }
+    }
+
+    function renderDuel() {
+      const container = document.getElementById('mainContainer');
+      const creatorName = duelData.profiles?.username || 'Utilizador FLY';
+      const creatorAvatar = duelData.profiles?.avatar_url || 'default-avatar.png';
+      
+      let votesA = duelData.duel_votes.filter(v => v.choice === 'A').length;
+      let votesB = duelData.duel_votes.filter(v => v.choice === 'B').length;
+      let total = votesA + votesB;
+      let pctA = total > 0 ? Math.round((votesA/total)*100) : 0;
+      let pctB = total > 0 ? Math.round((votesB/total)*100) : 0;
+
+      let timeLeftStr = "Terminado";
+      if (!isExpired) {
+        const diff = new Date(duelData.ends_at) - new Date();
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        timeLeftStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+      }
+
+      let html = `
+        <div class="creator-row">
+          <img src="${creatorAvatar}">
+          <div>
+            <div class="name">${creatorName}</div>
+            <div class="time"><i class="fa-solid fa-clock"></i> ${timeLeftStr}</div>
+          </div>
+        </div>
+        
+        <div class="question-title">${duelData.question}</div>
+      `;
+
+      if (hasVoted || isExpired) {
+        html += `
+          <div class="results-area" style="display: flex;">
+            <div class="result-row">
+              <div class="result-header"><span>${duelData.option_a_text}</span> <span>${pctA}%</span></div>
+              <div class="result-bar-bg"><div class="result-bar-fill fill-a" style="width: ${pctA}%"></div></div>
+              <div style="text-align:right; font-size:0.75rem; color:var(--text-muted); margin-top:5px;">${votesA} votos</div>
+            </div>
+            <div class="result-row">
+              <div class="result-header"><span>${duelData.option_b_text}</span> <span>${pctB}%</span></div>
+              <div class="result-bar-bg"><div class="result-bar-fill fill-b" style="width: ${pctB}%"></div></div>
+              <div style="text-align:right; font-size:0.75rem; color:var(--text-muted); margin-top:5px;">${votesB} votos</div>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div><i class="fa-solid fa-users"></i> ${total} participantes</div>
+            <div><i class="fa-solid fa-trophy"></i> ${total > 0 ? (votesA > votesB ? 'Opção A Venceu' : votesB > votesA ? 'Opção B Venceu' : 'Empate') : 'Sem votos'}</div>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="voting-area">
+            <div class="vote-card" onclick="submitVote('A')">
+              <img src="${duelData.option_a_image}">
+              <div class="opt-name">${duelData.option_a_text}</div>
+            </div>
+            <div class="vs-circle"><span>VS</span></div>
+            <div class="vote-card" onclick="submitVote('B')">
+              <img src="${duelData.option_b_image}">
+              <div class="opt-name">${duelData.option_b_text}</div>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div><i class="fa-solid fa-users"></i> ${total} votos até agora</div>
+            <div><i class="fa-solid fa-eye-slash"></i> ${duelData.mode === 'blind' ? 'Modo Cego' : 'Modo Normal'}</div>
+          </div>
+        `;
+      }
+
+      if (duelData.allow_comments) {
+        html += `
+          <div class="comments-section">
+            <h3><i class="fa-regular fa-comment-dots"></i> Comentários</h3>
+            <div class="comment-input-area">
+              <input type="text" id="commentInput" placeholder="Escreve um comentário...">
+              <button onclick="addComment()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+            <div id="commentsList"><p style="color:var(--text-muted); font-size:0.85rem;">A carregar comentários...</p></div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    }
+
+    async function submitVote(choice) {
+      if (hasVoted || isExpired) return;
+      
+      document.querySelectorAll('.vote-card').forEach(c => c.style.pointerEvents = 'none');
+      
+      const { error } = await supabaseClient.from('duel_votes').insert([{
+        duel_id: duelData.id,
+        user_id: currentUser,
+        choice: choice
+      }]);
+
+      if (error) {
+        if (error.code === '23505') { alert('Já votaste neste duelo!'); }
+        else { alert('Erro ao votar: ' + error.message); }
+        return;
+      }
+
+      // NOTIFICAÇÃO: Avisar o criador (se não for ele a votar)
+      if (duelData.creator_id !== currentUser) {
+        await supabaseClient.from('notifications').insert([{
+          user_id: duelData.creator_id,
+          sender_id: currentUser,
+          type: 'duel_vote',
+          post_id: duelData.id // Guarda o ID do duelo para o link
+        }]);
+      }
+
+      hasVoted = true;
+      userVoteChoice = choice;
+      
+      const { data: updatedDuel } = await supabaseClient
+        .from('duels')
+        .select(`*, profiles:creator_id (username, avatar_url), duel_votes (user_id, choice)`)
+        .eq('id', duelData.id)
+        .single();
+        
+      duelData = updatedDuel;
+      renderDuel();
+      
+      if (duelData.allow_comments) loadComments();
+    }
+
+    async function loadComments() {
+      const list = document.getElementById('commentsList');
+      if (!list) return;
+      
+      const { data: comments } = await supabaseClient
+        .from('duel_comments')
+        .select(`*, profiles:user_id (username, avatar_url)`)
+        .eq('duel_id', duelData.id)
+        .order('created_at', { ascending: true });
+
+      if (!comments || comments.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Sem comentários ainda.</p>';
+        return;
+      }
+
+      list.innerHTML = '';
+      comments.forEach(c => {
+        const author = c.profiles?.username || 'User';
+        const avatar = c.profiles?.avatar_url || 'default-avatar.png';
+        list.innerHTML += `
+          <div class="comment-item">
+            <img src="${avatar}">
+            <div class="text"><strong>${author}</strong>${c.content}</div>
+          </div>
+        `;
+      });
+    }
+
+    async function addComment() {
+      const input = document.getElementById('commentInput');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      
+      const { error } = await supabaseClient.from('duel_comments').insert([{
+        duel_id: duelData.id,
+        user_id: currentUser,
+        content: text
+      }]);
+
+      if (error) { alert('Erro ao comentar: ' + error.message); return; }
+
+      // NOTIFICAÇÃO: Avisar o criador (se não for ele a comentar)
+      if (duelData.creator_id !== currentUser) {
+        await supabaseClient.from('notifications').insert([{
+          user_id: duelData.creator_id,
+          sender_id: currentUser,
+          type: 'duel_comment',
+          post_id: duelData.id
+        }]);
+      }
+      
+      loadComments();
+    }
+
+    init();
+  </script>
+</body>
+</html>

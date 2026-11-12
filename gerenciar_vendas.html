@@ -35,6 +35,12 @@
     .btn-action { flex: 1; padding: 10px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; justify-content: center; align-items: center; gap: 5px; }
     .btn-chat-buyer { background: transparent; border: 1px solid var(--neon); color: var(--neon); }
     .btn-advance { background: var(--primary); color: white; }
+
+    /* SKELETONS PARA VENDAS */
+    .skeleton-order-card { height: 220px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); position: relative; overflow: hidden; margin-bottom: 15px; }
+    .skeleton-order-header { height: 20px; margin: 15px; background: #1a2235; border-radius: 5px; }
+    .skeleton-order-body { height: 60px; margin: 15px; background: #1a2235; border-radius: 10px; }
+    .skeleton-order-footer { height: 40px; margin: 15px; background: #1a2235; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -56,31 +62,51 @@
     <div class="tab active">Todos</div><div class="tab">Pendentes</div><div class="tab">Enviados</div>
   </div>
 
-  <div class="orders-list" id="ordersList"><p style="text-align: center; color: var(--text-muted);">A carregar os teus pedidos...</p></div>
+  <div class="orders-list" id="ordersList">
+    <!-- Skeletons -->
+    <div class="skeleton-order-card">
+      <div class="skeleton-order-header"></div>
+      <div class="skeleton-order-body"></div>
+      <div class="skeleton-order-footer"></div>
+    </div>
+    <div class="skeleton-order-card">
+      <div class="skeleton-order-header"></div>
+      <div class="skeleton-order-body"></div>
+      <div class="skeleton-order-footer"></div>
+    </div>
+  </div>
 
   <nav class="bottom-nav">
     <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
     <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="duelos.html" class="nav-item" style="color: #ffd700; transform: scale(1.1);"><i class="fa-solid fa-trophy"></i><span style="font-weight: bold;">Duelo</span></a>
     <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge">0</span></a>
-    <a href="gerenciar_vendas.html" class="nav-item active"><i class="fa-solid fa-briefcase"></i><span>Negócio</span><span class="nav-badge" id="negocio-badge">0</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item active"><i class="fa-solid fa-briefcase"></i><span>Negócios</span></a>
     <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
   <script>
     let currentUser = null;
     function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
 
     async function updateBadges() {
       if (!currentUser) return;
       const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser).eq('is_read', false);
       const chatBadge = document.getElementById('chat-badge');
       if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
-
-      const { count: orderCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('seller_id', currentUser).eq('status', 'pendente');
-      const negocioBadge = document.getElementById('negocio-badge');
-      if (negocioBadge) { if (orderCount > 0) { negocioBadge.innerText = orderCount; negocioBadge.style.display = 'flex'; } else { negocioBadge.style.display = 'none'; } }
     }
 
     async function loadSales() {
@@ -93,7 +119,12 @@
       const { data: orders, error } = await supabaseClient.from('orders').select(`*, products ( name, image_url ), profiles:buyer_id ( username )`).eq('seller_id', currentUser).order('created_at', { ascending: false });
       const list = document.getElementById('ordersList');
       
-      if (error) { list.innerHTML = `<p style="color:red; text-align:center;">Erro: ${error.message}</p>`; return; }
+      if (error) { 
+        list.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar pedidos.</p>`; 
+        showToast('Erro ao carregar pedidos.', 'error');
+        return; 
+      }
+      
       if (!orders || orders.length === 0) {
         list.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 30px;"><i class="fa-solid fa-box-open" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i><p>Ainda não tens pedidos.</p><button onclick="window.location.href='criar_produto.html'" style="margin-top:15px; padding:10px 20px; border-radius:20px; background:var(--primary); color:white; border:none;">Criar um Produto</button></div>`;
         return;
@@ -109,7 +140,7 @@
         const productName = order.products ? order.products.name : 'Produto apagado';
         const productImg = order.products && order.products.image_url ? order.products.image_url : 'https://via.placeholder.com/60';
         const buyerName = order.profiles ? order.profiles.username : 'Cliente';
-        const buyerAvatar = 'default-avatar.png'; // Alterado aqui
+        const buyerAvatar = 'default-avatar.png';
         const date = new Date(order.created_at).toLocaleDateString('pt-PT');
 
         let statusHtml = `<span class="status-badge status-pendente">Pendente</span>`;
@@ -141,8 +172,15 @@
     async function updateStatus(orderId, newStatus) {
       const confirmMsg = newStatus === 'enviado' ? 'Confirmas que já enviaste o produto?' : 'Avançar o estado do pedido?';
       if (!confirm(confirmMsg)) return;
+      
       const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
-      if (error) { alert('Erro: ' + error.message); return; }
+      
+      if (error) { 
+        showToast('Erro ao atualizar estado.', 'error'); 
+        return; 
+      }
+      
+      showToast('Estado do pedido atualizado!', 'success');
       loadSales();
     }
     loadSales();

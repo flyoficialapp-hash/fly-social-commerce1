@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>FLY - Configurações</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,26 +20,19 @@
     .settings-icon { width: 35px; height: 35px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 1rem; }
     .icon-blue { background: rgba(0, 204, 255, 0.1); color: var(--neon); }
     .icon-red { background: rgba(255, 51, 102, 0.1); color: var(--danger); }
-    .icon-gold { background: rgba(255, 215, 0, 0.1); color: #ffd700; }
-    .icon-green { background: rgba(0, 230, 118, 0.1); color: var(--success); }
     .icon-purple { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+    .icon-green { background: rgba(0, 230, 118, 0.1); color: var(--success); }
+    .icon-gold { background: rgba(255, 215, 0, 0.1); color: #ffd700; }
     .settings-text h4 { font-size: 0.95rem; color: white; margin-bottom: 3px; }
     .settings-text p { font-size: 0.75rem; color: var(--text-muted); }
     .settings-item i.chevron { color: var(--text-muted); font-size: 0.9rem; }
-    .toggle-switch { position: relative; display: inline-block; width: 45px; height: 24px; }
+    .toggle-switch { position: relative; display: inline-block; width: 45px; height: 24px; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
     .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
     input:checked + .slider { background-color: var(--primary); }
     input:checked + .slider:before { transform: translateX(21px); }
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
-    .modal-content { background: var(--bg-color); border: 1px solid var(--neon); border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; box-shadow: 0 0 30px rgba(0, 204, 255, 0.2); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .modal-header h3 { color: var(--neon); }
-    .modal-header i { cursor: pointer; font-size: 1.5rem; }
-    
-    /* ESTILO DO SELECT DE IDIOMAS */
-    select.input-glass { background-color: #0a1f44; color: white; appearance: none; padding: 12px; }
+    select.input-glass { background-color: #0a1f44; color: white; appearance: none; padding: 10px; border-radius: 8px; border: 1px solid var(--neon); width: 130px; font-size: 0.85rem; outline: none;}
     select.input-glass option { background-color: #0a1f44; color: white; }
   </style>
 </head>
@@ -53,7 +46,7 @@
 
   <div class="settings-container">
     
-    <!-- SECÇÃO DE IDIOMA -->
+    <!-- IDIOMA E REGIÃO -->
     <p class="settings-group-title">Idioma e Região</p>
     <div class="settings-group">
       <div class="settings-item" style="cursor: default;">
@@ -64,109 +57,134 @@
             <p>Para traduções automáticas no chat</p>
           </div>
         </div>
-        <select id="languageSelect" class="input-glass" onchange="saveLanguage(this.value)" style="width: auto; max-width: 120px; font-size: 0.85rem;">
-          <!-- Opções preenchidas via JS -->
-        </select>
+        <select id="languageSelect" class="input-glass" onchange="changeLanguage(this.value)"></select>
       </div>
     </div>
 
+    <!-- CONTA E SEGURANÇA -->
     <p class="settings-group-title">Conta e Segurança</p>
     <div class="settings-group">
       <div class="settings-item" onclick="window.location.href='perfil.html'">
         <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-user-pen"></i></div><div class="settings-text"><h4>Editar Perfil</h4><p>Foto, nome e biografia</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
-      <div class="settings-item" onclick="openPasswordModal()">
-        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-lock"></i></div><div class="settings-text"><h4>Alterar Palavra-passe</h4><p>Muda a tua senha de acesso</p></div></div>
+      <div class="settings-item" onclick="alert('Funcionalidade em breve: Alterar Palavra-passe via Supabase.')">
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-lock"></i></div><div class="settings-text"><h4>Alterar Palavra-passe</h4><p>Muda a sua senha de acesso</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
-      <div class="settings-item" onclick="openEmailModal()">
-        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-envelope"></i></div><div class="settings-text"><h4>Alterar E-mail</h4><p id="displayEmail">A carregar...</p></div></div>
+      <div class="settings-item" onclick="alert('Funcionalidade em breve: Alterar E-mail via Supabase.')">
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-envelope"></i></div><div class="settings-text"><h4>Alterar E-mail</h4><p>Atualiza o teu endereço de e-mail</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
-      <div class="settings-item" onclick="alert('Em breve: Autenticação em 2 Fatores (2FA) para máxima segurança.')">
-        <div class="settings-item-left"><div class="settings-icon icon-green"><i class="fa-solid fa-shield-halved"></i></div><div class="settings-text"><h4>Autenticação 2FA</h4><p>Aumenta a segurança da conta</p></div></div>
-        <i class="fa-solid fa-chevron-right chevron"></i>
+      <div class="settings-item">
+        <div class="settings-item-left"><div class="settings-icon icon-green"><i class="fa-solid fa-shield-halved"></i></div><div class="settings-text"><h4>Autenticação 2FA</h4><p>Proteção extra com código</p></div></div>
+        <label class="toggle-switch"><input type="checkbox" onclick="alert('Apenas UI: 2FA será ligado na próxima versão.')"><span class="slider"></span></label>
       </div>
     </div>
 
+    <!-- PRIVACIDADE -->
     <p class="settings-group-title">Privacidade</p>
     <div class="settings-group">
       <div class="settings-item">
-        <div class="settings-item-left"><div class="settings-icon icon-purple"><i class="fa-solid fa-eye-slash"></i></div><div class="settings-text"><h4>Conta Privada</h4><p>Só seguidores veem os teus posts</p></div></div>
-        <label class="toggle-switch"><input type="checkbox" id="togglePrivate" onchange="saveSetting('private_account', this.checked)"><span class="slider"></span></label>
+        <div class="settings-item-left"><div class="settings-icon icon-purple"><i class="fa-solid fa-eye-slash"></i></div><div class="settings-text"><h4>Conta Privada</h4><p>Só seguidores veem os seus posts</p></div></div>
+        <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
       </div>
-      <div class="settings-item" onclick="alert('Em breve: Escolher quem pode enviar mensagens.')">
-        <div class="settings-item-left"><div class="settings-icon icon-purple"><i class="fa-solid fa-comment-slash"></i></div><div class="settings-text"><h4>Quem pode enviar mensagens</h4><p>Todos</p></div></div>
-        <i class="fa-solid fa-chevron-right chevron"></i>
+      <div class="settings-item" style="cursor: default;">
+        <div class="settings-item-left"><div class="settings-icon icon-purple"><i class="fa-solid fa-comment-slash"></i></div><div class="settings-text"><h4>Quem pode enviar mensagens</h4><p>Filtra quem fala contigo</p></div></div>
+        <select class="input-glass" style="width: 100px;">
+          <option>Todos</option>
+          <option>Amigos</option>
+          <option>Ninguém</option>
+        </select>
       </div>
     </div>
 
+    <!-- NOTIFICAÇÕES -->
     <p class="settings-group-title">Notificações</p>
     <div class="settings-group">
       <div class="settings-item">
-        <div class="settings-item-left"><div class="settings-icon icon-gold"><i class="fa-solid fa-bell"></i></div><div class="settings-text"><h4>Notificações Push</h4><p>Avisos no telemóvel</p></div></div>
-        <label class="toggle-switch"><input type="checkbox" id="togglePush" onchange="saveSetting('notif_push', this.checked)" checked><span class="slider"></span></label>
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-bell"></i></div><div class="settings-text"><h4>Notificações Push</h4><p>Alertas no telemóvel</p></div></div>
+        <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
       </div>
       <div class="settings-item">
-        <div class="settings-item-left"><div class="settings-icon icon-gold"><i class="fa-solid fa-envelope-open-text"></i></div><div class="settings-text"><h4>Notificações por E-mail</h4><p>Resumos de vendas e mensagens</p></div></div>
-        <label class="toggle-switch"><input type="checkbox" id="toggleEmailNotif" onchange="saveSetting('notif_email', this.checked)"><span class="slider"></span></label>
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-envelope-open-text"></i></div><div class="settings-text"><h4>Notificações por E-mail</h4><p>Resumos de vendas e mensagens</p></div></div>
+        <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
       </div>
     </div>
 
+    <!-- MARKETPLACE -->
     <p class="settings-group-title">Marketplace (Vendas)</p>
     <div class="settings-group">
       <div class="settings-item">
-        <div class="settings-item-left"><div class="settings-icon icon-red"><i class="fa-solid fa-plane"></i></div><div class="settings-text"><h4>Modo de Férias</h4><p>Pausa todos os teus anúncios</p></div></div>
-        <label class="toggle-switch"><input type="checkbox" id="toggleVacation" onchange="toggleVacationMode(this.checked)"><span class="slider"></span></label>
+        <div class="settings-item-left"><div class="settings-icon icon-gold"><i class="fa-solid fa-umbrella-beach"></i></div><div class="settings-text"><h4>Modo de Férias</h4><p>Pausa todos os teus anúncios</p></div></div>
+        <label class="toggle-switch"><input type="checkbox" onclick="alert('Apenas UI: O modo de férias será implementado em breve.')"><span class="slider"></span></label>
       </div>
-      <div class="settings-item" onclick="alert('Em breve: Adicionar IBAN ou Multicaixa para receber pagamentos.')">
-        <div class="settings-item-left"><div class="settings-icon icon-green"><i class="fa-solid fa-credit-card"></i></div><div class="settings-text"><h4>Dados de Pagamento</h4><p>Como recebes o teu dinheiro</p></div></div>
+      <div class="settings-item" onclick="alert('Apenas UI: Introduzir dados de pagamento (IBAN / Multicaixa).')">
+        <div class="settings-item-left"><div class="settings-icon icon-gold"><i class="fa-solid fa-credit-card"></i></div><div class="settings-text"><h4>Dados de Pagamento</h4><p>IBAN ou Multicaixa Express</p></div></div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+      <div class="settings-item" onclick="alert('Apenas UI: Introduzir endereço de entrega.')">
+        <div class="settings-item-left"><div class="settings-icon icon-gold"><i class="fa-solid fa-location-dot"></i></div><div class="settings-text"><h4>Endereço de Entrega</h4><p>Onde recebes os teus produtos</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
     </div>
 
+    <!-- SUPORTE E SOBRE -->
+    <p class="settings-group-title">Suporte e Sobre</p>
+    <div class="settings-group">
+      <div class="settings-item" onclick="alert('Apenas UI: Centro de Ajuda em construção.')">
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-circle-question"></i></div><div class="settings-text"><h4>Centro de Ajuda</h4><p>FAQs e tutoriais</p></div></div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+      <div class="settings-item" onclick="alert('Apenas UI: Termos e Políticas em construção.')">
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-file-contract"></i></div><div class="settings-text"><h4>Termos e Políticas</h4><p>Regras e privacidade</p></div></div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+      <div class="settings-item" style="cursor: default;">
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-circle-info"></i></div><div class="settings-text"><h4>Versão da App</h4><p>v1.0.0 (MVP)</p></div></div>
+      </div>
+    </div>
+
+    <!-- SESSÃO E CONTA -->
     <p class="settings-group-title">Sessão e Conta</p>
     <div class="settings-group">
       <div class="settings-item" onclick="logout()">
-        <div class="settings-item-left"><div class="settings-icon icon-red"><i class="fa-solid fa-right-from-bracket"></i></div><div class="settings-text"><h4 style="color: var(--danger);">Terminar Sessão</h4><p>Sair da conta neste dispositivo</p></div></div>
+        <div class="settings-item-left"><div class="settings-icon icon-red"><i class="fa-solid fa-right-from-bracket"></i></div><div class="settings-text"><h4 style="color: var(--danger);">Terminar Sessão</h4></div></div>
+      </div>
+      <div class="settings-item" onclick="alert('Apenas UI: Apagar conta (Irreversível).')">
+        <div class="settings-item-left"><div class="settings-icon icon-red"><i class="fa-solid fa-trash"></i></div><div class="settings-text"><h4 style="color: var(--danger);">Apagar Conta</h4><p>Elimina todos os teus dados</p></div></div>
       </div>
     </div>
   </div>
 
-  <!-- MODAIS MANTIDOS -->
-  <div class="modal-overlay" id="passwordModal">
-    <div class="modal-content">
-      <div class="modal-header"><h3>Nova Palavra-passe</h3><i class="fa-solid fa-xmark" onclick="document.getElementById('passwordModal').style.display='none'"></i></div>
-      <div class="input-group"><label>Nova Senha</label><input type="password" id="newPassword" class="input-glass" placeholder="Mínimo 6 caracteres"></div>
-      <div class="input-group"><label>Confirmar Senha</label><input type="password" id="confirmPassword" class="input-glass" placeholder="Repete a senha"></div>
-      <button class="btn-primary" style="margin-top: 10px;" onclick="changePassword()" id="btnSavePassword">Guardar</button>
-      <p id="pwdMsg" style="text-align: center; margin-top: 10px; font-size: 0.9rem; font-weight: bold;"></p>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="emailModal">
-    <div class="modal-content">
-      <div class="modal-header"><h3>Alterar E-mail</h3><i class="fa-solid fa-xmark" onclick="document.getElementById('emailModal').style.display='none'"></i></div>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">O Supabase vai enviar um link de confirmação para o novo e-mail.</p>
-      <div class="input-group"><label>Novo E-mail</label><input type="email" id="newEmail" class="input-glass" placeholder="novo@email.com"></div>
-      <button class="btn-primary" style="margin-top: 10px;" onclick="changeEmail()" id="btnSaveEmail">Atualizar E-mail</button>
-      <p id="emailMsg" style="text-align: center; margin-top: 10px; font-size: 0.9rem; font-weight: bold;"></p>
-    </div>
-  </div>
+  <!-- NAVBAR COM OS 6 BOTÕES -->
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
+    <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="duelos.html" class="nav-item" style="color: #ffd700; transform: scale(1.1);"><i class="fa-solid fa-trophy"></i><span style="font-weight: bold;">Duelo</span></a>
+    <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócios</span></a>
+    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+  </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
   <script>
     let currentUser = null;
-
-    // LISTA DE IDIOMAS
     const LANGS = [
       { code: 'pt', name: 'Português' }, { code: 'en', name: 'Inglês' }, { code: 'es', name: 'Espanhol' },
       { code: 'fr', name: 'Francês' }, { code: 'de', name: 'Alemão' }, { code: 'it', name: 'Italiano' },
-      { code: 'nl', name: 'Holandês' }, { code: 'ru', name: 'Russo' }, { code: 'ar', name: 'Árabe' },
-      { code: 'ja', name: 'Japonês' }, { code: 'ko', name: 'Coreano' }, { code: 'zh-CN', name: 'Chinês' },
-      { code: 'hi', name: 'Hindi' }, { code: 'sw', name: 'Suaíli' }, { code: 'tr', name: 'Turco' }
+      { code: 'ca', name: 'Catalão' }, { code: 'nl', name: 'Holandês' }, { code: 'pl', name: 'Polonês' },
+      { code: 'sv', name: 'Sueco' }, { code: 'no', name: 'Norueguês' }, { code: 'da', name: 'Dinamarquês' },
+      { code: 'fi', name: 'Finlandês' }, { code: 'cs', name: 'Tcheco' }, { code: 'sk', name: 'Eslovaco' },
+      { code: 'sl', name: 'Esloveno' }, { code: 'hr', name: 'Croata' }, { code: 'ro', name: 'Romeno' },
+      { code: 'hu', name: 'Húngaro' }, { code: 'el', name: 'Grego' }, { code: 'tr', name: 'Turco' },
+      { code: 'ru', name: 'Russo' }, { code: 'uk', name: 'Ucraniano' }, { code: 'ar', name: 'Árabe' },
+      { code: 'he', name: 'Hebraico' }, { code: 'hi', name: 'Hindi' }, { code: 'th', name: 'Tailandês' },
+      { code: 'vi', name: 'Vietnamita' }, { code: 'id', name: 'Indonésio' }, { code: 'ms', name: 'Malaio' },
+      { code: 'ja', name: 'Japonês' }, { code: 'ko', name: 'Coreano' }, { code: 'zh-CN', name: 'Chinês (Simplificado)' },
+      { code: 'zh-TW', name: 'Chinês (Tradicional)' }, { code: 'sw', name: 'Suaíli' }, { code: 'eo', name: 'Esperanto' },
     ];
 
     function fillLanguageSelect() {
@@ -181,70 +199,26 @@
     }
 
     async function init() {
+      fillLanguageSelect();
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user.id;
-      document.getElementById('displayEmail').innerText = session.user.email;
 
-      fillLanguageSelect();
-
-      const { data: profile } = await supabaseClient.from('profiles').select('settings, language').eq('id', currentUser).single();
+      const { data: profile } = await supabaseClient.from('profiles').select('language').eq('id', currentUser).single();
       
-      if (profile) {
-        if (profile.language) document.getElementById('languageSelect').value = profile.language;
-        if (profile.settings) {
-          const s = profile.settings;
-          if(s.private_account) document.getElementById('togglePrivate').checked = true;
-          if(s.notif_push !== undefined) document.getElementById('togglePush').checked = s.notif_push;
-          if(s.notif_email) document.getElementById('toggleEmailNotif').checked = true;
-          if(s.vacation_mode) document.getElementById('toggleVacation').checked = true;
-        }
-      }
+      const savedLang = profile?.language || 'pt';
+      document.getElementById('languageSelect').value = savedLang;
+      localStorage.setItem('fly_language', savedLang);
     }
 
-    async function saveLanguage(code) {
-      const { error } = await supabaseClient.from('profiles').update({ language: code }).eq('id', currentUser);
-      if (error) { alert('Erro ao guardar idioma: ' + error.message); }
-      else { alert('Idioma atualizado com sucesso!'); }
+    async function changeLanguage(langCode) {
+      localStorage.setItem('fly_language', langCode);
+      const { error } = await supabaseClient.from('profiles').update({ language: langCode }).eq('id', currentUser);
+      if (error) { alert('Erro ao guardar no banco: ' + error.message); }
     }
 
-    async function saveSetting(key, value) {
-      const { data: profile } = await supabaseClient.from('profiles').select('settings').eq('id', currentUser).single();
-      let settings = profile.settings || {};
-      settings[key] = value;
-      await supabaseClient.from('profiles').update({ settings }).eq('id', currentUser);
-    }
-
-    async function toggleVacationMode(isVacation) {
-      saveSetting('vacation_mode', isVacation);
-      const newStatus = isVacation ? 'pausado' : 'ativo';
-      const { error } = await supabaseClient.from('products').update({ status: newStatus }).eq('seller_id', currentUser);
-      if (error) { alert('Erro ao pausar anúncios: ' + error.message); return; }
-    }
-
-    function openPasswordModal() { document.getElementById('passwordModal').style.display = 'flex'; document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; document.getElementById('pwdMsg').innerText = ''; }
-    async function changePassword() {
-      const newPass = document.getElementById('newPassword').value; const confirmPass = document.getElementById('confirmPassword').value;
-      const msg = document.getElementById('pwdMsg'); const btn = document.getElementById('btnSavePassword');
-      if (newPass.length < 6) { msg.style.color = 'var(--danger)'; msg.innerText = 'A senha deve ter 6 caracteres.'; return; }
-      if (newPass !== confirmPass) { msg.style.color = 'var(--danger)'; msg.innerText = 'As senhas não coincidem.'; return; }
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
-      const { error } = await supabaseClient.auth.updateUser({ password: newPass });
-      if (error) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro: ' + error.message; btn.innerHTML = 'Guardar'; btn.disabled = false; } 
-      else { msg.style.color = 'var(--success)'; msg.innerText = 'Senha atualizada!'; setTimeout(() => { document.getElementById('passwordModal').style.display = 'none'; }, 2000); btn.innerHTML = 'Guardar'; btn.disabled = false; }
-    }
-
-    function openEmailModal() { document.getElementById('emailModal').style.display = 'flex'; document.getElementById('newEmail').value = ''; document.getElementById('emailMsg').innerText = ''; }
-    async function changeEmail() {
-      const newEmail = document.getElementById('newEmail').value; const msg = document.getElementById('emailMsg'); const btn = document.getElementById('btnSaveEmail');
-      if(!newEmail) return;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
-      const { error } = await supabaseClient.auth.updateUser({ email: newEmail });
-      if (error) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro: ' + error.message; btn.innerHTML = 'Atualizar E-mail'; btn.disabled = false; } 
-      else { msg.style.color = 'var(--success)'; msg.innerText = 'Link enviado para o novo e-mail!'; btn.innerHTML = 'Atualizar E-mail'; btn.disabled = false; }
-    }
-
-    async function logout() { if(confirm('Tens a certeza que queres terminar a sessão?')) { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; } }
+    async function logout() { if(confirm('Terminar sessão?')) { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; } }
+    
     init();
   </script>
 </body>

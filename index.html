@@ -22,7 +22,7 @@
 
     .login-wrapper {
       width: 100%;
-      max-width: 420px; /* Largura máxima da tela toda */
+      max-width: 420px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -32,20 +32,19 @@
     }
 
     .gif-hero-container {
-      width: 100%; /* Ocupa toda a largura */
+      width: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
     }
 
-    /* VÍDEO AJUSTADO PARA ALINHAR COM O PAINEL */
     .login-video {
       display: block;
-      width: 100%; /* Mesma largura do formulário */
+      width: 100%;
       height: auto;
-      max-height: 40vh; /* Limite de altura para não empurrar o form para fora */
-      object-fit: cover; /* Preenche o espaço sem distorcer */
-      border-radius: 20px; /* Mesmo arredondamento do formulário */
+      max-height: 40vh;
+      object-fit: cover;
+      border-radius: 20px;
       filter: drop-shadow(0 0 20px rgba(0, 204, 255, 0.3));
     }
 
@@ -56,10 +55,9 @@
       width: 100%;
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      border-radius: 20px; /* Garantindo o arredondamento igual */
+      border-radius: 20px;
     }
 
-    /* Ajuste para ecrãs menores */
     @media (max-width: 600px) {
       .login-video { max-height: 35vh; }
       .login-panel { padding: 20px 15px !important; }

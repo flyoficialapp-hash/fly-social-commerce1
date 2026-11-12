@@ -71,10 +71,14 @@
     .avatar-upload-box { display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; }
     .avatar-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--neon); margin-bottom: 10px; background: #000; }
     .btn-upload-avatar { background: var(--glass-bg); border: 1px solid var(--neon); color: var(--neon); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
-    
-    /* ESTILO DO SELECT DE IDIOMAS */
     select.input-glass { background-color: #0a1f44; color: white; appearance: none; }
     select.input-glass option { background-color: #0a1f44; color: white; }
+
+    /* SKELETON PARA PRODUTOS NO PERFIL */
+    .skeleton-product-card { height: 200px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); position: relative; overflow: hidden; }
+    .skeleton-img-profile { width: 100%; height: 120px; background: #1a2235; }
+    .skeleton-text-profile { height: 15px; margin: 10px; background: #1a2235; border-radius: 5px; }
+    .skeleton-text-profile.short { width: 50%; }
   </style>
 </head>
 <body>
@@ -119,7 +123,10 @@
   </div>
 
   <div class="section-title" id="productsTitle">Anúncios</div>
-  <div class="my-products-grid" id="myProducts"><p style="color: var(--text-muted); grid-column: span 2; text-align: center;">A carregar...</p></div>
+  <div class="my-products-grid" id="myProducts">
+    <div class="skeleton-product-card"><div class="skeleton-img-profile"></div><div class="skeleton-text-profile"></div><div class="skeleton-text-profile short"></div></div>
+    <div class="skeleton-product-card"><div class="skeleton-img-profile"></div><div class="skeleton-text-profile"></div><div class="skeleton-text-profile short"></div></div>
+  </div>
   
   <button class="btn-logout" id="btnLogout" onclick="logout()" style="display: none;"><i class="fa-solid fa-right-from-bracket"></i> Terminar Sessão</button>
 
@@ -134,12 +141,9 @@
       <div class="input-group"><label>Nome de Utilizador</label><input type="text" id="editUsername" class="input-glass" placeholder="O teu nome..."></div>
       <div class="input-group"><label>Biografia</label><textarea id="editBio" class="input-glass" rows="2" placeholder="Fala um pouco sobre ti..."></textarea></div>
       
-      <!-- SELETOR DE IDIOMAS -->
       <div class="input-group">
         <label><i class="fa-solid fa-globe"></i> Idioma Nativo (para traduções)</label>
-        <select id="editLanguage" class="input-glass">
-          <!-- Opções preenchidas via JavaScript -->
-        </select>
+        <select id="editLanguage" class="input-glass"></select>
       </div>
 
       <div class="input-group"><label><i class="fa-brands fa-instagram"></i> Instagram</label><input type="url" id="editInstagram" class="input-glass" placeholder="https://instagram.com/oteuuser"></div>
@@ -153,52 +157,29 @@
   <nav class="bottom-nav">
     <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
     <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="duelos.html" class="nav-item" style="color: #ffd700; transform: scale(1.1);"><i class="fa-solid fa-trophy"></i><span style="font-weight: bold;">Duelo</span></a>
     <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge" style="display:none;">0</span></a>
-    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócio</span><span class="nav-badge" id="negocio-badge" style="display:none;">0</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócios</span></a>
     <a href="perfil.html" class="nav-item active"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
   <script>
-    // A LISTA GIGANTE DE IDIOMAS DO TEU PROJETO ANTIGO
     const LANGS = [
-      { code: 'pt',    name: 'Português' },
-      { code: 'en',    name: 'Inglês' },
-      { code: 'es',    name: 'Espanhol' },
-      { code: 'fr',    name: 'Francês' },
-      { code: 'de',    name: 'Alemão' },
-      { code: 'it',    name: 'Italiano' },
-      { code: 'ca',    name: 'Catalão' },
-      { code: 'nl',    name: 'Holandês' },
-      { code: 'pl',    name: 'Polonês' },
-      { code: 'sv',    name: 'Sueco' },
-      { code: 'no',    name: 'Norueguês' },
-      { code: 'da',    name: 'Dinamarquês' },
-      { code: 'fi',    name: 'Finlandês' },
-      { code: 'cs',    name: 'Tcheco' },
-      { code: 'sk',    name: 'Eslovaco' },
-      { code: 'sl',    name: 'Esloveno' },
-      { code: 'hr',    name: 'Croata' },
-      { code: 'ro',    name: 'Romeno' },
-      { code: 'hu',    name: 'Húngaro' },
-      { code: 'el',    name: 'Grego' },
-      { code: 'tr',    name: 'Turco' },
-      { code: 'ru',    name: 'Russo' },
-      { code: 'uk',    name: 'Ucraniano' },
-      { code: 'ar',    name: 'Árabe' },
-      { code: 'he',    name: 'Hebraico' },
-      { code: 'hi',    name: 'Hindi' },
-      { code: 'th',    name: 'Tailandês' },
-      { code: 'vi',    name: 'Vietnamita' },
-      { code: 'id',    name: 'Indonésio' },
-      { code: 'ms',    name: 'Malaio' },
-      { code: 'ja',    name: 'Japonês' },
-      { code: 'ko',    name: 'Coreano' },
-      { code: 'zh-CN', name: 'Chinês (Simplificado)' },
-      { code: 'zh-TW', name: 'Chinês (Tradicional)' },
-      { code: 'sw',    name: 'Suaíli' },
-      { code: 'eo',    name: 'Esperanto' },
+      { code: 'pt', name: 'Português' }, { code: 'en', name: 'Inglês' }, { code: 'es', name: 'Espanhol' },
+      { code: 'fr', name: 'Francês' }, { code: 'de', name: 'Alemão' }, { code: 'it', name: 'Italiano' },
+      { code: 'ca', name: 'Catalão' }, { code: 'nl', name: 'Holandês' }, { code: 'pl', name: 'Polonês' },
+      { code: 'sv', name: 'Sueco' }, { code: 'no', name: 'Norueguês' }, { code: 'da', name: 'Dinamarquês' },
+      { code: 'fi', name: 'Finlandês' }, { code: 'cs', name: 'Tcheco' }, { code: 'sk', name: 'Eslovaco' },
+      { code: 'sl', name: 'Esloveno' }, { code: 'hr', name: 'Croata' }, { code: 'ro', name: 'Romeno' },
+      { code: 'hu', name: 'Húngaro' }, { code: 'el', name: 'Grego' }, { code: 'tr', name: 'Turco' },
+      { code: 'ru', name: 'Russo' }, { code: 'uk', name: 'Ucraniano' }, { code: 'ar', name: 'Árabe' },
+      { code: 'he', name: 'Hebraico' }, { code: 'hi', name: 'Hindi' }, { code: 'th', name: 'Tailandês' },
+      { code: 'vi', name: 'Vietnamita' }, { code: 'id', name: 'Indonésio' }, { code: 'ms', name: 'Malaio' },
+      { code: 'ja', name: 'Japonês' }, { code: 'ko', name: 'Coreano' }, { code: 'zh-CN', name: 'Chinês (Simplificado)' },
+      { code: 'zh-TW', name: 'Chinês (Tradicional)' }, { code: 'sw', name: 'Suaíli' }, { code: 'eo', name: 'Esperanto' },
     ];
 
     let loggedInUser = null; let profileUser = null; let isMyProfile = false;
@@ -207,6 +188,16 @@
     let currentLanguageCode = 'pt';
 
     function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
 
     function fillLanguageSelect() {
       const select = document.getElementById('editLanguage');
@@ -224,10 +215,6 @@
       const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', loggedInUser).eq('is_read', false);
       const chatBadge = document.getElementById('chat-badge');
       if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
-
-      const { count: orderCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('seller_id', loggedInUser).eq('status', 'pendente');
-      const negocioBadge = document.getElementById('negocio-badge');
-      if (negocioBadge) { if (orderCount > 0) { negocioBadge.innerText = orderCount; negocioBadge.style.display = 'flex'; } else { negocioBadge.style.display = 'none'; } }
     }
 
     async function loadProfile() {
@@ -244,18 +231,18 @@
       try {
         const { data: profile } = await supabaseClient.from('profiles').select('username, avatar_url, bio, social_links, is_premium, language').eq('id', profileUser).single();
         if (profile) {
-          document.getElementById('userName').innerHTML = (profile.username || "Utilizador FLY");
+          const isPrem = profile.is_premium ? 'inline' : 'none';
+          document.getElementById('userName').innerHTML = `${profile.username || "Utilizador FLY"} <span id="premiumBadge" style="display:${isPrem}; color: #ffd700;"><i class="fa-solid fa-crown"></i></span>`;
+          
           document.getElementById('userBio').innerText = profile.bio || "Sem biografia.";
           currentAvatarUrl = profile.avatar_url || 'default-avatar.png';
           document.getElementById('userAvatar').src = currentAvatarUrl;
           
-          // Mostrar o idioma no perfil
           currentLanguageCode = profile.language || 'pt';
           const langName = LANGS.find(l => l.code === currentLanguageCode)?.name || 'Português';
           document.getElementById('userLangDisplay').innerHTML = `<i class="fa-solid fa-globe"></i> Idioma: ${langName}`;
 
           if (profile.is_premium) {
-            document.getElementById('premiumBadge').style.display = 'inline';
             document.getElementById('avatarRing').classList.add('premium-ring');
           }
 
@@ -276,7 +263,8 @@
         document.getElementById('productsTitle').innerText = "Os Meus Anúncios";
         
         const { data: profile } = await supabaseClient.from('profiles').select('is_premium').eq('id', loggedInUser).single();
-        if (profile && !profile.is_premium) document.getElementById('premiumBanner').style.display = 'flex';
+        const pb = document.getElementById('premiumBanner');
+        if (profile && !profile.is_premium && pb) pb.style.display = 'flex';
       } else {
         document.getElementById('userEmail').style.display = 'none';
         document.getElementById('socialActions').style.display = 'flex';
@@ -343,10 +331,12 @@
       if (isFollowing) {
         await supabaseClient.from('follows').delete().eq('follower_id', loggedInUser).eq('following_id', profileUser);
         isFollowing = false;
+        showToast('Deixaste de seguir', 'success');
       } else {
         await supabaseClient.from('follows').insert([{ follower_id: loggedInUser, following_id: profileUser }]);
         isFollowing = true;
         await supabaseClient.from('notifications').insert([{ user_id: profileUser, sender_id: loggedInUser, type: 'follow' }]);
+        showToast('Começaste a seguir!', 'success');
       }
       updateFollowButton(); loadProfile();
     }
@@ -355,10 +345,11 @@
       if (friendshipStatus !== 'none') return;
       const btn = document.getElementById('btnFriend'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
       const { error } = await supabaseClient.from('friendships').insert([{ requester_id: loggedInUser, addressee_id: profileUser, status: 'pendente' }]);
-      if (error) { alert('Erro ao enviar pedido: ' + error.message); updateFriendButton(); } 
+      if (error) { showToast('Erro ao enviar pedido.', 'error'); updateFriendButton(); } 
       else {
         friendshipStatus = 'pendente'; updateFriendButton();
         await supabaseClient.from('notifications').insert([{ user_id: profileUser, sender_id: loggedInUser, type: 'friend' }]);
+        showToast('Pedido enviado!', 'success');
       }
     }
 
@@ -381,27 +372,23 @@
       const newUsername = document.getElementById('editUsername').value.trim(); const newBio = document.getElementById('editBio').value.trim();
       const newLang = document.getElementById('editLanguage').value;
       const insta = document.getElementById('editInstagram').value.trim(); const zap = document.getElementById('editWhatsapp').value.trim(); const face = document.getElementById('editFacebook').value.trim();
-      if (!newUsername) { msg.style.color = 'var(--danger)'; msg.innerText = 'O nome não pode estar vazio.'; return; }
+      if (!newUsername) { showToast('O nome não pode estar vazio.', 'error'); return; }
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A guardar...'; btn.disabled = true;
       let newAvatarUrl = currentAvatarUrl;
       if (selectedAvatarFile) {
         const fileExt = selectedAvatarFile.name.split('.').pop(); const fileName = `avatars/${loggedInUser}_${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(fileName, selectedAvatarFile);
-        if (uploadError) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro na foto: ' + uploadError.message; btn.innerHTML = 'Guardar'; btn.disabled = false; return; }
+        if (uploadError) { showToast('Erro na foto: ' + uploadError.message, 'error'); btn.innerHTML = 'Guardar'; btn.disabled = false; return; }
         const { data } = supabaseClient.storage.from('fly_bucket').getPublicUrl(fileName); newAvatarUrl = data.publicUrl;
       }
       const newLinks = {}; if (insta) newLinks.instagram = insta; if (zap) newLinks.whatsapp = zap; if (face) newLinks.facebook = face;
       
       const { error: updateError } = await supabaseClient.from('profiles').update({ 
-        username: newUsername, 
-        avatar_url: newAvatarUrl, 
-        bio: newBio, 
-        social_links: newLinks,
-        language: newLang 
+        username: newUsername, avatar_url: newAvatarUrl, bio: newBio, social_links: newLinks, language: newLang 
       }).eq('id', loggedInUser);
 
-      if (updateError) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro: ' + updateError.message; btn.innerHTML = 'Guardar'; btn.disabled = false; return; }
-      msg.style.color = 'var(--success)'; msg.innerText = 'Perfil atualizado!';
+      if (updateError) { showToast('Erro: ' + updateError.message, 'error'); btn.innerHTML = 'Guardar'; btn.disabled = false; return; }
+      showToast('Perfil atualizado!', 'success');
       setTimeout(() => { document.getElementById('editModal').style.display = 'none'; loadProfile(); }, 1000);
     }
     

@@ -26,11 +26,9 @@
     .btn-chat { flex: 1; padding: 15px; background: transparent; border: 1px solid var(--neon); border-radius: 12px; color: var(--neon); font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; }
     .btn-buy-now { flex: 2; padding: 15px; background: linear-gradient(90deg, var(--primary), var(--neon)); border: none; border-radius: 12px; color: white; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
     .btn-buy-now:disabled { background: var(--text-muted); box-shadow: none; cursor: not-allowed; }
-    
     .seller-actions { display: flex; gap: 10px; margin-bottom: 20px; }
     .btn-edit { flex: 1; padding: 12px; background: rgba(255, 179, 0, 0.1); border: 1px solid #ffb300; color: #ffb300; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; }
     .btn-delete { flex: 1; padding: 12px; background: rgba(255, 51, 102, 0.1); border: 1px solid var(--danger); color: var(--danger); border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; }
-
     .confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 3000; display: none; justify-content: center; align-items: center; padding: 20px; }
     .confirm-box { background: var(--bg-color); border: 1px solid var(--danger); border-radius: 20px; width: 100%; max-width: 350px; padding: 25px; text-align: center; box-shadow: 0 0 30px rgba(255, 51, 102, 0.2); }
     .confirm-box i { font-size: 3rem; color: var(--danger); margin-bottom: 15px; }
@@ -92,6 +90,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
+  <!-- i18n.js REMOVIDO -->
   <script>
     let productData = null; let currentUser = null;
     function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
@@ -105,7 +105,7 @@
       if (error || !product) { document.getElementById('loading').innerText = 'Erro ao carregar.'; return; }
       
       productData = product;
-      let sellerName = "Vendedor FLY"; let sellerAvatar = 'default-avatar.png'; // Alterado aqui
+      let sellerName = "Vendedor FLY"; let sellerAvatar = 'default-avatar.png';
       
       if (product.seller_id) {
         const { data: seller } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', product.seller_id).single();

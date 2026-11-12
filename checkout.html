@@ -82,6 +82,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
+  <!-- i18n.js REMOVIDO -->
   <script>
     let currentUser = null; let orderId = null; let orderAmount = 0; let selectedMethod = 'multicaixa';
     function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }

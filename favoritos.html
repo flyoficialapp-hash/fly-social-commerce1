@@ -30,12 +30,19 @@
 
     .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
     .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+
+    /* SKELETONS PARA FAVORITOS */
+    .skeleton-product-card { height: 200px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); position: relative; overflow: hidden; }
+    .skeleton-img-fav { width: 100%; height: 120px; background: #1a2235; }
+    .skeleton-text-fav { height: 15px; margin: 10px; background: #1a2235; border-radius: 5px; }
+    .skeleton-text-fav.short { width: 50%; }
+    
+    .skeleton-post-card { height: 100px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); position: relative; overflow: hidden; margin-bottom: 15px; padding: 15px; }
   </style>
 </head>
 <body>
   <header class="header">
     <i class="fa-solid fa-arrow-left" onclick="window.location.href='perfil.html'" style="font-size: 1.5rem; cursor: pointer;"></i>
-    <!-- CORRIGIDO AQUI -->
     <div class="header-title"><img src="logo.png" alt="FLY"> Guardados</div>
     <div style="width: 24px;"></div>
   </header>
@@ -45,30 +52,42 @@
     <div class="tab" id="tabProdutos" onclick="switchTab('produtos')">Produtos</div>
   </div>
 
-  <div class="content-area" id="contentArea"><p style="text-align: center; color: var(--text-muted);">A carregar...</p></div>
+  <div class="content-area" id="contentArea">
+    <!-- Skeletons que aparecem antes de carregar -->
+    <div class="skeleton-post-card"><div class="skeleton-img-fav" style="border-radius: 50%; width: 35px; height: 35px;"></div><div class="skeleton-text-fav" style="width: 60%; margin-top: 15px;"></div><div class="skeleton-text-fav" style="width: 80%;"></div></div>
+    <div class="skeleton-post-card"><div class="skeleton-img-fav" style="border-radius: 50%; width: 35px; height: 35px;"></div><div class="skeleton-text-fav" style="width: 60%; margin-top: 15px;"></div><div class="skeleton-text-fav" style="width: 80%;"></div></div>
+  </div>
 
   <nav class="bottom-nav">
     <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
     <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="duelos.html" class="nav-item" style="color: #ffd700; transform: scale(1.1);"><i class="fa-solid fa-trophy"></i><span style="font-weight: bold;">Duelo</span></a>
     <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge">0</span></a>
-    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócio</span><span class="nav-badge" id="negocio-badge">0</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócios</span></a>
     <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
   <script>
     let currentUser = null; let currentTab = 'posts';
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
 
     async function updateBadges() {
       if (!currentUser) return;
       const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser).eq('is_read', false);
       const chatBadge = document.getElementById('chat-badge');
       if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
-
-      const { count: orderCount } = await supabaseClient.from('orders').select('*', { count: 'exact', head: true }).eq('seller_id', currentUser).eq('status', 'pendente');
-      const negocioBadge = document.getElementById('negocio-badge');
-      if (negocioBadge) { if (orderCount > 0) { negocioBadge.innerText = orderCount; negocioBadge.style.display = 'flex'; } else { negocioBadge.style.display = 'none'; } }
     }
 
     function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
@@ -90,11 +109,23 @@
 
     async function loadContent() {
       const area = document.getElementById('contentArea');
-      area.innerHTML = '<p style="text-align: center; color: var(--text-muted);">A carregar...</p>';
+      
+      // Ao mudar de aba, mostramos um pequeno skeleton
+      area.innerHTML = `<div class="skeleton-post-card"><div class="skeleton-img-fav" style="border-radius: 50%; width: 35px; height: 35px;"></div><div class="skeleton-text-fav" style="width: 60%; margin-top: 15px;"></div><div class="skeleton-text-fav" style="width: 80%;"></div></div>`;
 
       if (currentTab === 'posts') {
         const { data: saved, error } = await supabaseClient.from('saved_posts').select(`post_id, posts ( id, content, media_url, media_type, profiles(username, avatar_url) )`).eq('user_id', currentUser);
-        if (error || !saved || saved.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-bookmark"></i><p>Ainda não guardaste nenhum post.</p></div>`; return; }
+        
+        if (error) { 
+          area.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar posts.</p>`; 
+          showToast('Erro ao carregar guardados.', 'error'); return; 
+        }
+        
+        if (!saved || saved.length === 0) { 
+          area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-bookmark"></i><p>Ainda não guardaste nenhum post.</p></div>`; 
+          return; 
+        }
+        
         area.innerHTML = '';
         saved.forEach(item => {
           const post = item.posts; if (!post) return;
@@ -104,10 +135,30 @@
         });
       } else {
         const { data: favs, error: favError } = await supabaseClient.from('favorites').select('product_id').eq('user_id', currentUser);
-        if (favError || !favs || favs.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-heart"></i><p>Ainda não guardaste nenhum produto.</p></div>`; return; }
+        
+        if (favError) { 
+          area.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar produtos.</p>`; 
+          showToast('Erro ao carregar guardados.', 'error'); return; 
+        }
+        
+        if (!favs || favs.length === 0) { 
+          area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-heart"></i><p>Ainda não guardaste nenhum produto.</p></div>`; 
+          return; 
+        }
+        
         const productIds = favs.map(f => f.product_id);
         const { data: products, error: prodError } = await supabaseClient.from('products').select('id, name, price, image_url').in('id', productIds);
-        if (prodError || !products || products.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-heart"></i><p>Os produtos que guardaste já não estão disponíveis.</p></div>`; return; }
+        
+        if (prodError) { 
+          area.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar produtos.</p>`; 
+          showToast('Erro ao carregar produtos.', 'error'); return; 
+        }
+        
+        if (!products || products.length === 0) { 
+          area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-heart"></i><p>Os produtos que guardaste já não estão disponíveis.</p></div>`; 
+          return; 
+        }
+        
         area.innerHTML = '<div class="products-grid" id="favGrid"></div>';
         const grid = document.getElementById('favGrid');
         products.forEach(p => {

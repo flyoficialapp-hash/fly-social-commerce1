@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    html, body { height: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; overscroll-behavior: none; background: var(--bg-color); }
+    html, body { height: 100vh; height: 100dvh; margin: 0; padding: 0; overflow: hidden; overscroll-behavior: none; background: var(--bg-color); }
     body { display: flex; flex-direction: column; font-family: 'Inter', sans-serif; }
     .chat-header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: rgba(3, 7, 18, 0.95); border-bottom: 1px solid var(--glass-border); z-index: 10; }
     .header-left { display: flex; align-items: center; gap: 10px; }
@@ -22,18 +22,25 @@
     .message-row.sent { align-self: flex-end; flex-direction: row-reverse; }
     .message-row.received { align-self: flex-start; }
     .msg-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--glass-border); margin-bottom: 18px;}
-    .message { padding: 12px 16px; border-radius: 15px; font-size: 0.95rem; line-height: 1.4; position: relative; word-wrap: break-word;}
+    .message { padding: 12px 16px; border-radius: 15px; font-size: 0.95rem; line-height: 1.4; position: relative; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%;}
     .message-row.sent .message { background: linear-gradient(90deg, var(--primary), var(--neon)); color: white; border-bottom-right-radius: 4px; }
     .message-row.received .message { background: var(--glass-bg); border: 1px solid var(--glass-border); color: white; border-bottom-left-radius: 4px; }
-    .message-image { max-width: 100%; border-radius: 10px; margin-bottom: 5px; cursor: pointer; }
+    .message-image { max-width: 100%; border-radius: 10px; margin-bottom: 5px; cursor: pointer; display: block; }
+    .message-video { max-width: 100%; border-radius: 10px; margin-bottom: 5px; display: block; background: #000; }
     .message-time { font-size: 0.65rem; color: rgba(255,255,255,0.7); text-align: right; margin-top: 5px; display: block; }
     .translated-tag { display: inline-block; font-size: 0.65rem; color: #a855f7; background: rgba(168, 85, 247, 0.15); padding: 2px 6px; border-radius: 4px; margin-bottom: 5px; font-weight: bold; }
     .translated-text { font-style: italic; color: #e0e0e0; }
+    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; padding: 40px 20px; }
+    .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; color: var(--neon); }
+    .empty-state h3 { color: white; margin-bottom: 8px; font-size: 1.1rem; }
+    .empty-state p { font-size: 0.9rem; }
     .chat-input-area { flex-shrink: 0; padding: 10px 15px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); background: rgba(3, 7, 18, 0.95); border-top: 1px solid var(--glass-border); display: flex; gap: 8px; align-items: center; position: relative; z-index: 20; }
     .input-actions { display: flex; gap: 10px; align-items: center; }
     .input-actions i { font-size: 1.5rem; color: var(--neon); cursor: pointer; }
     .chat-input { flex: 1; min-width: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 30px; padding: 12px 15px; color: white; outline: none; font-size: 0.95rem;}
-    .btn-send { width: 45px; height: 45px; flex-shrink: 0; border-radius: 50%; background: var(--primary); border: none; color: white; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
+    .chat-input:focus { border-color: var(--neon); }
+    .btn-send { width: 45px; height: 45px; flex-shrink: 0; border-radius: 50%; background: var(--primary); border: none; color: white; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); transition: opacity 0.2s; }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
     .emoji-panel { position: absolute; bottom: 70px; left: 15px; background: var(--bg-color); border: 1px solid var(--neon); border-radius: 15px; padding: 10px; display: none; grid-template-columns: repeat(5, 1fr); gap: 10px; z-index: 30; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
     .emoji-panel span { font-size: 1.5rem; cursor: pointer; text-align: center; }
   </style>
@@ -42,15 +49,15 @@
   <header class="chat-header">
     <div class="header-left">
       <i class="fa-solid fa-arrow-left" onclick="window.location.href='chat.html'"></i>
-      <img id="chatAvatar" src="default-avatar.png" class="chat-avatar">
+      <img id="chatAvatar" src="default-avatar.png" class="chat-avatar" alt="Avatar">
       <div>
         <div id="chatSellerName" class="chat-user-name">A carregar...</div>
         <div class="chat-status"><i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Online</div>
       </div>
     </div>
     <div class="header-actions">
-      <i class="fa-solid fa-phone" onclick="startCall('audio')"></i>
-      <i class="fa-solid fa-video" onclick="startCall('video')"></i>
+      <i class="fa-solid fa-phone" onclick="startCall('audio')" title="Chamada de voz"></i>
+      <i class="fa-solid fa-video" onclick="startCall('video')" title="Chamada de vídeo"></i>
     </div>
   </header>
 
@@ -58,8 +65,16 @@
 
   <div class="chat-input-area">
     <div class="emoji-panel" id="emojiPanel">
-      <span onclick="addEmoji('😀')">😀</span><span onclick="addEmoji('😂')">😂</span><span onclick="addEmoji('❤️')">❤️</span><span onclick="addEmoji('👍')">👍</span><span onclick="addEmoji('🔥')">🔥</span>
-      <span onclick="addEmoji('😮')">😮</span><span onclick="addEmoji('😢')">😢</span><span onclick="addEmoji('🙏')">🙏</span><span onclick="addEmoji('💪')">💪</span><span onclick="addEmoji('🎉')">🎉</span>
+      <span onclick="addEmoji('😀')">😀</span>
+      <span onclick="addEmoji('😂')">😂</span>
+      <span onclick="addEmoji('❤️')">❤️</span>
+      <span onclick="addEmoji('👍')">👍</span>
+      <span onclick="addEmoji('🔥')">🔥</span>
+      <span onclick="addEmoji('😍')">😍</span>
+      <span onclick="addEmoji('🙏')">🙏</span>
+      <span onclick="addEmoji('👏')">👏</span>
+      <span onclick="addEmoji('💯')">💯</span>
+      <span onclick="addEmoji('🎉')">🎉</span>
     </div>
 
     <div class="input-actions">
@@ -67,90 +82,147 @@
       <i class="fa-solid fa-paperclip" onclick="document.getElementById('fileInput').click()"></i>
       <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;" onchange="uploadMedia(event)">
     </div>
-    <input type="text" id="messageInput" class="chat-input" placeholder="Escreva..." onkeypress="handleKeyPress(event)">
-    <button class="btn-send" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+    <input type="text" id="messageInput" class="chat-input" placeholder="Escreva..." onkeypress="handleKeyPress(event)" autocomplete="off" enterkeyhint="send">
+    <button class="btn-send" id="btnSend" onclick="sendMessage()" aria-label="Enviar"><i class="fa-solid fa-paper-plane"></i></button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
   <script>
-    let currentUser = null; let sellerId = null;
-    let myAvatarUrl = 'default-avatar.png'; let otherAvatarUrl = 'default-avatar.png';
-    let myLanguage = 'pt'; let otherLanguage = 'pt';
-    const LANGS = { 'pt': 'Português', 'en': 'Inglês', 'es': 'Espanhol', 'fr': 'Francês', 'de': 'Alemão', 'it': 'Italiano', 'ru': 'Russo', 'ja': 'Japonês', 'zh-CN': 'Chinês', 'ar': 'Árabe', 'sw': 'Suaíli', 'ko': 'Coreano', 'nl': 'Holandês', 'tr': 'Turco', 'hi': 'Hindi' };
+    const MAX_IMAGE_MB = 10;
+    const MAX_VIDEO_MB = 50;
+    let currentUser = null;
+    let sellerId = null;
+    let myAvatarUrl = 'default-avatar.png';
+    let otherAvatarUrl = 'default-avatar.png';
+    let myLanguage = 'pt';
+    let otherLanguage = 'pt';
+    let realtimeChannel = null;
+    let isSending = false;
+    let isUploading = false;
+
+    const LANGS = {
+      'pt': 'Português', 'en': 'Inglês', 'es': 'Espanhol', 'fr': 'Francês',
+      'de': 'Alemão', 'it': 'Italiano', 'ru': 'Russo', 'ja': 'Japonês',
+      'zh-CN': 'Chinês', 'ar': 'Árabe', 'sw': 'Suaíli', 'ko': 'Coreano',
+      'nl': 'Holandês', 'tr': 'Turco', 'hi': 'Hindi'
+    };
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    function updateKeyboardLanguage(langCode) {
+      document.documentElement.lang = langCode;
+      const input = document.getElementById('messageInput');
+      if (input) input.setAttribute('lang', langCode);
+    }
+
+    function scrollToBottom(smooth = true) {
+      const box = document.getElementById('chatMessages');
+      if (!box) return;
+      if (smooth) box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
+      else box.scrollTop = box.scrollHeight;
+    }
 
     async function initChat() {
       const urlParams = new URLSearchParams(window.location.search);
       sellerId = urlParams.get('seller_id');
       if (!sellerId) { window.location.href = 'chat.html'; return; }
-      
+
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user.id;
 
       const { data: me } = await supabaseClient.from('profiles').select('avatar_url, language').eq('id', currentUser).single();
-      if (me) { if (me.avatar_url) myAvatarUrl = me.avatar_url; if (me.language) myLanguage = me.language; }
+      if (me) {
+        if (me.avatar_url) myAvatarUrl = me.avatar_url;
+        if (me.language) { myLanguage = me.language; updateKeyboardLanguage(myLanguage); }
+      }
 
       const { data: other } = await supabaseClient.from('profiles').select('username, avatar_url, language').eq('id', sellerId).single();
       if (other) {
         if (other.avatar_url) otherAvatarUrl = other.avatar_url;
         if (other.language) otherLanguage = other.language;
-        document.getElementById('chatSellerName').innerText = currentUser === sellerId ? "Você (O seu anúncio)" : other.username;
+        document.getElementById('chatSellerName').innerText = currentUser === sellerId ? 'Você (o seu anúncio)' : (other.username || 'Utilizador FLY');
         document.getElementById('chatAvatar').src = otherAvatarUrl;
       }
 
-      await loadMessages(); 
-      
-      supabaseClient.channel('chat-room').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-        const newMsg = payload.new;
-        if (newMsg.sender_id !== currentUser && (newMsg.sender_id === sellerId && newMsg.receiver_id === currentUser)) { 
-          appendMessage(newMsg); markAsRead();
-        }
-      }).subscribe();
+      await loadMessages();
+      subscribeToRealtime();
+
+      document.getElementById('messageInput').addEventListener('focus', () => { setTimeout(() => scrollToBottom(false), 300); });
+      if (window.visualViewport) { window.visualViewport.addEventListener('resize', () => { setTimeout(() => scrollToBottom(false), 100); }); }
+      window.addEventListener('beforeunload', () => { if (realtimeChannel) { supabaseClient.removeChannel(realtimeChannel); realtimeChannel = null; } });
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') markAsRead(); });
     }
 
     async function loadMessages() {
       const { data: messages, error } = await supabaseClient.from('messages').select('*').or(`and(sender_id.eq.${currentUser},receiver_id.eq.${sellerId}),and(sender_id.eq.${sellerId},receiver_id.eq.${currentUser})`).order('created_at', { ascending: true });
-      if (error) return;
+      if (error) { console.error('Erro loadMessages:', error); showToast('Erro ao carregar mensagens.', 'error'); return; }
       const chatBox = document.getElementById('chatMessages'); chatBox.innerHTML = '';
-      for (const msg of messages) { await appendMessage(msg); }
+      if (!messages || messages.length === 0) { showEmptyState(); return; }
+      for (const msg of messages) await appendMessage(msg);
       await markAsRead();
-      setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 150);
+      setTimeout(() => scrollToBottom(false), 150);
     }
 
-    async function markAsRead() { await supabaseClient.from('messages').update({ is_read: true }).eq('receiver_id', currentUser).eq('sender_id', sellerId).eq('is_read', false); }
+    function showEmptyState() {
+      const chatBox = document.getElementById('chatMessages');
+      chatBox.innerHTML = `<div class="empty-state"><i class="fa-regular fa-comments"></i><h3>Ainda não há mensagens</h3><p>Diz olá! 👋</p></div>`;
+    }
+
+    async function markAsRead() {
+      if (document.visibilityState !== 'visible') return;
+      await supabaseClient.from('messages').update({ is_read: true }).eq('receiver_id', currentUser).eq('sender_id', sellerId).eq('is_read', false);
+    }
 
     async function appendMessage(msg) {
       const chatBox = document.getElementById('chatMessages');
+      const emptyState = chatBox.querySelector('.empty-state');
+      if (emptyState) chatBox.innerHTML = '';
+      if (msg.id && document.getElementById(`msg-${msg.id}`)) return;
+
       const isSent = msg.sender_id === currentUser;
-      
-      // 🔍 CORREÇÃO DA DATA AQUI: Se não existir created_at, usa a data/hora atual
       const dateObj = msg.created_at ? new Date(msg.created_at) : new Date();
       const time = dateObj.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-      
+
       const row = document.createElement('div');
       row.className = `message-row ${isSent ? 'sent' : 'received'}`;
-      row.id = `msg-${msg.id || Date.now()}`;
-      
+      row.id = `msg-${msg.id || 'temp-' + Date.now()}`;
+
       let contentHtml = '';
       if (msg.file_url) {
-        if (msg.file_type && msg.file_type.startsWith('image/')) { contentHtml = `<img src="${msg.file_url}" class="message-image" onclick="window.open('${msg.file_url}', '_blank')">`; } 
-        else if (msg.file_type && msg.file_type.startsWith('video/')) { contentHtml = `<video src="${msg.file_url}" controls style="max-width: 100%; border-radius: 10px; margin-bottom: 5px;"></video>`; }
+        const safeUrl = escapeHtml(msg.file_url);
+        const type = msg.file_type || '';
+        if (type.startsWith('image/')) { contentHtml = `<img src="${safeUrl}" class="message-image" onclick="window.open(this.src, '_blank')" alt="Imagem">`; } 
+        else if (type.startsWith('video/')) { contentHtml = `<video src="${safeUrl}" controls playsinline preload="metadata" class="message-video"></video>`; } 
+        else { contentHtml = `<a href="${safeUrl}" target="_blank" style="color:var(--neon); text-decoration:underline;">📎 Abrir ficheiro</a>`; }
       }
-      
-      let textHtml = `<div>${msg.content}</div>`;
-      const shouldTranslate = !isSent && myLanguage !== otherLanguage && msg.content;
+
+      const safeText = escapeHtml(msg.content || '');
+      let textHtml = safeText ? `<div>${safeText}</div>` : '';
+      const shouldTranslate = !isSent && myLanguage !== otherLanguage && msg.content && msg.content.trim().length > 0;
 
       if (shouldTranslate) {
-        textHtml = `<div class="translated-tag" id="tag-${row.id}"><i class="fa-solid fa-spinner fa-spin"></i> A traduzir...</div><div class="translated-text" id="text-${row.id}">${msg.content}</div>`;
+        textHtml = `<div class="translated-tag" id="tag-${row.id}"><i class="fa-solid fa-spinner fa-spin"></i> A traduzir...</div><div class="translated-text" id="text-${row.id}">${safeText}</div>`;
       }
-      
-      row.innerHTML = `
-        <img src="${isSent ? myAvatarUrl : otherAvatarUrl}" class="msg-avatar">
-        <div class="message">${contentHtml}${textHtml}<span class="message-time">${time}</span></div>
-      `;
-      chatBox.appendChild(row); 
-      chatBox.scrollTop = chatBox.scrollHeight;
+
+      row.innerHTML = `<img src="${isSent ? escapeHtml(myAvatarUrl) : escapeHtml(otherAvatarUrl)}" class="msg-avatar" alt=""><div class="message">${contentHtml}${textHtml}<span class="message-time">${time}</span></div>`;
+      chatBox.appendChild(row);
+      scrollToBottom(false);
 
       if (shouldTranslate) { translateMessage(msg.content, otherLanguage, myLanguage, row.id); }
     }
@@ -160,54 +232,115 @@
         const { data, error } = await supabaseClient.functions.invoke('translate-message', { body: { text, source, target } });
         const tag = document.getElementById(`tag-${rowId}`);
         const textDiv = document.getElementById(`text-${rowId}`);
-        if (error || !data || data.error) {
-          if (tag) tag.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Falha`;
-          if (textDiv) textDiv.innerText = text; return;
+        
+        if (error || !data || data.error) { 
+          console.error("Erro Edge Function:", error, data);
+          if (tag) tag.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Falha na tradução`; 
+          if (textDiv) textDiv.innerText = text; 
+          return; 
         }
         if (tag) tag.innerHTML = `<i class="fa-solid fa-language"></i> Traduzido de ${LANGS[source] || source}`;
-        if (textDiv) textDiv.innerText = data.translated;
-      } catch (err) { console.error(err); }
+        if (textDiv) textDiv.innerText = data.translated || text;
+      } catch (err) { 
+        console.error('Erro tradução:', err); 
+        const tag = document.getElementById(`tag-${rowId}`); 
+        if (tag) tag.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Erro`; 
+      }
     }
 
     async function sendMessage() {
-      const input = document.getElementById('messageInput'); const text = input.value.trim(); if (!text) return;
+      if (isSending) return;
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text) return;
+      const btn = document.getElementById('btnSend');
+      isSending = true; btn.disabled = true;
+      const originalText = input.value;
       input.value = '';
-      const receiver = (currentUser === sellerId) ? currentUser : sellerId;
-      
-      // 🔍 CORREÇÃO AQUI: Adicionar a data no momento do envio para a mensagem temporária
-      const tempMsg = { 
-        sender_id: currentUser, 
-        receiver_id: receiver, 
-        content: text,
-        created_at: new Date().toISOString()
-      };
-      
-      appendMessage(tempMsg);
-      await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: receiver, content: text, is_read: false }]);
+      const { data: inserted, error } = await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: sellerId, content: text, is_read: false }]).select().single();
+      isSending = false; btn.disabled = false;
+      if (error) { console.error('Erro insert:', error); input.value = originalText; showToast('Falha ao enviar: ' + (error.message || 'erro desconhecido'), 'error'); return; }
+      appendMessage(inserted);
     }
 
     async function uploadMedia(event) {
-      const file = event.target.files[0]; if (!file) return;
-      const receiver = (currentUser === sellerId) ? currentUser : sellerId;
-      const fileExt = file.name.split('.').pop(); const fileName = `chats/${currentUser}_${Date.now()}.${fileExt}`;
+      const file = event.target.files[0];
+      if (!file) return;
+      if (isUploading) { showToast('Já tens um ficheiro a enviar...', 'error'); event.target.value = ''; return; }
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+      if (!isImage && !isVideo) { showToast('Apenas imagens e vídeos são permitidos.', 'error'); event.target.value = ''; return; }
+      const sizeMB = file.size / 1024 / 1024;
+      const limitMB = isVideo ? MAX_VIDEO_MB : MAX_IMAGE_MB;
+      if (sizeMB > limitMB) { showToast(`Ficheiro muito grande (${sizeMB.toFixed(2)}MB). Máximo: ${limitMB}MB.`, 'error'); event.target.value = ''; return; }
+
+      let fileExt = file.name.split('.').pop().toLowerCase();
+      if (!fileExt || fileExt.length > 5) {
+        if (file.type === 'image/jpeg') fileExt = 'jpg'; else if (file.type === 'image/png') fileExt = 'png'; else if (file.type === 'video/mp4') fileExt = 'mp4'; else if (file.type === 'video/quicktime') fileExt = 'mov'; else fileExt = isVideo ? 'mp4' : 'jpg';
+      }
+
+      const fileName = `chats/${currentUser}_${Date.now()}.${fileExt}`;
       const chatBox = document.getElementById('chatMessages');
-      const tempRow = document.createElement('div'); tempRow.className = 'message-row sent';
-      tempRow.innerHTML = `<div class="message"><i class="fa-solid fa-spinner fa-spin"></i> A enviar...</div>`;
-      chatBox.appendChild(tempRow); chatBox.scrollTop = chatBox.scrollHeight;
-      const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(fileName, file);
-      if (uploadError) { alert('Erro: ' + uploadError.message); tempRow.remove(); return; }
+      const emptyState = chatBox.querySelector('.empty-state');
+      if (emptyState) chatBox.innerHTML = '';
+
+      const tempRow = document.createElement('div');
+      tempRow.className = 'message-row sent';
+      tempRow.id = 'temp-upload-' + Date.now();
+      tempRow.innerHTML = `<div class="message"><i class="fa-solid fa-spinner fa-spin"></i> A enviar ${isVideo ? 'vídeo' : 'imagem'} (${sizeMB.toFixed(2)}MB)...</div>`;
+      chatBox.appendChild(tempRow);
+      scrollToBottom(false);
+      isUploading = true;
+
+      let uploadError;
+      try {
+        const res = await supabaseClient.storage.from('fly_bucket').upload(fileName, file, { cacheControl: '3600', upsert: false, contentType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg') });
+        uploadError = res.error;
+      } catch (err) {
+        console.error('💥 Exceção no upload:', err); tempRow.remove(); isUploading = false; event.target.value = ''; showToast('Erro de rede no upload.', 'error'); return;
+      }
+
+      if (uploadError) {
+        console.error('❌ Upload error:', uploadError); tempRow.remove(); isUploading = false; event.target.value = ''; showToast('O Supabase rejeitou o upload.', 'error'); return;
+      }
+
       const { data: publicUrl } = supabaseClient.storage.from('fly_bucket').getPublicUrl(fileName);
-      await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: receiver, content: '', file_url: publicUrl.publicUrl, file_type: file.type, is_read: false }]);
-      tempRow.remove(); loadMessages();
+      const fileUrl = publicUrl.publicUrl;
+
+      const { data: inserted, error: dbError } = await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: sellerId, content: '', file_url: fileUrl, file_type: file.type, is_read: false }]).select().single();
+      tempRow.remove(); isUploading = false; event.target.value = '';
+
+      if (dbError) { console.error('❌ DB insert error:', dbError); showToast('Upload feito mas falhou gravar na BD.', 'error'); return; }
+      appendMessage(inserted);
+      showToast('Enviado! ✅', 'success');
     }
 
     function toggleEmojiPanel() { const panel = document.getElementById('emojiPanel'); panel.style.display = panel.style.display === 'grid' ? 'none' : 'grid'; }
     function addEmoji(emoji) { const input = document.getElementById('messageInput'); input.value += emoji; input.focus(); }
+    
     async function startCall(type) {
-      const { data: call } = await supabaseClient.from('calls').insert([{ caller_id: currentUser, receiver_id: sellerId, type: type, status: 'ringing' }]).select().single();
+      if (!currentUser || !sellerId) return;
+      const { data: call, error } = await supabaseClient.from('calls').insert([{ caller_id: currentUser, receiver_id: sellerId, type, status: 'ringing' }]).select().single();
+      if (error || !call) { showToast('Não foi possível iniciar a chamada.', 'error'); return; }
       window.location.href = `chamada.html?user_id=${sellerId}&type=${type}&call_id=${call.id}&role=caller`;
     }
-    function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+    
+    function handleKeyPress(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+
+    function subscribeToRealtime() {
+      realtimeChannel = supabaseClient.channel('chat-room-' + currentUser + '-' + sellerId)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+          const newMsg = payload.new;
+          const isThisConversation = (newMsg.sender_id === sellerId && newMsg.receiver_id === currentUser) || (newMsg.sender_id === currentUser && newMsg.receiver_id === sellerId);
+          if (!isThisConversation) return;
+          if (newMsg.sender_id === currentUser) return;
+          if (document.getElementById(`msg-${newMsg.id}`)) return;
+          appendMessage(newMsg);
+          markAsRead();
+        })
+        .subscribe((status) => { console.log('🔄 Realtime status:', status); });
+    }
+
     initChat();
   </script>
 </body>

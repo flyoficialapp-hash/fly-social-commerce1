@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Criar Duelo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background: var(--bg-color); background-image: var(--bg-gradient); min-height: 100vh; padding-bottom: 80px; }
+    .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(3, 7, 18, 0.95); border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
+    .header i { color: white; font-size: 1.5rem; cursor: pointer; }
+    .header-title { color: white; font-size: 1.2rem; font-weight: bold; }
+    .form-container { padding: 20px; max-width: 600px; margin: 0 auto; }
+    .question-input { width: 100%; background: rgba(255,255,255,0.05); border: 2px solid var(--neon); border-radius: 15px; padding: 15px; color: white; font-size: 1.2rem; font-weight: bold; text-align: center; outline: none; margin-bottom: 25px; }
+    .question-input:focus { box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
+    .options-container { display: flex; gap: 15px; margin-bottom: 25px; position: relative; }
+    .vs-divider { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(45deg, #7e22ce, #ec4899); color: white; font-weight: 900; font-style: italic; width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 4px solid var(--bg-color); z-index: 10; box-shadow: 0 0 15px rgba(236, 72, 153, 0.5); }
+    .option-box { flex: 1; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .option-box label { color: white; font-weight: bold; font-size: 0.9rem; align-self: flex-start; }
+    .opt-text-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 10px; padding: 10px; color: white; outline: none; text-align: center; font-weight: bold; }
+    .img-upload-box { width: 100%; height: 120px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 12px; display: flex; justify-content: center; align-items: center; flex-direction: column; color: var(--text-muted); cursor: pointer; position: relative; overflow: hidden; background: rgba(0,0,0,0.5); }
+    .img-upload-box input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
+    .img-preview { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 5; }
+    .settings-row { display: flex; gap: 15px; margin-bottom: 15px; }
+    .setting-group { flex: 1; }
+    .setting-group label { display: block; color: var(--neon); font-size: 0.85rem; margin-bottom: 5px; font-weight: bold; }
+    .setting-group select { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: white; padding: 12px; border-radius: 10px; outline: none; font-size: 0.9rem; appearance: none; }
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; background: var(--glass-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 25px; }
+    .toggle-row span { color: white; font-weight: bold; font-size: 0.95rem; }
+    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--neon); }
+    input:checked + .slider:before { transform: translateX(24px); }
+    .btn-publish { width: 100%; padding: 18px; border-radius: 15px; background: linear-gradient(90deg, #7e22ce, #a855f7); color: white; font-size: 1.1rem; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); display: flex; justify-content: center; align-items: center; gap: 10px; }
+    .btn-publish:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.history.back()"></i>
+    <div class="header-title"><i class="fa-solid fa-trophy" style="color:#ffd700; margin-right:5px;"></i> Criar Duelo</div>
+    <div style="width: 24px;"></div>
+  </header>
+
+  <div class="form-container">
+    <input type="text" id="question" class="question-input" placeholder="Ex: Praia ou Piscina?" maxlength="100">
+
+    <div class="options-container">
+      <div class="vs-divider">VS</div>
+      
+      <div class="option-box">
+        <label>Opção A</label>
+        <div class="img-upload-box" id="boxA" onclick="document.getElementById('imgA').click()">
+          <input type="file" id="imgA" accept="image/*" onchange="previewImage(event, 'A')">
+          <img id="previewA" class="img-preview" src="">
+          <i class="fa-solid fa-camera" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
+          <span style="font-size: 0.75rem;">Adicionar Foto</span>
+        </div>
+        <input type="text" id="textA" class="opt-text-input" placeholder="Texto Opção A">
+      </div>
+
+      <div class="option-box">
+        <label>Opção B</label>
+        <div class="img-upload-box" id="boxB" onclick="document.getElementById('imgB').click()">
+          <input type="file" id="imgB" accept="image/*" onchange="previewImage(event, 'B')">
+          <img id="previewB" class="img-preview" src="">
+          <i class="fa-solid fa-camera" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
+          <span style="font-size: 0.75rem;">Adicionar Foto</span>
+        </div>
+        <input type="text" id="textB" class="opt-text-input" placeholder="Texto Opção B">
+      </div>
+    </div>
+
+    <div class="settings-row">
+      <div class="setting-group">
+        <label><i class="fa-solid fa-users"></i> Público</label>
+        <select id="audience">
+          <option value="public">Todos (Público)</option>
+          <option value="friends">Apenas Amigos</option>
+        </select>
+      </div>
+      <div class="setting-group">
+        <label><i class="fa-solid fa-clock"></i> Duração</label>
+        <select id="duration">
+          <option value="1">1 Minuto (Relâmpago)</option>
+          <option value="10">10 Minutos</option>
+          <option value="60">1 Hora</option>
+          <option value="1440" selected>24 Horas</option>
+          <option value="10080">7 Dias</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings-row">
+      <div class="setting-group">
+        <label><i class="fa-solid fa-bolt"></i> Modo</label>
+        <select id="mode">
+          <option value="normal">Normal</option>
+          <option value="blind">Às Cegas (Ocultar até o fim)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <span><i class="fa-regular fa-comment-dots"></i> Permitir Comentários</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="allowComments" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <button class="btn-publish" id="btnPublish" onclick="publishDuel()">
+      <i class="fa-solid fa-paper-plane"></i> Publicar Duelo
+    </button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
+  <script>
+    let currentUser = null;
+    let fileA = null;
+    let fileB = null;
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+    }
+
+    function previewImage(event, option) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (option === 'A') fileA = file;
+      if (option === 'B') fileB = file;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const preview = document.getElementById(`preview${option}`);
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      }
+      reader.readAsDataURL(file);
+    }
+
+    async function publishDuel() {
+      const btn = document.getElementById('btnPublish');
+      const question = document.getElementById('question').value.trim();
+      const textA = document.getElementById('textA').value.trim() || 'Opção A';
+      const textB = document.getElementById('textB').value.trim() || 'Opção B';
+      const audience = document.getElementById('audience').value;
+      const durationMinutes = parseInt(document.getElementById('duration').value);
+      const mode = document.getElementById('mode').value;
+      const allowComments = document.getElementById('allowComments').checked;
+
+      if (!question) { showToast('Escreve a pergunta do duelo!', 'error'); return; }
+      if (!fileA || !fileB) { showToast('Adiciona uma imagem para cada opção!', 'error'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A publicar...';
+
+      try {
+        const extA = fileA.name.split('.').pop();
+        const pathA = `duelos/${currentUser}_${Date.now()}_A.${extA}`;
+        await supabaseClient.storage.from('fly_bucket').upload(pathA, fileA);
+        const { data: urlA } = supabaseClient.storage.from('fly_bucket').getPublicUrl(pathA);
+
+        const extB = fileB.name.split('.').pop();
+        const pathB = `duelos/${currentUser}_${Date.now()}_B.${extB}`;
+        await supabaseClient.storage.from('fly_bucket').upload(pathB, fileB);
+        const { data: urlB } = supabaseClient.storage.from('fly_bucket').getPublicUrl(pathB);
+
+        const endsAt = new Date();
+        endsAt.setMinutes(endsAt.getMinutes() + durationMinutes);
+
+        const { error } = await supabaseClient.from('duels').insert([{
+          creator_id: currentUser,
+          question: question,
+          option_a_text: textA,
+          option_a_image: urlA.publicUrl,
+          option_b_text: textB,
+          option_b_image: urlB.publicUrl,
+          audience: audience,
+          mode: mode,
+          allow_comments: allowComments,
+          ends_at: endsAt.toISOString()
+        }]);
+
+        if (error) throw error;
+
+        showToast('Duelo criado com sucesso! 🏆', 'success');
+        setTimeout(() => { window.location.href = 'duelos.html'; }, 1500);
+
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao publicar duelo: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publicar Duelo';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

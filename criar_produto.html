@@ -10,10 +10,7 @@
     .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
     .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; color: white;}
     .header-title img { height: 30px; border-radius: 5px;}
-    
-    /* Aumentei o padding-bottom para o utilizador poder rolar o formulário até ao fim */
     .form-container { padding: 15px; padding-bottom: 170px; }
-    
     .upload-box { border: 2px dashed var(--glass-border); border-radius: 15px; height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted); cursor: pointer; background: rgba(255,255,255,0.02); position: relative; overflow: hidden; margin-bottom: 20px;}
     .upload-box input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;}
     .upload-box i { font-size: 2.5rem; color: var(--neon); margin-bottom: 10px; }
@@ -27,10 +24,7 @@
     .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
     input:checked + .slider { background-color: var(--primary); }
     input:checked + .slider:before { transform: translateX(24px); }
-
-    /* CORREÇÃO AQUI: O botão agora fica acima da barra de navegação */
     .btn-publish { position: fixed; bottom: 70px; left: 0; width: 100%; padding: 15px 20px; background: rgba(3, 7, 18, 0.95); border-top: 1px solid var(--glass-border); z-index: 999;}
-    
     select.input-glass { background-color: #0a1f44; color: white; }
     select.input-glass option { background-color: #0a1f44; color: white; }
   </style>
@@ -74,13 +68,15 @@
   <nav class="bottom-nav">
     <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
     <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="duelos.html" class="nav-item" style="color: #ffd700; transform: scale(1.1);"><i class="fa-solid fa-trophy"></i><span style="font-weight: bold;">Duelo</span></a>
     <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span></a>
-    <a href="gerenciar_vendas.html" class="nav-item active"><i class="fa-solid fa-briefcase"></i><span>Negócio</span></a>
-    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+    <a href="perfil.html" class="nav-item active"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
+  <!-- i18n.js REMOVIDO -->
   <script>
     let selectedFile = null;
     let editProductId = null;
