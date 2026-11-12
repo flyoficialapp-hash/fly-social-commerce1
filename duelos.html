@@ -11,45 +11,41 @@
     .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--glass-border); }
     .header-title { font-size: 1.4rem; font-weight: 800; color: white; display: flex; align-items: center; gap: 10px; font-style: italic; }
     .header-title i { color: #ffd700; font-size: 1.5rem; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-    
     .top-actions { padding: 15px; display: flex; justify-content: center; }
     .btn-create-duel { width: 100%; max-width: 400px; padding: 15px; border-radius: 30px; background: linear-gradient(90deg, #7e22ce, #a855f7); color: white; font-weight: bold; font-size: 1.1rem; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); transition: 0.3s; text-decoration: none; }
     .btn-create-duel:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(168, 85, 247, 0.6); }
-
     .tabs { display: flex; gap: 10px; padding: 0 15px 15px 15px; overflow-x: auto; scrollbar-width: none; }
     .tab { padding: 10px 20px; border-radius: 25px; background: var(--glass-bg); border: 1px solid var(--glass-border); font-size: 0.9rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; font-weight: bold; transition: 0.3s; }
     .tab.active { background: var(--primary); color: white; border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
-
     .feed { padding: 0 15px 100px 15px; display: flex; flex-direction: column; gap: 20px; }
-    
     .duel-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 15px; position: relative; overflow: hidden; }
     .duel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     .creator-info { display: flex; align-items: center; gap: 10px; cursor: pointer; }
     .creator-info img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; }
     .creator-info .name { font-weight: bold; color: white; font-size: 0.95rem; }
     .creator-info .time { font-size: 0.75rem; color: var(--text-muted); }
-    
     .duel-question { font-size: 1.2rem; font-weight: bold; color: white; text-align: center; margin-bottom: 15px; }
-    
     .duel-options { display: flex; gap: 10px; position: relative; margin-bottom: 15px; }
     .duel-option { flex: 1; border-radius: 15px; overflow: hidden; background: #111; cursor: pointer; position: relative; border: 2px solid transparent; transition: 0.2s; }
     .duel-option:hover { border-color: #a855f7; }
     .duel-option img { width: 100%; height: 120px; object-fit: cover; display: block; }
     .duel-option .opt-text { padding: 10px; text-align: center; font-weight: bold; color: white; background: rgba(0,0,0,0.6); font-size: 0.9rem; }
     .vs-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(45deg, #7e22ce, #ec4899); width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; color: white; border: 3px solid var(--bg-color); box-shadow: 0 0 15px rgba(236, 72, 153, 0.6); z-index: 10; font-size: 1rem; font-style: italic; }
-
     .duel-footer { display: flex; justify-content: space-between; align-items: center; }
     .duel-stats { display: flex; gap: 15px; font-size: 0.8rem; color: var(--text-muted); }
     .duel-stats i { color: var(--neon); }
     .btn-vote { padding: 10px 25px; border-radius: 20px; background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.3s; }
     .btn-vote:hover { background: var(--neon); color: #000; }
-
     .result-bar-container { display: none; flex-direction: column; gap: 5px; margin-bottom: 15px; }
     .result-bar-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: bold; color: white; }
     .result-bar-bg { flex: 1; height: 20px; background: #222; border-radius: 10px; overflow: hidden; position: relative; }
     .result-bar-fill { height: 100%; width: 0%; transition: width 1s ease-out; }
     .fill-a { background: linear-gradient(90deg, #0066ff, #00ccff); }
     .fill-b { background: linear-gradient(90deg, #7e22ce, #ec4899); }
+
+    /* BOTÃO DE GESTÃO (3 pontinhos) */
+    .manage-btn { position: absolute; top: 15px; right: 15px; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; z-index: 20; padding: 5px; }
+    .manage-btn:hover { color: white; }
   </style>
 </head>
 <body>
@@ -71,17 +67,7 @@
   </div>
 
   <div class="feed" id="duelosFeed">
-    <!-- Skeleton Loader -->
-    <div class="skeleton-post">
-      <div class="skeleton-header"><div class="skeleton-avatar"></div><div class="skeleton-text"></div></div>
-      <div class="skeleton-img"></div>
-      <div class="skeleton-actions"><div class="skeleton-icon"></div><div class="skeleton-icon"></div></div>
-    </div>
-    <div class="skeleton-post">
-      <div class="skeleton-header"><div class="skeleton-avatar"></div><div class="skeleton-text"></div></div>
-      <div class="skeleton-img"></div>
-      <div class="skeleton-actions"><div class="skeleton-icon"></div><div class="skeleton-icon"></div></div>
-    </div>
+    <div class="skeleton-post"><div class="skeleton-header"><div class="skeleton-avatar"></div><div class="skeleton-text"></div></div><div class="skeleton-img"></div></div>
   </div>
 
   <nav class="bottom-nav">
@@ -185,7 +171,7 @@
         
         const now = new Date();
         const endsAt = new Date(duel.ends_at);
-        const isExpired = now > endsAt;
+        const isExpired = now > endsAt || duel.status === 'finished';
         
         let timeString = "Terminado";
         if (!isExpired) {
@@ -199,9 +185,13 @@
         const imgA = duel.option_a_image || 'https://via.placeholder.com/150/0000FF/FFFFFF?text=Opção+A';
         const imgB = duel.option_b_image || 'https://via.placeholder.com/150/800080/FFFFFF?text=Opção+B';
 
+        const isMyDuel = duel.creator_id === currentUser;
+        const manageBtnHtml = (isMyDuel && currentTab === 'meus') ? `<div class="manage-btn" onclick="event.stopPropagation(); window.location.href='gerir_duelo.html?id=${duel.id}'"><i class="fa-solid fa-gears"></i></div>` : '';
+
         const card = document.createElement('div');
         card.className = 'duel-card';
         card.innerHTML = `
+          ${manageBtnHtml}
           <div class="duel-header">
             <div class="creator-info" onclick="window.location.href='perfil.html?id=${duel.creator_id}'">
               <img src="${creatorAvatar}">

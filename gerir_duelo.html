@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY - Gerir Duelo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background: var(--bg-color); background-image: var(--bg-gradient); min-height: 100vh; }
+    .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--glass-border); }
+    .header i { color: white; font-size: 1.5rem; cursor: pointer; }
+    .header-title { color: white; font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+    .header-title i { color: #ffd700; font-size: 1.3rem; }
+    
+    .container { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 90px; }
+    
+    /* CARTÃO DO DUELO */
+    .duel-preview { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; margin-bottom: 25px; position: relative; overflow: hidden; }
+    .duel-question { font-size: 1.3rem; font-weight: bold; color: white; text-align: center; margin-bottom: 20px; }
+    .duel-options { display: flex; gap: 10px; position: relative; margin-bottom: 20px; }
+    .duel-option { flex: 1; border-radius: 12px; overflow: hidden; background: #111; position: relative; border: 1px solid rgba(255,255,255,0.1); }
+    .duel-option img { width: 100%; height: 100px; object-fit: cover; display: block; }
+    .duel-option .opt-text { padding: 10px; text-align: center; font-weight: bold; color: white; background: rgba(0,0,0,0.7); font-size: 0.9rem; }
+    .vs-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(45deg, #7e22ce, #ec4899); width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; color: white; border: 3px solid var(--bg-color); box-shadow: 0 0 15px rgba(236, 72, 153, 0.6); z-index: 10; font-size: 1rem; font-style: italic; }
+    
+    /* ESTATÍSTICAS */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+    .stat-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; text-align: center; }
+    .stat-value { font-size: 1.8rem; font-weight: 900; margin-bottom: 5px; }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+    .val-a { color: #00ccff; }
+    .val-b { color: #ec4899; }
+    
+    .progress-container { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; margin-bottom: 25px; }
+    .progress-row { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: bold; color: white; margin-bottom: 8px; }
+    .progress-bar-bg { width: 100%; height: 12px; background: #222; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+    .progress-bar-fill { height: 100%; width: 0%; transition: width 1s ease-out; }
+    .fill-a { background: linear-gradient(90deg, #0066ff, #00ccff); }
+    .fill-b { background: linear-gradient(90deg, #7e22ce, #ec4899); }
+
+    /* LISTA DE VOTANTES */
+    .section-title { font-size: 1.1rem; font-weight: bold; color: white; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+    .voters-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
+    .voter-item { display: flex; align-items: center; justify-content: space-between; background: var(--glass-bg); padding: 12px 15px; border-radius: 12px; border: 1px solid var(--glass-border); }
+    .voter-info { display: flex; align-items: center; gap: 12px; }
+    .voter-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--glass-border); }
+    .voter-info span { color: white; font-weight: bold; font-size: 0.95rem; }
+    .vote-badge { padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; }
+    .badge-a { background: rgba(0, 204, 255, 0.15); color: #00ccff; border: 1px solid #00ccff; }
+    .badge-b { background: rgba(236, 72, 153, 0.15); color: #ec4899; border: 1px solid #ec4899; }
+    .empty-voters { text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 20px; }
+
+    /* BOTÕES DE AÇÃO */
+    .actions-container { display: flex; flex-direction: column; gap: 12px; margin-top: 30px; }
+    .btn-action { width: 100%; padding: 16px; border-radius: 15px; border: none; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
+    .btn-share { background: rgba(0, 204, 255, 0.1); color: var(--neon); border: 1px solid var(--neon); }
+    .btn-end { background: rgba(255, 179, 0, 0.1); color: #ffb300; border: 1px solid #ffb300; }
+    .btn-delete { background: rgba(255, 51, 102, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+    .btn-action:hover { opacity: 0.8; transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.location.href='duelos.html'"></i>
+    <div class="header-title"><i class="fa-solid fa-gears"></i> Gestão de Duelo</div>
+    <div style="width: 24px;"></div>
+  </header>
+
+  <div class="container" id="mainContainer">
+    <p style="text-align: center; color: var(--text-muted); margin-top: 50px;">A carregar dados do duelo...</p>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
+    <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
+    <a href="duelos.html" class="nav-item active" style="color: #ffd700; transform: scale(1.1);"><i class="fa-solid fa-trophy"></i><span style="font-weight: bold;">Duelo</span></a>
+    <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócios</span></a>
+    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/calls.js"></script>
+  <script>
+    let currentUser = null;
+    let duelData = null;
+    let votesList = [];
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    async function init() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const duelId = urlParams.get('id');
+      if (!duelId) { window.location.href = 'duelos.html'; return; }
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+
+      // Carregar Duelo e Votos (com os perfis dos votantes)
+      const { data: duel, error } = await supabaseClient
+        .from('duels')
+        .select(`
+          *,
+          duel_votes ( user_id, choice, created_at, profiles:user_id (username, avatar_url) )
+        `)
+        .eq('id', duelId)
+        .single();
+
+      if (error || !duel) { alert('Duelo não encontrado.'); window.location.href = 'duelos.html'; return; }
+      
+      // Segurança: Só o criador pode aceder a esta página
+      if (duel.creator_id !== currentUser) {
+        showToast('Não tens permissão para gerir este duelo.', 'error');
+        setTimeout(() => window.location.href = 'duelos.html', 1500);
+        return;
+      }
+
+      duelData = duel;
+      votesList = duel.duel_votes || [];
+      renderManagement();
+    }
+
+    function renderManagement() {
+      const container = document.getElementById('mainContainer');
+      
+      const votesA = votesList.filter(v => v.choice === 'A').length;
+      const votesB = votesList.filter(v => v.choice === 'B').length;
+      const total = votesA + votesB;
+      const pctA = total > 0 ? Math.round((votesA/total)*100) : 0;
+      const pctB = total > 0 ? Math.round((votesB/total)*100) : 0;
+      
+      const isExpired = new Date() > new Date(duelData.ends_at) || duelData.status === 'finished';
+
+      let votersHtml = '';
+      if (votesList.length === 0) {
+        votersHtml = `<div class="empty-voters"><i class="fa-solid fa-user-slash"></i><br>Ainda ninguém votou.</div>`;
+      } else {
+        // Ordenar por data de voto (mais recentes primeiro)
+        votesList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        votesList.forEach(v => {
+          const name = v.profiles?.username || 'Utilizador FLY';
+          const avatar = v.profiles?.avatar_url || 'default-avatar.png';
+          const isA = v.choice === 'A';
+          
+          votersHtml += `
+            <div class="voter-item">
+              <div class="voter-info">
+                <img src="${avatar}">
+                <span>${name}</span>
+              </div>
+              <div class="vote-badge ${isA ? 'badge-a' : 'badge-b'}">${isA ? duelData.option_a_text : duelData.option_b_text}</div>
+            </div>
+          `;
+        });
+      }
+
+      container.innerHTML = `
+        <div class="duel-preview">
+          <div class="duel-question">${duelData.question}</div>
+          <div class="duel-options">
+            <div class="duel-option">
+              <img src="${duelData.option_a_image}">
+              <div class="opt-text">${duelData.option_a_text}</div>
+            </div>
+            <div class="vs-badge">VS</div>
+            <div class="duel-option">
+              <img src="${duelData.option_b_image}">
+              <div class="opt-text">${duelData.option_b_text}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value val-a">${pctA}%</div>
+            <div class="stat-label">${votesA} votos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value val-b">${pctB}%</div>
+            <div class="stat-label">${votesB} votos</div>
+          </div>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-row"><span>${duelData.option_a_text}</span> <span>${pctA}%</span></div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill fill-a" style="width: ${pctA}%"></div></div>
+          <div class="progress-row"><span>${duelData.option_b_text}</span> <span>${pctB}%</span></div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill fill-b" style="width: ${pctB}%"></div></div>
+        </div>
+
+        <div class="section-title"><i class="fa-solid fa-users"></i> Quem Votou (${total})</div>
+        <div class="voters-list">
+          ${votersHtml}
+        </div>
+
+        <div class="actions-container">
+          <button class="btn-action btn-share" onclick="shareDuel()">
+            <i class="fa-solid fa-share-nodes"></i> Partilhar Duelo
+          </button>
+          
+          ${!isExpired ? `
+            <button class="btn-action btn-end" onclick="endDuelNow()">
+              <i class="fa-solid fa-flag-checkered"></i> Terminar Votação Agora
+            </button>
+          ` : ''}
+          
+          <button class="btn-action btn-delete" onclick="deleteDuel()">
+            <i class="fa-solid fa-trash"></i> Apagar Duelo
+          </button>
+        </div>
+      `;
+    }
+
+    async function endDuelNow() {
+      if (!confirm("Tens a certeza que queres terminar a votação agora? Ninguém mais poderá votar.")) return;
+
+      const { error } = await supabaseClient.from('duels').update({ 
+        status: 'finished', 
+        ends_at: new Date().toISOString() 
+      }).eq('id', duelData.id);
+
+      if (error) { showToast('Erro ao terminar duelo.', 'error'); return; }
+      showToast('Duelo terminado com sucesso!', 'success');
+      duelData.status = 'finished';
+      duelData.ends_at = new Date().toISOString();
+      renderManagement();
+    }
+
+    async function deleteDuel() {
+      if (!confirm("CUIDADO: Tens a certeza que queres apagar este duelo? Todos os votos serão perdidos para sempre.")) return;
+
+      const { error } = await supabaseClient.from('duels').delete().eq('id', duelData.id);
+
+      if (error) { showToast('Erro ao apagar duelo.', 'error'); return; }
+      showToast('Duelo apagado.', 'success');
+      setTimeout(() => window.location.href = 'duelos.html', 1500);
+    }
+
+    async function shareDuel() {
+      const url = window.location.origin + '/duelo.html?id=' + duelData.id;
+      if (navigator.share) {
+        try { await navigator.share({ title: 'FLY Duelo', text: 'Vota no meu duelo: ' + duelData.question, url: url }); return; } catch (err) {}
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast('Link copiado!', 'success');
+      } catch (err) { showToast('Erro ao copiar link.', 'error'); }
+    }
+
+    init();
+  </script>
+</body>
+</html>

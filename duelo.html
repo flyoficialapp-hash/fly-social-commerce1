@@ -8,29 +8,29 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { background: var(--bg-color); background-image: var(--bg-gradient); min-height: 100vh; display: flex; flex-direction: column; }
-    .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(3, 7, 18, 0.95); border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(3, 7, 18, 0.95); border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
     .header i { color: white; font-size: 1.5rem; cursor: pointer; }
     .header-title { color: white; font-size: 1.2rem; font-weight: bold; }
     
     .duel-container { flex: 1; padding: 20px; display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; width: 100%; }
     
-    .creator-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-    .creator-row img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; }
-    .creator-row .name { color: white; font-weight: bold; font-size: 1rem; }
-    .creator-row .time { color: var(--text-muted); font-size: 0.75rem; }
+    .creator-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .creator-info { display: flex; align-items: center; gap: 10px; }
+    .creator-info img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; }
+    .creator-info .name { color: white; font-weight: bold; font-size: 1rem; }
+    .creator-info .time { color: var(--text-muted); font-size: 0.75rem; }
+    
+    /* NOVO: CRONÓMETRO EM TEMPO REAL */
+    .live-timer { background: rgba(0, 0, 0, 0.5); border: 1px solid var(--neon); color: var(--neon); padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 1.1rem; font-family: monospace; letter-spacing: 1px; box-shadow: 0 0 10px rgba(0, 204, 255, 0.3); }
 
     .question-title { font-size: 1.5rem; font-weight: 900; color: white; text-align: center; margin-bottom: 25px; line-height: 1.3; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
-    
     .voting-area { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
-    
     .vote-card { position: relative; border-radius: 20px; overflow: hidden; border: 3px solid transparent; cursor: pointer; transition: 0.3s; background: #111; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     .vote-card:hover { border-color: var(--neon); transform: scale(1.02); }
     .vote-card img { width: 100%; height: 180px; object-fit: cover; display: block; }
     .vote-card .opt-name { position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); color: white; font-size: 1.2rem; font-weight: bold; text-align: center; }
-    
     .vs-circle { text-align: center; margin: -25px 0; position: relative; z-index: 10; }
     .vs-circle span { background: linear-gradient(45deg, #7e22ce, #ec4899); color: white; font-weight: 900; font-style: italic; width: 50px; height: 50px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; border: 4px solid var(--bg-color); box-shadow: 0 0 20px rgba(236, 72, 153, 0.6); font-size: 1.2rem; }
-
     .results-area { display: none; flex-direction: column; gap: 15px; margin-bottom: 20px; }
     .result-row { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; }
     .result-header { display: flex; justify-content: space-between; color: white; font-weight: bold; margin-bottom: 8px; font-size: 1rem; }
@@ -38,10 +38,8 @@
     .result-bar-fill { height: 100%; width: 0%; transition: width 1s ease-out; }
     .fill-a { background: linear-gradient(90deg, #0066ff, #00ccff); }
     .fill-b { background: linear-gradient(90deg, #7e22ce, #ec4899); }
-
     .stats-row { display: flex; justify-content: center; gap: 20px; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
     .stats-row i { color: var(--neon); }
-
     .comments-section { background: var(--glass-bg); border-radius: 20px; padding: 15px; border: 1px solid var(--glass-border); margin-bottom: 30px; }
     .comments-section h3 { color: white; font-size: 1rem; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
     .comment-input-area { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -74,6 +72,17 @@
     let hasVoted = false;
     let userVoteChoice = null;
     let isExpired = false;
+    let timerInterval = null;
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
 
     async function init() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -84,14 +93,9 @@
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user.id;
 
-      // 1. Carregar Duelo e Votos
       const { data: duel, error } = await supabaseClient
         .from('duels')
-        .select(`
-          *,
-          profiles:creator_id (username, avatar_url),
-          duel_votes (user_id, choice)
-        `)
+        .select(`*, profiles:creator_id (username, avatar_url), duel_votes (user_id, choice)`)
         .eq('id', duelId)
         .single();
 
@@ -99,19 +103,44 @@
       
       duelData = duel;
       const now = new Date();
-      isExpired = now > new Date(duel.ends_at);
+      isExpired = now > new Date(duel.ends_at) || duel.status === 'finished';
 
       const myVote = duel.duel_votes.find(v => v.user_id === currentUser);
-      if (myVote) {
-        hasVoted = true;
-        userVoteChoice = myVote.choice;
-      }
+      if (myVote) { hasVoted = true; userVoteChoice = myVote.choice; }
 
       renderDuel();
+      if (!isExpired) startLiveTimer();
 
-      if (duel.allow_comments) {
-        loadComments();
-      }
+      if (duel.allow_comments) loadComments();
+    }
+
+    function startLiveTimer() {
+      const timerEl = document.getElementById('liveTimer');
+      if (!timerEl) return;
+
+      timerInterval = setInterval(() => {
+        const now = new Date();
+        const endsAt = new Date(duelData.ends_at);
+        const diff = endsAt - now;
+
+        if (diff <= 0) {
+          clearInterval(timerInterval);
+          isExpired = true;
+          renderDuel(); // Re-renderiza para mostrar os resultados finais
+          return;
+        }
+
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        
+        // Formatar HH:MM:SS
+        const hStr = h.toString().padStart(2, '0');
+        const mStr = m.toString().padStart(2, '0');
+        const sStr = s.toString().padStart(2, '0');
+        
+        timerEl.innerText = `${hStr}:${mStr}:${sStr}`;
+      }, 1000);
     }
 
     function renderDuel() {
@@ -125,27 +154,25 @@
       let pctA = total > 0 ? Math.round((votesA/total)*100) : 0;
       let pctB = total > 0 ? Math.round((votesB/total)*100) : 0;
 
-      let timeLeftStr = "Terminado";
-      if (!isExpired) {
-        const diff = new Date(duelData.ends_at) - new Date();
-        const h = Math.floor(diff / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
-        timeLeftStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-      }
+      // Lógica do Modo Cego: Se não votou e o duelo está a decorrer, não vê os resultados
+      const showResults = isExpired || hasVoted;
 
       let html = `
         <div class="creator-row">
-          <img src="${creatorAvatar}">
-          <div>
-            <div class="name">${creatorName}</div>
-            <div class="time"><i class="fa-solid fa-clock"></i> ${timeLeftStr}</div>
+          <div class="creator-info">
+            <img src="${creatorAvatar}">
+            <div>
+              <div class="name">${creatorName}</div>
+              <div class="time">${isExpired ? 'Duelo Encerrado' : 'A decorrer'}</div>
+            </div>
           </div>
+          ${!isExpired ? `<div class="live-timer" id="liveTimer">--:--:--</div>` : `<div class="live-timer" style="color:#ff3366; border-color:#ff3366;">ENCERRADO</div>`}
         </div>
         
         <div class="question-title">${duelData.question}</div>
       `;
 
-      if (hasVoted || isExpired) {
+      if (showResults) {
         html += `
           <div class="results-area" style="display: flex;">
             <div class="result-row">
@@ -198,6 +225,11 @@
       }
 
       container.innerHTML = html;
+
+      // Se o timer foi recriado, reinicia a contagem
+      if (!isExpired && !document.getElementById('liveTimer').innerText.includes(':')) {
+          startLiveTimer();
+      }
     }
 
     async function submitVote(choice) {
@@ -212,23 +244,23 @@
       }]);
 
       if (error) {
-        if (error.code === '23505') { alert('Já votaste neste duelo!'); }
-        else { alert('Erro ao votar: ' + error.message); }
+        if (error.code === '23505') { showToast('Já votaste neste duelo!', 'error'); }
+        else { showToast('Erro ao votar: ' + error.message, 'error'); }
         return;
       }
 
-      // NOTIFICAÇÃO: Avisar o criador (se não for ele a votar)
       if (duelData.creator_id !== currentUser) {
         await supabaseClient.from('notifications').insert([{
           user_id: duelData.creator_id,
           sender_id: currentUser,
           type: 'duel_vote',
-          post_id: duelData.id // Guarda o ID do duelo para o link
+          post_id: duelData.id
         }]);
       }
 
       hasVoted = true;
       userVoteChoice = choice;
+      showToast('Voto registado! 🏆', 'success');
       
       const { data: updatedDuel } = await supabaseClient
         .from('duels')
@@ -282,9 +314,8 @@
         content: text
       }]);
 
-      if (error) { alert('Erro ao comentar: ' + error.message); return; }
+      if (error) { showToast('Erro ao comentar: ' + error.message, 'error'); return; }
 
-      // NOTIFICAÇÃO: Avisar o criador (se não for ele a comentar)
       if (duelData.creator_id !== currentUser) {
         await supabaseClient.from('notifications').insert([{
           user_id: duelData.creator_id,
