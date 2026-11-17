@@ -7,55 +7,115 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); }
     .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; color: white;}
     .header-title img { height: 30px; border-radius: 5px;}
-    .tabs { display: flex; gap: 10px; padding: 0 15px 15px 15px; justify-content: center; }
-    .tab { flex: 1; text-align: center; padding: 12px; border-radius: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); font-size: 0.95rem; color: var(--text-muted); cursor: pointer; font-weight: bold; }
+    .btn-edit-mode { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 6px 12px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
+    .btn-edit-mode.active { background: var(--neon); color: #000; }
+    
+    .tabs { display: flex; gap: 10px; padding: 15px 15px 10px 15px; justify-content: center; }
+    .tab { flex: 1; text-align: center; padding: 12px; border-radius: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); font-size: 0.95rem; color: var(--text-muted); cursor: pointer; font-weight: bold; transition: 0.3s;}
     .tab.active { background: var(--primary); color: white; border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 204, 255, 0.4); }
+    
+    /* PESQUISA E ORDENAÇÃO */
+    .filter-bar { padding: 0 15px 15px 15px; display: flex; gap: 10px; }
+    .search-input-wrapper { flex: 1; display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 30px; padding: 10px 15px; gap: 10px; }
+    .search-input-wrapper i { color: var(--neon); }
+    .search-input-wrapper input { background: transparent; border: none; color: white; outline: none; width: 100%; font-size: 0.95rem; }
+    
+    .sort-select { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: white; padding: 0 15px; border-radius: 30px; font-size: 0.85rem; outline: none; appearance: none; cursor: pointer; font-weight: bold; text-align: center; }
+    .sort-select option { background-color: #0a1f44; color: white; }
+
     .content-area { padding: 0 15px 90px 15px; }
     
+    /* GRID PRODUTOS */
     .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .product-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; }
-    .product-image { width: 100%; height: 120px; object-fit: cover; background: #000; }
+    .product-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; position: relative; transition: 0.2s; animation: fadeIn 0.3s ease-out;}
+    .product-card.selected { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 204, 255, 0.3); }
+    .product-image { width: 100%; height: 130px; object-fit: cover; background: #000; transition: 0.2s;}
+    .product-card.selected .product-image { opacity: 0.6; }
     .product-info { padding: 10px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
-    .product-title { font-size: 0.85rem; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .product-price { font-size: 0.9rem; font-weight: bold; color: var(--neon); }
+    .product-title { font-size: 0.85rem; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: white;}
+    .product-price { font-size: 0.95rem; font-weight: bold; color: var(--neon); }
+    
+    /* BOTÃO REMOVER (MODO NORMAL) */
+    .btn-remove-fav { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); border: 1px solid var(--danger); color: var(--danger); width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 10; backdrop-filter: blur(5px); transition: 0.2s;}
+    .btn-remove-fav:hover { background: var(--danger); color: white; }
+    .post-card .btn-remove-fav { top: 15px; right: 15px; }
+    
+    /* CHECKBOX DE SELEÇÃO (MODO EDIÇÃO) */
+    .checkbox-select { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon); background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; color: transparent; z-index: 20; backdrop-filter: blur(5px); }
+    .product-card.selected .checkbox-select, .post-card.selected .checkbox-select { display: flex; background: var(--neon); color: #000; }
+    
+    .edit-mode-on .btn-remove-fav { display: none; }
+    .edit-mode-on .product-card, .edit-mode-on .post-card { cursor: pointer; }
 
-    .post-card { margin-bottom: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; cursor: pointer; }
+    /* POSTS */
+    .post-card { margin-bottom: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; cursor: pointer; position: relative; padding-right: 50px; transition: 0.2s; animation: fadeIn 0.3s ease-out;}
     .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .post-header img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid var(--neon); }
-    .post-header h4 { font-size: 0.9rem; }
+    .post-header h4 { font-size: 0.9rem; color: white; }
     .post-content { font-size: 0.9rem; color: #ddd; }
+    .edit-mode-on .post-card { padding-right: 15px; }
 
-    .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
-    .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+    /* BARRA FLUTUANTE DE AÇÃO */
+    .bulk-action-bar { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--bg-color); border: 1px solid var(--neon); border-radius: 30px; padding: 10px 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 500; transition: transform 0.3s; opacity: 0; pointer-events: none; }
+    .bulk-action-bar.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: all; }
+    .bulk-action-bar span { color: white; font-weight: bold; font-size: 0.9rem; }
+    .btn-bulk-delete { background: var(--danger); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .btn-bulk-delete:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* SKELETONS PARA FAVORITOS */
-    .skeleton-product-card { height: 200px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); position: relative; overflow: hidden; }
-    .skeleton-img-fav { width: 100%; height: 120px; background: #1a2235; }
-    .skeleton-text-fav { height: 15px; margin: 10px; background: #1a2235; border-radius: 5px; }
-    .skeleton-text-fav.short { width: 50%; }
+    /* EMPTY STATE COM BOTÃO */
+    .empty-state { text-align: center; color: var(--text-muted); padding: 50px 20px; display: flex; flex-direction: column; align-items: center; }
+    .empty-state i { font-size: 3rem; margin-bottom: 15px; color: var(--neon); opacity: 0.4; }
+    .empty-state h3 { color: white; margin-bottom: 5px; font-size: 1.1rem; }
+    .empty-state p { font-size: 0.9rem; margin-bottom: 20px; }
+    .empty-btn { padding: 10px 20px; border-radius: 20px; background: var(--primary); color: white; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     
-    .skeleton-post-card { height: 100px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); position: relative; overflow: hidden; margin-bottom: 15px; padding: 15px; }
+    /* SKELETONS */
+    .skeleton-card { height: 200px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); position: relative; overflow: hidden; }
+    .skeleton-img { width: 100%; height: 130px; background: #1a2235; }
+    .skeleton-text { height: 15px; margin: 10px; background: #1a2235; border-radius: 5px; }
+    .skeleton-text.short { width: 50%; }
+    
+    .skeleton-card::after, .skeleton-post::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent); animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    .skeleton-post { height: 100px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); margin-bottom: 15px; position: relative; overflow: hidden; padding: 15px;}
   </style>
 </head>
 <body>
   <header class="header">
     <i class="fa-solid fa-arrow-left" onclick="window.location.href='perfil.html'" style="font-size: 1.5rem; cursor: pointer;"></i>
     <div class="header-title"><img src="logo.png" alt="FLY"> Guardados</div>
-    <div style="width: 24px;"></div>
+    <button class="btn-edit-mode" id="btnEditMode" onclick="toggleEditMode()">Editar</button>
   </header>
 
   <div class="tabs">
-    <div class="tab active" id="tabPosts" onclick="switchTab('posts')">Posts</div>
-    <div class="tab" id="tabProdutos" onclick="switchTab('produtos')">Produtos</div>
+    <div class="tab active" id="tabPosts" onclick="switchTab('posts')">Posts <span id="countPostsTab" style="font-size:0.8rem; opacity:0.7;"></span></div>
+    <div class="tab" id="tabProdutos" onclick="switchTab('produtos')">Produtos <span id="countProdsTab" style="font-size:0.8rem; opacity:0.7;"></span></div>
   </div>
 
-  <div class="content-area" id="contentArea">
-    <!-- Skeletons que aparecem antes de carregar -->
-    <div class="skeleton-post-card"><div class="skeleton-img-fav" style="border-radius: 50%; width: 35px; height: 35px;"></div><div class="skeleton-text-fav" style="width: 60%; margin-top: 15px;"></div><div class="skeleton-text-fav" style="width: 80%;"></div></div>
-    <div class="skeleton-post-card"><div class="skeleton-img-fav" style="border-radius: 50%; width: 35px; height: 35px;"></div><div class="skeleton-text-fav" style="width: 60%; margin-top: 15px;"></div><div class="skeleton-text-fav" style="width: 80%;"></div></div>
+  <div class="filter-bar" id="filterBar">
+    <div class="search-input-wrapper">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="searchInput" placeholder="Pesquisar..." oninput="filterContent()">
+    </div>
+    <select class="sort-select" id="sortSelect" onchange="filterContent()">
+      <option value="recent">Recentes</option>
+      <option value="price_asc">Preço ↑</option>
+      <option value="price_desc">Preço ↓</option>
+    </select>
+  </div>
+
+  <div class="content-area" id="contentArea"></div>
+
+  <div class="bulk-action-bar" id="bulkActionBar">
+    <span id="selectedCount">0 selecionados</span>
+    <button class="btn-bulk-delete" id="btnBulkDelete" onclick="executeBulkDelete()" disabled>
+      <i class="fa-solid fa-trash"></i> Apagar
+    </button>
   </div>
 
   <nav class="bottom-nav">
@@ -64,7 +124,7 @@
     <a href="duelos.html" class="nav-item" style="color: #ffd700; transform: scale(1.1);"><i class="fa-solid fa-trophy"></i><span style="font-weight: bold;">Duelo</span></a>
     <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge">0</span></a>
     <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócios</span></a>
-    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+    <a href="perfil.html" class="nav-item active"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -72,6 +132,11 @@
   <script src="js/calls.js"></script>
   <script>
     let currentUser = null; let currentTab = 'posts';
+    let allSavedPosts = []; let allSavedProducts = [];
+    
+    let isEditMode = false;
+    let selectedPostIds = new Set();
+    let selectedProductIds = new Set();
 
     function showToast(message, type = 'success') {
       const toast = document.createElement('div');
@@ -83,14 +148,14 @@
       setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
     }
 
+    function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
+
     async function updateBadges() {
       if (!currentUser) return;
       const { count: chatCount } = await supabaseClient.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser).eq('is_read', false);
       const chatBadge = document.getElementById('chat-badge');
       if (chatBadge) { if (chatCount > 0) { chatBadge.innerText = chatCount; chatBadge.style.display = 'flex'; } else { chatBadge.style.display = 'none'; } }
     }
-
-    function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
 
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -101,72 +166,207 @@
     }
 
     function switchTab(tab) {
+      if (isEditMode) toggleEditMode();
       currentTab = tab;
       document.getElementById('tabPosts').classList.toggle('active', tab === 'posts');
       document.getElementById('tabProdutos').classList.toggle('active', tab === 'produtos');
+      document.getElementById('searchInput').value = '';
+      
+      const sortSelect = document.getElementById('sortSelect');
+      if (tab === 'posts') {
+        sortSelect.innerHTML = `<option value="recent">Recentes</option>`;
+        sortSelect.disabled = true;
+        sortSelect.style.opacity = '0.5';
+      } else {
+        sortSelect.innerHTML = `<option value="recent">Recentes</option><option value="price_asc">Preço ↑</option><option value="price_desc">Preço ↓</option>`;
+        sortSelect.disabled = false;
+        sortSelect.style.opacity = '1';
+      }
+      
       loadContent();
     }
 
     async function loadContent() {
       const area = document.getElementById('contentArea');
-      
-      // Ao mudar de aba, mostramos um pequeno skeleton
-      area.innerHTML = `<div class="skeleton-post-card"><div class="skeleton-img-fav" style="border-radius: 50%; width: 35px; height: 35px;"></div><div class="skeleton-text-fav" style="width: 60%; margin-top: 15px;"></div><div class="skeleton-text-fav" style="width: 80%;"></div></div>`;
+      const filterBar = document.getElementById('filterBar');
+      filterBar.style.display = 'flex';
+      document.getElementById('btnEditMode').style.display = 'block';
 
       if (currentTab === 'posts') {
+        area.innerHTML = `<div class="skeleton-post"></div><div class="skeleton-post"></div>`;
         const { data: saved, error } = await supabaseClient.from('saved_posts').select(`post_id, posts ( id, content, media_url, media_type, profiles(username, avatar_url) )`).eq('user_id', currentUser);
         
-        if (error) { 
-          area.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar posts.</p>`; 
-          showToast('Erro ao carregar guardados.', 'error'); return; 
-        }
+        if (error) { area.innerHTML = `<p style="color:var(--danger); text-align:center;">Erro ao carregar.</p>`; return; }
         
         if (!saved || saved.length === 0) { 
-          area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-bookmark"></i><p>Ainda não guardaste nenhum post.</p></div>`; 
+          filterBar.style.display = 'none';
+          document.getElementById('btnEditMode').style.display = 'none';
+          document.getElementById('countPostsTab').innerText = '';
+          area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-bookmark"></i><h3>Nenhum post guardado</h3><p>Quando guardares um post, ele aparece aqui.</p><a href="home.html" class="empty-btn">Ir ao Feed</a></div>`; 
           return; 
         }
         
-        area.innerHTML = '';
-        saved.forEach(item => {
-          const post = item.posts; if (!post) return;
-          const author = post.profiles ? post.profiles.username : 'User';
-          const avatar = post.profiles && post.profiles.avatar_url ? post.profiles.avatar_url : `https://i.pravatar.cc/150?u=${post.id}`;
-          area.innerHTML += `<div class="post-card" onclick="window.location.href='home.html'"><div class="post-header"><img src="${avatar}"><h4>${author}</h4></div><div class="post-content">${post.content || 'Post com multimédia'}</div></div>`;
-        });
+        allSavedPosts = saved.map(item => item.posts).filter(p => p !== null);
+        document.getElementById('countPostsTab').innerText = `(${allSavedPosts.length})`;
+        filterContent();
       } else {
+        area.innerHTML = `<div class="products-grid"><div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div><div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div></div>`;
         const { data: favs, error: favError } = await supabaseClient.from('favorites').select('product_id').eq('user_id', currentUser);
         
-        if (favError) { 
-          area.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar produtos.</p>`; 
-          showToast('Erro ao carregar guardados.', 'error'); return; 
-        }
+        if (favError) { area.innerHTML = `<p style="color:var(--danger); text-align:center;">Erro ao carregar.</p>`; return; }
         
         if (!favs || favs.length === 0) { 
-          area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-heart"></i><p>Ainda não guardaste nenhum produto.</p></div>`; 
+          filterBar.style.display = 'none';
+          document.getElementById('btnEditMode').style.display = 'none';
+          document.getElementById('countProdsTab').innerText = '';
+          area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-heart"></i><h3>Nenhum produto guardado</h3><p>Explora o mercado e guarda os teus favoritos.</p><a href="mercado.html" class="empty-btn">Ir ao Mercado</a></div>`; 
           return; 
         }
         
         const productIds = favs.map(f => f.product_id);
         const { data: products, error: prodError } = await supabaseClient.from('products').select('id, name, price, image_url').in('id', productIds);
         
-        if (prodError) { 
-          area.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar produtos.</p>`; 
-          showToast('Erro ao carregar produtos.', 'error'); return; 
-        }
-        
-        if (!products || products.length === 0) { 
-          area.innerHTML = `<div class="empty-state"><i class="fa-regular fa-heart"></i><p>Os produtos que guardaste já não estão disponíveis.</p></div>`; 
+        if (prodError || !products || products.length === 0) { 
+          filterBar.style.display = 'none';
+          document.getElementById('btnEditMode').style.display = 'none';
+          document.getElementById('countProdsTab').innerText = '';
+          area.innerHTML = `<div class="empty-state"><i class="fa-solid fa-box-open"></i><h3>Produtos indisponíveis</h3><p>Os produtos que guardaste já não estão à venda.</p><a href="mercado.html" class="empty-btn">Ir ao Mercado</a></div>`; 
           return; 
         }
         
+        allSavedProducts = products;
+        document.getElementById('countProdsTab').innerText = `(${allSavedProducts.length})`;
+        filterContent();
+      }
+    }
+
+    function toggleEditMode() {
+      isEditMode = !isEditMode;
+      const btn = document.getElementById('btnEditMode');
+      const body = document.body;
+      const bulkBar = document.getElementById('bulkActionBar');
+
+      if (isEditMode) {
+        btn.innerText = 'Concluir';
+        btn.classList.add('active');
+        body.classList.add('edit-mode-on');
+        bulkBar.classList.add('show');
+        selectedPostIds.clear(); selectedProductIds.clear();
+        updateBulkBar();
+      } else {
+        btn.innerText = 'Editar';
+        btn.classList.remove('active');
+        body.classList.remove('edit-mode-on');
+        bulkBar.classList.remove('show');
+        selectedPostIds.clear(); selectedProductIds.clear();
+      }
+      filterContent();
+    }
+
+    function toggleSelection(event, id, type) {
+      if (!isEditMode) return;
+      event.stopPropagation();
+      const set = type === 'post' ? selectedPostIds : selectedProductIds;
+      if (set.has(id)) set.delete(id); else set.add(id);
+      updateBulkBar();
+      filterContent();
+    }
+
+    function updateBulkBar() {
+      const totalSelected = selectedPostIds.size + selectedProductIds.size;
+      document.getElementById('selectedCount').innerText = `${totalSelected} selecionado(s)`;
+      document.getElementById('btnBulkDelete').disabled = totalSelected === 0;
+    }
+
+    async function executeBulkDelete() {
+      const total = selectedPostIds.size + selectedProductIds.size;
+      if (total === 0) return;
+      if (!confirm(`Tens a certeza que queres apagar ${total} item(ns) dos guardados?`)) return;
+
+      const btn = document.getElementById('btnBulkDelete');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A apagar...';
+      btn.disabled = true;
+
+      if (selectedPostIds.size > 0) { await supabaseClient.from('saved_posts').delete().in('post_id', Array.from(selectedPostIds)).eq('user_id', currentUser); }
+      if (selectedProductIds.size > 0) { await supabaseClient.from('favorites').delete().in('product_id', Array.from(selectedProductIds)).eq('user_id', currentUser); }
+
+      showToast(`${total} item(ns) removidos.`, 'success');
+      toggleEditMode();
+      loadContent();
+    }
+
+    function filterContent() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const sortValue = document.getElementById('sortSelect').value;
+      const area = document.getElementById('contentArea');
+
+      if (currentTab === 'posts') {
+        const filtered = allSavedPosts.filter(post => (post.content && post.content.toLowerCase().includes(query)) || (post.profiles && post.profiles.username.toLowerCase().includes(query)));
+        if (filtered.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><h3>Nenhum resultado</h3><p>Tenta pesquisar por outra palavra.</p></div>`; return; }
+
+        area.innerHTML = '';
+        filtered.forEach(post => {
+          const author = post.profiles ? post.profiles.username : 'Utilizador';
+          const avatar = post.profiles && post.profiles.avatar_url ? post.profiles.avatar_url : 'default-avatar.png';
+          const isSelected = selectedPostIds.has(post.id);
+          
+          let mediaHtml = '';
+          if (post.media_url) {
+            if (post.media_type === 'video') mediaHtml = `<video src="${post.media_url}" style="width:100%; border-radius:8px; margin-top:8px; max-height:150px; object-fit:cover;" muted></video>`;
+            else mediaHtml = `<img src="${post.media_url}" style="width:100%; border-radius:8px; margin-top:8px; max-height:150px; object-fit:cover;">`;
+          }
+
+          const clickAction = isEditMode ? `onclick="toggleSelection(event, '${post.id}', 'post')"` : `onclick="window.location.href='home.html'"`;
+
+          area.innerHTML += `
+            <div class="post-card ${isSelected ? 'selected' : ''}" ${clickAction}>
+              <div class="checkbox-select"><i class="fa-solid fa-check"></i></div>
+              <div class="btn-remove-fav" onclick="removeSavedPost(event, '${post.id}')"><i class="fa-solid fa-trash"></i></div>
+              <div class="post-header"><img src="${avatar}"><h4>${author}</h4></div>
+              <div class="post-content">${post.content || 'Publicação multimédia'}</div>
+              ${mediaHtml}
+            </div>`;
+        });
+      } else {
+        let filtered = allSavedProducts.filter(p => p.name.toLowerCase().includes(query));
+        if (sortValue === 'price_asc') filtered.sort((a, b) => a.price - b.price);
+        else if (sortValue === 'price_desc') filtered.sort((a, b) => b.price - a.price);
+
+        if (filtered.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><h3>Nenhum resultado</h3><p>Tenta pesquisar por outro nome.</p></div>`; return; }
+
         area.innerHTML = '<div class="products-grid" id="favGrid"></div>';
         const grid = document.getElementById('favGrid');
-        products.forEach(p => {
+        
+        filtered.forEach(p => {
           const imgUrl = p.image_url || 'https://via.placeholder.com/150';
-          grid.innerHTML += `<div class="product-card" onclick="window.location.href='produto.html?id=${p.id}'"><img src="${imgUrl}" class="product-image"><div class="product-info"><div class="product-title">${p.name}</div><div class="product-price">${formatKz(p.price)}</div></div></div>`;
+          const isSelected = selectedProductIds.has(p.id);
+          const clickAction = isEditMode ? `onclick="toggleSelection(event, '${p.id}', 'product')"` : `onclick="window.location.href='produto.html?id=${p.id}'"`;
+
+          grid.innerHTML += `
+            <div class="product-card ${isSelected ? 'selected' : ''}" ${clickAction}>
+              <div class="checkbox-select"><i class="fa-solid fa-check"></i></div>
+              <div class="btn-remove-fav" onclick="removeFavorite(event, '${p.id}')"><i class="fa-solid fa-trash"></i></div>
+              <img src="${imgUrl}" class="product-image">
+              <div class="product-info"><div class="product-title">${p.name}</div><div class="product-price">${formatKz(p.price)}</div></div>
+            </div>`;
         });
       }
     }
+
+    async function removeSavedPost(event, postId) {
+      event.stopPropagation();
+      if (!confirm('Remover este post dos guardados?')) return;
+      const { error } = await supabaseClient.from('saved_posts').delete().eq('post_id', postId).eq('user_id', currentUser);
+      if (error) { showToast('Erro ao remover.', 'error'); } else { showToast('Post removido.', 'success'); loadContent(); }
+    }
+
+    async function removeFavorite(event, productId) {
+      event.stopPropagation();
+      if (!confirm('Remover este produto dos guardados?')) return;
+      const { error } = await supabaseClient.from('favorites').delete().eq('product_id', productId).eq('user_id', currentUser);
+      if (error) { showToast('Erro ao remover.', 'error'); } else { showToast('Produto removido.', 'success'); loadContent(); }
+    }
+
     init();
   </script>
 </body>

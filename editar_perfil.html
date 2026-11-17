@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>FLY - Editar Perfil</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px); z-index: 100; }
+    .header i { color: white; font-size: 1.5rem; cursor: pointer; }
+    .header-title { color: white; font-size: 1.2rem; font-weight: bold; }
+    
+    .edit-container { padding: 20px; padding-bottom: 90px; max-width: 500px; margin: 0 auto; }
+    
+    /* CAPA E AVATAR */
+    .media-upload-section { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; }
+    .cover-upload-box { width: 100%; height: 140px; background: #0a1f44; border-radius: 15px; overflow: hidden; position: relative; margin-bottom: 15px; border: 1px dashed var(--glass-border); }
+    .cover-upload-box img { width: 100%; height: 100%; object-fit: cover; }
+    .btn-upload-cover { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); border: 1px solid var(--neon); color: var(--neon); padding: 6px 12px; border-radius: 10px; font-size: 0.8rem; font-weight: bold; cursor: pointer; backdrop-filter: blur(5px); transition: 0.3s; }
+    .btn-upload-cover:hover { background: var(--neon); color: #000; }
+    
+    .avatar-upload-box { display: flex; flex-direction: column; align-items: center; position: relative; margin-top: -40px; }
+    .avatar-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--neon); background: #000; box-shadow: 0 0 15px rgba(0, 204, 255, 0.3); margin-bottom: 10px; }
+    .btn-upload-avatar { background: var(--glass-bg); border: 1px solid var(--neon); color: var(--neon); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.3s; backdrop-filter: blur(5px); }
+    .btn-upload-avatar:hover { background: var(--neon); color: #000; }
+    
+    .section-title { font-size: 0.85rem; color: var(--neon); font-weight: bold; margin-bottom: 15px; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;}
+    .input-group { margin-bottom: 15px; }
+    .input-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 500;}
+    .input-glass { width: 100%; padding: 14px 16px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-size: 1rem; outline: none; transition: 0.3s; }
+    .input-glass:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 204, 255, 0.3); }
+    select.input-glass { background-color: #0a1f44; color: white; appearance: none; }
+    select.input-glass option { background-color: #0a1f44; color: white; }
+    
+    .btn-save { width: 100%; padding: 16px; border-radius: 15px; border: none; background: linear-gradient(90deg, var(--primary), var(--neon)); color: white; font-size: 1rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;}
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(0, 204, 255, 0.7); }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.location.href='configuracoes.html'"></i>
+    <div class="header-title">Editar Perfil</div>
+    <div style="width: 24px;"></div>
+  </header>
+
+  <div class="edit-container">
+    
+    <!-- SECÇÃO DE FOTO DE CAPA E AVATAR -->
+    <div class="media-upload-section">
+      <div class="cover-upload-box">
+        <img id="coverPreview" src="https://via.placeholder.com/800x300/0a1f44/00ccff?text=Capa" alt="Capa">
+        <input type="file" id="coverInput" accept="image/*" style="display: none;" onchange="previewCover(event)">
+        <button class="btn-upload-cover" onclick="document.getElementById('coverInput').click()">
+          <i class="fa-solid fa-camera"></i> Mudar Capa
+        </button>
+      </div>
+
+      <div class="avatar-upload-box">
+        <img id="avatarPreview" class="avatar-preview" src="default-avatar.png">
+        <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="previewAvatar(event)">
+        <button class="btn-upload-avatar" onclick="document.getElementById('avatarInput').click()">
+          <i class="fa-solid fa-camera"></i> Mudar Foto de Perfil
+        </button>
+      </div>
+    </div>
+
+    <p class="section-title"><i class="fa-solid fa-user"></i> Informações Básicas</p>
+    <div class="input-group">
+      <label>Nome de Utilizador</label>
+      <input type="text" id="editUsername" class="input-glass" placeholder="O teu nome...">
+    </div>
+    
+    <div class="input-group">
+      <label>Biografia</label>
+      <textarea id="editBio" class="input-glass" rows="3" placeholder="Fala um pouco sobre ti..."></textarea>
+    </div>
+
+    <div class="input-group">
+      <label><i class="fa-solid fa-globe"></i> Idioma Nativo (para traduções)</label>
+      <select id="editLanguage" class="input-glass"></select>
+    </div>
+
+    <p class="section-title" style="margin-top: 30px;"><i class="fa-solid fa-link"></i> Redes Sociais</p>
+    <div class="input-group">
+      <label><i class="fa-brands fa-instagram"></i> Instagram (Link)</label>
+      <input type="url" id="editInstagram" class="input-glass" placeholder="https://instagram.com/oteuuser">
+    </div>
+    <div class="input-group">
+      <label><i class="fa-brands fa-whatsapp"></i> WhatsApp (Link)</label>
+      <input type="url" id="editWhatsapp" class="input-glass" placeholder="https://wa.me/2449xxxxxxxx">
+    </div>
+    <div class="input-group">
+      <label><i class="fa-brands fa-facebook"></i> Facebook (Link)</label>
+      <input type="url" id="editFacebook" class="input-glass" placeholder="https://facebook.com/oteuperfil">
+    </div>
+
+    <button class="btn-save" onclick="saveProfile()" id="btnSaveProfile">
+      <i class="fa-solid fa-check"></i> Guardar Alterações
+    </button>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let loggedInUser = null;
+    let currentAvatarUrl = "";
+    let currentCoverUrl = "";
+    let selectedAvatarFile = null;
+    let selectedCoverFile = null;
+    let currentSocialLinks = {};
+
+    const LANGS = [
+      { code: 'pt', name: 'Português' }, { code: 'en', name: 'Inglês' }, { code: 'es', name: 'Espanhol' },
+      { code: 'fr', name: 'Francês' }, { code: 'de', name: 'Alemão' }, { code: 'it', name: 'Italiano' }
+    ];
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    function previewAvatar(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      selectedAvatarFile = file;
+      document.getElementById('avatarPreview').src = URL.createObjectURL(file);
+    }
+
+    function previewCover(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      selectedCoverFile = file;
+      document.getElementById('coverPreview').src = URL.createObjectURL(file);
+    }
+
+    async function loadProfile() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      loggedInUser = session.user.id;
+
+      const select = document.getElementById('editLanguage');
+      LANGS.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.code;
+        opt.innerText = l.name;
+        select.appendChild(opt);
+      });
+
+      // Buscar dados incluindo a capa
+      const { data: profile, error } = await supabaseClient
+        .from('profiles')
+        .select('username, avatar_url, cover_url, bio, social_links, language')
+        .eq('id', loggedInUser)
+        .single();
+
+      if (profile) {
+        document.getElementById('editUsername').value = profile.username || '';
+        document.getElementById('editBio').value = profile.bio || '';
+        document.getElementById('editLanguage').value = profile.language || 'pt';
+        
+        currentAvatarUrl = profile.avatar_url || 'default-avatar.png';
+        document.getElementById('avatarPreview').src = currentAvatarUrl;
+
+        currentCoverUrl = profile.cover_url || 'https://via.placeholder.com/800x300/0a1f44/00ccff?text=Capa';
+        document.getElementById('coverPreview').src = currentCoverUrl;
+
+        currentSocialLinks = profile.social_links || {};
+        document.getElementById('editInstagram').value = currentSocialLinks.instagram || '';
+        document.getElementById('editWhatsapp').value = currentSocialLinks.whatsapp || '';
+        document.getElementById('editFacebook').value = currentSocialLinks.facebook || '';
+      }
+    }
+
+    async function saveProfile() {
+      const btn = document.getElementById('btnSaveProfile');
+      const newUsername = document.getElementById('editUsername').value.trim();
+      const newBio = document.getElementById('editBio').value.trim();
+      const newLang = document.getElementById('editLanguage').value;
+      const insta = document.getElementById('editInstagram').value.trim();
+      const zap = document.getElementById('editWhatsapp').value.trim();
+      const face = document.getElementById('editFacebook').value.trim();
+
+      if (!newUsername) { showToast('O nome não pode estar vazio.', 'error'); return; }
+
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A guardar...'; 
+      btn.disabled = true;
+
+      let newAvatarUrl = currentAvatarUrl;
+      let newCoverUrl = currentCoverUrl;
+
+      // 1. Upload da nova Foto de Perfil (se houver)
+      if (selectedAvatarFile) {
+        const fileExt = selectedAvatarFile.name.split('.').pop(); 
+        const fileName = `avatars/${loggedInUser}_${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(fileName, selectedAvatarFile);
+        
+        if (uploadError) { 
+          showToast('Erro na foto de perfil: ' + uploadError.message, 'error'); 
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Guardar Alterações'; 
+          btn.disabled = false; 
+          return; 
+        }
+        
+        const { data } = supabaseClient.storage.from('fly_bucket').getPublicUrl(fileName); 
+        newAvatarUrl = data.publicUrl;
+      }
+
+      // 2. Upload da nova Foto de Capa (se houver)
+      if (selectedCoverFile) {
+        const fileExt = selectedCoverFile.name.split('.').pop(); 
+        const fileName = `covers/${loggedInUser}_${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(fileName, selectedCoverFile);
+        
+        if (uploadError) { 
+          showToast('Erro na foto de capa: ' + uploadError.message, 'error'); 
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Guardar Alterações'; 
+          btn.disabled = false; 
+          return; 
+        }
+        
+        const { data } = supabaseClient.storage.from('fly_bucket').getPublicUrl(fileName); 
+        newCoverUrl = data.publicUrl;
+      }
+
+      const newLinks = {}; 
+      if (insta) newLinks.instagram = insta; 
+      if (zap) newLinks.whatsapp = zap; 
+      if (face) newLinks.facebook = face;
+      
+      // 3. Atualizar a Base de Dados
+      const { error: updateError } = await supabaseClient.from('profiles').update({ 
+        username: newUsername, 
+        avatar_url: newAvatarUrl, 
+        cover_url: newCoverUrl,
+        bio: newBio, 
+        social_links: newLinks, 
+        language: newLang 
+      }).eq('id', loggedInUser);
+
+      if (updateError) { 
+        showToast('Erro: ' + updateError.message, 'error'); 
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Guardar Alterações'; 
+        btn.disabled = false; 
+        return; 
+      }
+      
+      showToast('Perfil atualizado com sucesso!', 'success');
+      setTimeout(() => { window.location.href = 'perfil.html'; }, 1500);
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

@@ -11,6 +11,12 @@
     .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--glass-border); }
     .header-title { font-size: 1.4rem; font-weight: 800; color: white; display: flex; align-items: center; gap: 10px; font-style: italic; }
     .header-title i { color: #ffd700; font-size: 1.5rem; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+    .header-actions { display: flex; gap: 15px; align-items: center; }
+    .header-actions i { color: white; font-size: 1.2rem; cursor: pointer; }
+    
+    .search-bar-duel { display: none; padding: 0 15px 15px 15px; }
+    .search-input-duel { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--neon); border-radius: 30px; padding: 12px 20px; color: white; outline: none; }
+    
     .top-actions { padding: 15px; display: flex; justify-content: center; }
     .btn-create-duel { width: 100%; max-width: 400px; padding: 15px; border-radius: 30px; background: linear-gradient(90deg, #7e22ce, #a855f7); color: white; font-weight: bold; font-size: 1.1rem; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); transition: 0.3s; text-decoration: none; }
     .btn-create-duel:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(168, 85, 247, 0.6); }
@@ -34,28 +40,34 @@
     .duel-footer { display: flex; justify-content: space-between; align-items: center; }
     .duel-stats { display: flex; gap: 15px; font-size: 0.8rem; color: var(--text-muted); }
     .duel-stats i { color: var(--neon); }
+    .duel-footer-actions { display: flex; gap: 10px; align-items: center; }
     .btn-vote { padding: 10px 25px; border-radius: 20px; background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.3s; }
     .btn-vote:hover { background: var(--neon); color: #000; }
+    .btn-share-duel { background: rgba(255,255,255,0.1); color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: none; cursor: pointer; transition: 0.2s; }
+    .btn-share-duel:hover { background: rgba(255,255,255,0.2); }
     .result-bar-container { display: none; flex-direction: column; gap: 5px; margin-bottom: 15px; }
     .result-bar-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: bold; color: white; }
     .result-bar-bg { flex: 1; height: 20px; background: #222; border-radius: 10px; overflow: hidden; position: relative; }
     .result-bar-fill { height: 100%; width: 0%; transition: width 1s ease-out; }
     .fill-a { background: linear-gradient(90deg, #0066ff, #00ccff); }
     .fill-b { background: linear-gradient(90deg, #7e22ce, #ec4899); }
-
-    /* BOTÃO DE GESTÃO (3 pontinhos) */
     .manage-btn { position: absolute; top: 15px; right: 15px; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; z-index: 20; padding: 5px; }
     .manage-btn:hover { color: white; }
+    .private-badge { position: absolute; top: 15px; right: 45px; color: #ffb300; font-size: 1rem; z-index: 20; }
   </style>
 </head>
 <body>
 
   <header class="header">
     <div class="header-title"><i class="fa-solid fa-trophy"></i> Fly Duelo</div>
-    <div style="display: flex; gap: 15px;">
-      <i class="fa-solid fa-magnifying-glass" style="color: white; font-size: 1.2rem; cursor: pointer;"></i>
+    <div class="header-actions">
+      <i class="fa-solid fa-magnifying-glass" onclick="toggleSearch()"></i>
     </div>
   </header>
+
+  <div class="search-bar-duel" id="searchBarDuel">
+    <input type="text" id="searchDuelInput" class="search-input-duel" placeholder="Pesquisar duelo por pergunta..." onkeyup="filterDuels()">
+  </div>
 
   <div class="top-actions">
     <a href="criar_duelo.html" class="btn-create-duel"><i class="fa-solid fa-plus"></i> Criar Duelo</a>
@@ -97,11 +109,32 @@
       setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
     }
 
+    function toggleSearch() {
+      const bar = document.getElementById('searchBarDuel');
+      if (bar.style.display === 'block') {
+        bar.style.display = 'none';
+        document.getElementById('searchDuelInput').value = '';
+        filterDuels();
+      } else {
+        bar.style.display = 'block';
+        document.getElementById('searchDuelInput').focus();
+      }
+    }
+
+    async function shareDuel(question, id) {
+      const url = window.location.origin + '/duelo.html?id=' + id;
+      const text = `Vota no meu duelo no FLY: "${question}" ${url}`;
+      
+      if (navigator.share) {
+        try { await navigator.share({ title: 'FLY Duelo', text: text, url: url }); return; } catch (err) {}
+      }
+      try { await navigator.clipboard.writeText(text); showToast('Link do duelo copiado!', 'success'); } catch (err) { showToast('Erro ao copiar.', 'error'); }
+    }
+
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user.id;
-      
       updateBadges();
       loadDuels();
     }
@@ -127,6 +160,7 @@
         .from('duels')
         .select(`
           *,
+          invited_users,
           profiles!creator_id (username, avatar_url, is_premium),
           duel_votes (choice)
         `)
@@ -143,7 +177,17 @@
         return;
       }
 
-      allDuels = duels;
+      allDuels = duels.filter(duel => {
+        if (duel.audience === 'private') {
+          return duel.creator_id === currentUser || (duel.invited_users && duel.invited_users.includes(currentUser));
+        }
+        return true;
+      });
+
+      renderDuels();
+    }
+
+    function filterDuels() {
       renderDuels();
     }
 
@@ -151,9 +195,15 @@
       const feed = document.getElementById('duelosFeed');
       feed.innerHTML = '';
 
+      const searchTerm = document.getElementById('searchDuelInput') ? document.getElementById('searchDuelInput').value.toLowerCase() : '';
       let filtered = allDuels;
+      
       if (currentTab === 'meus') {
-        filtered = allDuels.filter(d => d.creator_id === currentUser);
+        filtered = filtered.filter(d => d.creator_id === currentUser);
+      }
+      
+      if (searchTerm) {
+        filtered = filtered.filter(d => d.question.toLowerCase().includes(searchTerm));
       }
 
       if (filtered.length === 0) {
@@ -187,11 +237,13 @@
 
         const isMyDuel = duel.creator_id === currentUser;
         const manageBtnHtml = (isMyDuel && currentTab === 'meus') ? `<div class="manage-btn" onclick="event.stopPropagation(); window.location.href='gerir_duelo.html?id=${duel.id}'"><i class="fa-solid fa-gears"></i></div>` : '';
+        const privateBadge = duel.audience === 'private' ? `<i class="fa-solid fa-lock private-badge"></i>` : '';
 
         const card = document.createElement('div');
         card.className = 'duel-card';
         card.innerHTML = `
           ${manageBtnHtml}
+          ${privateBadge}
           <div class="duel-header">
             <div class="creator-info" onclick="window.location.href='perfil.html?id=${duel.creator_id}'">
               <img src="${creatorAvatar}">
@@ -233,9 +285,12 @@
               <div><i class="fa-solid fa-users"></i> ${totalVotes} votos</div>
               <div><i class="fa-solid fa-clock"></i> ${timeString}</div>
             </div>
-            <button class="btn-vote" onclick="window.location.href='duelo.html?id=${duel.id}'">
-              <i class="fa-solid fa-check"></i> ${isExpired ? 'Ver Resultado' : 'Votar'}
-            </button>
+            <div class="duel-footer-actions">
+              <button class="btn-share-duel" onclick="shareDuel('${duel.question.replace(/'/g, "\\'")}', '${duel.id}')"><i class="fa-solid fa-share-nodes"></i></button>
+              <button class="btn-vote" onclick="window.location.href='duelo.html?id=${duel.id}'">
+                <i class="fa-solid fa-check"></i> ${isExpired ? 'Ver Resultado' : 'Votar'}
+              </button>
+            </div>
           </div>
         `;
         feed.appendChild(card);

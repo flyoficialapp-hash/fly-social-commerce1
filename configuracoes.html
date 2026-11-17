@@ -23,18 +23,48 @@
     .icon-purple { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
     .icon-green { background: rgba(0, 230, 118, 0.1); color: var(--success); }
     .icon-gold { background: rgba(255, 215, 0, 0.1); color: #ffd700; }
+    .icon-orange { background: rgba(255, 165, 0, 0.1); color: #ffa500; }
     .settings-text h4 { font-size: 0.95rem; color: white; margin-bottom: 3px; }
     .settings-text p { font-size: 0.75rem; color: var(--text-muted); }
     .settings-item i.chevron { color: var(--text-muted); font-size: 0.9rem; }
+    
     .toggle-switch { position: relative; display: inline-block; width: 45px; height: 24px; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
     .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
     input:checked + .slider { background-color: var(--primary); }
     input:checked + .slider:before { transform: translateX(21px); }
-    select.input-glass { background-color: #0a1f44; color: white; appearance: none; padding: 10px; border-radius: 8px; border: 1px solid var(--neon); width: 130px; font-size: 0.85rem; outline: none;}
+    
+    select.input-glass { background-color: #0a1f44; color: white; appearance: none; padding: 10px; border-radius: 8px; border: 1px solid var(--neon); width: 120px; font-size: 0.85rem; outline: none;}
     select.input-glass option { background-color: #0a1f44; color: white; }
+
+    /* MODAIS */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
+    .modal-content { background: var(--bg-color); border: 1px solid var(--neon); border-radius: 20px; width: 100%; max-width: 400px; padding: 20px; box-shadow: 0 0 30px rgba(0, 204, 255, 0.2); max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .modal-header h3 { color: var(--neon); font-size: 1.1rem; }
+    .modal-header i { cursor: pointer; font-size: 1.5rem; color: var(--text-muted); }
+    .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-cancel { flex: 1; padding: 12px; border-radius: 10px; background: transparent; border: 1px solid var(--glass-border); color: white; font-weight: bold; cursor: pointer; }
+    .btn-save { flex: 2; padding: 12px; border-radius: 10px; background: linear-gradient(90deg, var(--primary), var(--neon)); border: none; color: white; font-weight: bold; cursor: pointer; }
+    .btn-danger { flex: 2; padding: 12px; border-radius: 10px; background: var(--danger); border: none; color: white; font-weight: bold; cursor: pointer; }
+    
+    .terms-text { font-size: 0.85rem; color: #ccc; line-height: 1.5; margin-bottom: 15px; }
+    .terms-text strong { color: white; }
+
+    /* MEDIDOR DE FORÇA DE SENHA */
+    .password-strength-container { display: flex; gap: 5px; margin-top: 8px; }
+    .strength-bar { height: 4px; flex: 1; background: #333; border-radius: 2px; transition: 0.3s; }
+    .strength-text { font-size: 0.75rem; margin-top: 5px; text-align: right; font-weight: bold; }
   </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedSize = localStorage.getItem('fly_font_size');
+      if (savedSize === 'small') document.documentElement.style.fontSize = '14px';
+      else if (savedSize === 'large') document.documentElement.style.fontSize = '18px';
+      else document.documentElement.style.fontSize = '16px';
+    });
+  </script>
 </head>
 <body>
 
@@ -46,7 +76,6 @@
 
   <div class="settings-container">
     
-    <!-- IDIOMA E REGIÃO -->
     <p class="settings-group-title">Idioma e Região</p>
     <div class="settings-group">
       <div class="settings-item" style="cursor: default;">
@@ -61,103 +90,125 @@
       </div>
     </div>
 
-    <!-- CONTA E SEGURANÇA -->
     <p class="settings-group-title">Conta e Segurança</p>
     <div class="settings-group">
-      <div class="settings-item" onclick="window.location.href='perfil.html'">
+      <!-- ✅ BOTÃO CORRIGIDO: Vai para editar_perfil.html -->
+      <div class="settings-item" onclick="window.location.href='editar_perfil.html'">
         <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-user-pen"></i></div><div class="settings-text"><h4>Editar Perfil</h4><p>Foto, nome e biografia</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
-      <div class="settings-item" onclick="alert('Funcionalidade em breve: Alterar Palavra-passe via Supabase.')">
+      <div class="settings-item" onclick="openModal('modalPassword')">
         <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-lock"></i></div><div class="settings-text"><h4>Alterar Palavra-passe</h4><p>Muda a sua senha de acesso</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
-      <div class="settings-item" onclick="alert('Funcionalidade em breve: Alterar E-mail via Supabase.')">
+      <div class="settings-item" onclick="openModal('modalEmail')">
         <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-envelope"></i></div><div class="settings-text"><h4>Alterar E-mail</h4><p>Atualiza o teu endereço de e-mail</p></div></div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+      <div class="settings-item" onclick="logoutOtherDevices()">
+        <div class="settings-item-left"><div class="settings-icon icon-red"><i class="fa-solid fa-desktop"></i></div><div class="settings-text"><h4>Terminar outras sessões</h4><p>Desconectar outros dispositivos</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
       <div class="settings-item">
         <div class="settings-item-left"><div class="settings-icon icon-green"><i class="fa-solid fa-shield-halved"></i></div><div class="settings-text"><h4>Autenticação 2FA</h4><p>Proteção extra com código</p></div></div>
-        <label class="toggle-switch"><input type="checkbox" onclick="alert('Apenas UI: 2FA será ligado na próxima versão.')"><span class="slider"></span></label>
+        <label class="toggle-switch"><input type="checkbox" id="toggle2FA" onchange="updateSetting('is_2fa_enabled', this)"><span class="slider"></span></label>
       </div>
     </div>
 
-    <!-- PRIVACIDADE -->
+    <p class="settings-group-title">Acessibilidade</p>
+    <div class="settings-group">
+      <div class="settings-item" onclick="openModal('modalFontSize')">
+        <div class="settings-item-left"><div class="settings-icon icon-orange"><i class="fa-solid fa-text-height"></i></div><div class="settings-text"><h4>Tamanho da Fonte</h4><p>Ajusta o texto da aplicação</p></div></div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
+    </div>
+
     <p class="settings-group-title">Privacidade</p>
     <div class="settings-group">
       <div class="settings-item">
         <div class="settings-item-left"><div class="settings-icon icon-purple"><i class="fa-solid fa-eye-slash"></i></div><div class="settings-text"><h4>Conta Privada</h4><p>Só seguidores veem os seus posts</p></div></div>
-        <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+        <label class="toggle-switch"><input type="checkbox" id="togglePrivate" onchange="updateSetting('is_private', this)"><span class="slider"></span></label>
+      </div>
+      <div class="settings-item">
+        <div class="settings-item-left"><div class="settings-icon icon-purple"><i class="fa-solid fa-ghost"></i></div><div class="settings-text"><h4>Esconder Estado Online</h4><p>Ninguém vê quando estás online</p></div></div>
+        <label class="toggle-switch"><input type="checkbox" id="toggleHideOnline" onchange="updateSetting('hide_online_status', this)"><span class="slider"></span></label>
       </div>
       <div class="settings-item" style="cursor: default;">
         <div class="settings-item-left"><div class="settings-icon icon-purple"><i class="fa-solid fa-comment-slash"></i></div><div class="settings-text"><h4>Quem pode enviar mensagens</h4><p>Filtra quem fala contigo</p></div></div>
-        <select class="input-glass" style="width: 100px;">
-          <option>Todos</option>
-          <option>Amigos</option>
-          <option>Ninguém</option>
+        <select id="messagePrivacySelect" class="input-glass" onchange="saveMessagePrivacy(this.value)">
+          <option value="todos">Todos</option>
+          <option value="amigos">Amigos</option>
+          <option value="ninguem">Ninguém</option>
         </select>
+      </div>
+      <div class="settings-item" onclick="window.location.href='lista_usuarios.html?type=bloqueados'">
+        <div class="settings-item-left"><div class="settings-icon icon-purple"><i class="fa-solid fa-ban"></i></div><div class="settings-text"><h4>Utilizadores Bloqueados</h4><p>Gere a tua lista de bloqueios</p></div></div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
     </div>
 
-    <!-- NOTIFICAÇÕES -->
     <p class="settings-group-title">Notificações</p>
     <div class="settings-group">
       <div class="settings-item">
-        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-bell"></i></div><div class="settings-text"><h4>Notificações Push</h4><p>Alertas no telemóvel</p></div></div>
-        <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-heart"></i></div><div class="settings-text"><h4>Likes e Comentários</h4><p>Avisar quando interagem contigo</p></div></div>
+        <label class="toggle-switch"><input type="checkbox" id="toggleNotifyLikes" onchange="updateSetting('notify_likes', this)"><span class="slider"></span></label>
       </div>
       <div class="settings-item">
-        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-envelope-open-text"></i></div><div class="settings-text"><h4>Notificações por E-mail</h4><p>Resumos de vendas e mensagens</p></div></div>
-        <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-user-plus"></i></div><div class="settings-text"><h4>Novos Seguidores</h4><p>Avisar quando te seguem</p></div></div>
+        <label class="toggle-switch"><input type="checkbox" id="toggleNotifyFollows" onchange="updateSetting('notify_follows', this)"><span class="slider"></span></label>
+      </div>
+      <div class="settings-item">
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-bell"></i></div><div class="settings-text"><h4>Notificações Push</h4><p>Alertas no telemóvel</p></div></div>
+        <label class="toggle-switch"><input type="checkbox" id="togglePush" onchange="updateSetting('push_notifications', this)"><span class="slider"></span></label>
       </div>
     </div>
 
-    <!-- MARKETPLACE -->
     <p class="settings-group-title">Marketplace (Vendas)</p>
     <div class="settings-group">
       <div class="settings-item">
         <div class="settings-item-left"><div class="settings-icon icon-gold"><i class="fa-solid fa-umbrella-beach"></i></div><div class="settings-text"><h4>Modo de Férias</h4><p>Pausa todos os teus anúncios</p></div></div>
-        <label class="toggle-switch"><input type="checkbox" onclick="alert('Apenas UI: O modo de férias será implementado em breve.')"><span class="slider"></span></label>
+        <label class="toggle-switch"><input type="checkbox" id="toggleVacation" onchange="updateSetting('vacation_mode', this)"><span class="slider"></span></label>
       </div>
-      <div class="settings-item" onclick="alert('Apenas UI: Introduzir dados de pagamento (IBAN / Multicaixa).')">
+      <div class="settings-item" onclick="openModal('modalPayment')">
         <div class="settings-item-left"><div class="settings-icon icon-gold"><i class="fa-solid fa-credit-card"></i></div><div class="settings-text"><h4>Dados de Pagamento</h4><p>IBAN ou Multicaixa Express</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
-      <div class="settings-item" onclick="alert('Apenas UI: Introduzir endereço de entrega.')">
+      <div class="settings-item" onclick="openModal('modalAddress')">
         <div class="settings-item-left"><div class="settings-icon icon-gold"><i class="fa-solid fa-location-dot"></i></div><div class="settings-text"><h4>Endereço de Entrega</h4><p>Onde recebes os teus produtos</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
     </div>
 
-    <!-- SUPORTE E SOBRE -->
     <p class="settings-group-title">Suporte e Sobre</p>
     <div class="settings-group">
-      <div class="settings-item" onclick="alert('Apenas UI: Centro de Ajuda em construção.')">
-        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-circle-question"></i></div><div class="settings-text"><h4>Centro de Ajuda</h4><p>FAQs e tutoriais</p></div></div>
+      <div class="settings-item" onclick="openModal('modalHelp')">
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-circle-question"></i></div><div class="settings-text"><h4>Centro de Ajuda</h4><p>Fala com a equipa de suporte</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
-      <div class="settings-item" onclick="alert('Apenas UI: Termos e Políticas em construção.')">
+      <div class="settings-item" onclick="openModal('modalTerms')">
         <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-file-contract"></i></div><div class="settings-text"><h4>Termos e Políticas</h4><p>Regras e privacidade</p></div></div>
         <i class="fa-solid fa-chevron-right chevron"></i>
       </div>
+      <div class="settings-item" onclick="clearCache()">
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-broom"></i></div><div class="settings-text"><h4>Limpar Cache</h4><p>Liberta espaço e melhora o desempenho</p></div></div>
+        <i class="fa-solid fa-chevron-right chevron"></i>
+      </div>
       <div class="settings-item" style="cursor: default;">
-        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-circle-info"></i></div><div class="settings-text"><h4>Versão da App</h4><p>v1.0.0 (MVP)</p></div></div>
+        <div class="settings-item-left"><div class="settings-icon icon-blue"><i class="fa-solid fa-circle-info"></i></div><div class="settings-text"><h4>Versão da App</h4><p>v1.4.0 (Premium)</p></div></div>
       </div>
     </div>
 
-    <!-- SESSÃO E CONTA -->
     <p class="settings-group-title">Sessão e Conta</p>
     <div class="settings-group">
       <div class="settings-item" onclick="logout()">
         <div class="settings-item-left"><div class="settings-icon icon-red"><i class="fa-solid fa-right-from-bracket"></i></div><div class="settings-text"><h4 style="color: var(--danger);">Terminar Sessão</h4></div></div>
       </div>
-      <div class="settings-item" onclick="alert('Apenas UI: Apagar conta (Irreversível).')">
+      <div class="settings-item" onclick="openModal('modalDeleteAccount')">
         <div class="settings-item-left"><div class="settings-icon icon-red"><i class="fa-solid fa-trash"></i></div><div class="settings-text"><h4 style="color: var(--danger);">Apagar Conta</h4><p>Elimina todos os teus dados</p></div></div>
       </div>
     </div>
   </div>
 
-  <!-- NAVBAR COM OS 6 BOTÕES -->
   <nav class="bottom-nav">
     <a href="home.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Início</span></a>
     <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
@@ -167,57 +218,280 @@
     <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
+  <!-- MODAL: ALTERAR PALAVRA-PASSE COM MEDIDOR DE FORÇA -->
+  <div class="modal-overlay" id="modalPassword">
+    <div class="modal-content">
+      <div class="modal-header"><h3><i class="fa-solid fa-lock"></i> Nova Palavra-passe</h3><i class="fa-solid fa-xmark" onclick="closeModal('modalPassword')"></i></div>
+      
+      <div class="input-group">
+        <label>Palavra-passe Atual</label>
+        <input type="password" id="currentPassword" class="input-glass" placeholder="A tua senha atual">
+      </div>
+      
+      <div class="input-group">
+        <label>Nova Palavra-passe</label>
+        <input type="password" id="newPassword" class="input-glass" placeholder="Mínimo 6 caracteres" oninput="checkPasswordStrength(this.value)">
+        <div class="password-strength-container">
+          <div class="strength-bar" id="bar1"></div>
+          <div class="strength-bar" id="bar2"></div>
+          <div class="strength-bar" id="bar3"></div>
+        </div>
+        <p class="strength-text" id="strengthText" style="color: var(--text-muted);">Insere uma senha</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('modalPassword')">Cancelar</button>
+        <button class="btn-save" onclick="savePassword()" id="btnSavePassword">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTROS MODAIS (Fonte, Ajuda, Email, Pagamento, Morada, Apagar Conta, Termos) mantêm-se iguais -->
+  <div class="modal-overlay" id="modalFontSize"><div class="modal-content"><div class="modal-header"><h3><i class="fa-solid fa-text-height"></i> Tamanho da Fonte</h3><i class="fa-solid fa-xmark" onclick="closeModal('modalFontSize')"></i></div><div style="display: flex; flex-direction: column; gap: 10px;"><button class="btn-save" style="background: transparent; border: 1px solid var(--neon); color: white;" onclick="changeFontSize('small')">Pequeno</button><button class="btn-save" style="background: linear-gradient(90deg, var(--primary), var(--neon)); color: white;" onclick="changeFontSize('normal')">Normal (Padrão)</button><button class="btn-save" style="background: transparent; border: 1px solid var(--neon); color: white; font-size: 1.2rem;" onclick="changeFontSize('large')">Grande</button></div></div></div>
+
+  <div class="modal-overlay" id="modalHelp"><div class="modal-content"><div class="modal-header"><h3><i class="fa-solid fa-headset"></i> Suporte FLY</h3><i class="fa-solid fa-xmark" onclick="closeModal('modalHelp')"></i></div><div class="input-group"><label>Assunto</label><select id="ticketSubject" class="input-glass" style="width: 100%;"><option value="Problema com encomenda">Problema com encomenda</option><option value="Problema com conta">Problema com conta</option><option value="Denúncia de conteúdo">Denúncia de conteúdo</option><option value="Sugestão de melhoria">Sugestão de melhoria</option><option value="Outro">Outro</option></select></div><div class="input-group"><label>Mensagem</label><textarea id="ticketMessage" class="input-glass" rows="4" placeholder="Escreve aqui os detalhes..."></textarea></div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalHelp')">Cancelar</button><button class="btn-save" onclick="submitTicket()" id="btnSubmitTicket">Enviar</button></div></div></div>
+
+  <div class="modal-overlay" id="modalEmail"><div class="modal-content"><div class="modal-header"><h3><i class="fa-solid fa-envelope"></i> Novo E-mail</h3><i class="fa-solid fa-xmark" onclick="closeModal('modalEmail')"></i></div><div class="input-group"><label>Palavra-passe Atual</label><input type="password" id="currentPasswordEmail" class="input-glass" placeholder="Confirma a tua senha"></div><div class="input-group"><label>Novo E-mail</label><input type="email" id="newEmail" class="input-glass" placeholder="seu@novoemail.com"></div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalEmail')">Cancelar</button><button class="btn-save" onclick="saveEmail()" id="btnSaveEmail">Guardar</button></div></div></div>
+
+  <div class="modal-overlay" id="modalPayment"><div class="modal-content"><div class="modal-header"><h3><i class="fa-solid fa-credit-card"></i> Dados de Pagamento</h3><i class="fa-solid fa-xmark" onclick="closeModal('modalPayment')"></i></div><div class="input-group"><label>IBAN</label><input type="text" id="paymentIban" class="input-glass" placeholder="AO06 0000 0000 0000 0000 0"></div><div class="input-group"><label>Multicaixa Express (Nº Telemóvel)</label><input type="tel" id="paymentMulticaixa" class="input-glass" placeholder="9XX XXX XXX" maxlength="9"></div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalPayment')">Cancelar</button><button class="btn-save" onclick="savePaymentData()" id="btnSavePayment">Guardar</button></div></div></div>
+
+  <div class="modal-overlay" id="modalAddress"><div class="modal-content"><div class="modal-header"><h3><i class="fa-solid fa-location-dot"></i> Endereço</h3><i class="fa-solid fa-xmark" onclick="closeModal('modalAddress')"></i></div><div class="input-group"><label>Endereço Completo</label><textarea id="deliveryAddress" class="input-glass" rows="3" placeholder="Rua, Bairro, Nº da Casa..."></textarea></div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalAddress')">Cancelar</button><button class="btn-save" onclick="saveAddress()" id="btnSaveAddress">Guardar</button></div></div></div>
+
+  <div class="modal-overlay" id="modalDeleteAccount"><div class="modal-content"><div class="modal-header"><h3 style="color: var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Apagar Conta</h3><i class="fa-solid fa-xmark" onclick="closeModal('modalDeleteAccount')"></i></div><p style="font-size: 0.9rem; color: white; margin-bottom: 15px;">Tens a certeza? Esta ação é <strong>irreversível</strong>.</p><div class="input-group"><label style="color: var(--danger);">Escreve "APAGAR" para confirmar</label><input type="text" id="confirmDeleteText" class="input-glass" placeholder="APAGAR"></div><div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalDeleteAccount')">Cancelar</button><button class="btn-danger" onclick="executeDeleteAccount()" id="btnDeleteAccount">Apagar</button></div></div></div>
+
+  <div class="modal-overlay" id="modalTerms"><div class="modal-content"><div class="modal-header"><h3><i class="fa-solid fa-file-contract"></i> Termos e Políticas</h3><i class="fa-solid fa-xmark" onclick="closeModal('modalTerms')"></i></div><div class="terms-text"><strong>1. Termos de Serviço</strong><br>Ao utilizar a FLY, concordas em não publicar conteúdo ilegal.<br><br><strong>2. Política de Privacidade</strong><br>Os teus dados são usados exclusivamente para processar encomendas.<br><br><strong>3. FlyCoins e Duelos</strong><br>Qualquer manipulação resultará em banimento.</div><button class="btn-save" style="width: 100%;" onclick="closeModal('modalTerms')">Entendido</button></div></div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <script src="js/calls.js"></script>
   <script>
     let currentUser = null;
-    const LANGS = [
-      { code: 'pt', name: 'Português' }, { code: 'en', name: 'Inglês' }, { code: 'es', name: 'Espanhol' },
-      { code: 'fr', name: 'Francês' }, { code: 'de', name: 'Alemão' }, { code: 'it', name: 'Italiano' },
-      { code: 'ca', name: 'Catalão' }, { code: 'nl', name: 'Holandês' }, { code: 'pl', name: 'Polonês' },
-      { code: 'sv', name: 'Sueco' }, { code: 'no', name: 'Norueguês' }, { code: 'da', name: 'Dinamarquês' },
-      { code: 'fi', name: 'Finlandês' }, { code: 'cs', name: 'Tcheco' }, { code: 'sk', name: 'Eslovaco' },
-      { code: 'sl', name: 'Esloveno' }, { code: 'hr', name: 'Croata' }, { code: 'ro', name: 'Romeno' },
-      { code: 'hu', name: 'Húngaro' }, { code: 'el', name: 'Grego' }, { code: 'tr', name: 'Turco' },
-      { code: 'ru', name: 'Russo' }, { code: 'uk', name: 'Ucraniano' }, { code: 'ar', name: 'Árabe' },
-      { code: 'he', name: 'Hebraico' }, { code: 'hi', name: 'Hindi' }, { code: 'th', name: 'Tailandês' },
-      { code: 'vi', name: 'Vietnamita' }, { code: 'id', name: 'Indonésio' }, { code: 'ms', name: 'Malaio' },
-      { code: 'ja', name: 'Japonês' }, { code: 'ko', name: 'Coreano' }, { code: 'zh-CN', name: 'Chinês (Simplificado)' },
-      { code: 'zh-TW', name: 'Chinês (Tradicional)' }, { code: 'sw', name: 'Suaíli' }, { code: 'eo', name: 'Esperanto' },
-    ];
+    const LANGS = [{ code: 'pt', name: 'Português' }, { code: 'en', name: 'Inglês' }, { code: 'es', name: 'Espanhol' }, { code: 'fr', name: 'Francês' }, { code: 'de', name: 'Alemão' }, { code: 'it', name: 'Italiano' }];
 
-    function fillLanguageSelect() {
-      const select = document.getElementById('languageSelect');
-      select.innerHTML = '';
-      LANGS.forEach(l => {
-        const opt = document.createElement('option');
-        opt.value = l.code;
-        opt.innerText = l.name;
-        select.appendChild(opt);
-      });
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
     }
 
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
     async function init() {
-      fillLanguageSelect();
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user.id;
 
-      const { data: profile } = await supabaseClient.from('profiles').select('language').eq('id', currentUser).single();
+      const select = document.getElementById('languageSelect');
+      select.innerHTML = '';
+      LANGS.forEach(l => { const opt = document.createElement('option'); opt.value = l.code; opt.innerText = l.name; select.appendChild(opt); });
+
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('language, is_private, vacation_mode, is_2fa_enabled, push_notifications, email_notifications, payment_iban, payment_multicaixa, delivery_address, message_privacy, notify_likes, notify_follows, hide_online_status, font_size')
+        .eq('id', currentUser)
+        .single();
       
-      const savedLang = profile?.language || 'pt';
-      document.getElementById('languageSelect').value = savedLang;
-      localStorage.setItem('fly_language', savedLang);
+      if (profile) {
+        document.getElementById('languageSelect').value = profile.language || 'pt';
+        document.getElementById('toggle2FA').checked = profile.is_2fa_enabled || false;
+        document.getElementById('togglePrivate').checked = profile.is_private || false;
+        document.getElementById('toggleHideOnline').checked = profile.hide_online_status || false;
+        document.getElementById('toggleNotifyLikes').checked = profile.notify_likes !== false;
+        document.getElementById('toggleNotifyFollows').checked = profile.notify_follows !== false;
+        document.getElementById('togglePush').checked = profile.push_notifications !== false;
+        document.getElementById('toggleVacation').checked = profile.vacation_mode || false;
+        document.getElementById('messagePrivacySelect').value = profile.message_privacy || 'todos';
+        document.getElementById('paymentIban').value = profile.payment_iban || '';
+        document.getElementById('paymentMulticaixa').value = profile.payment_multicaixa || '';
+        document.getElementById('deliveryAddress').value = profile.delivery_address || '';
+      }
+    }
+
+    // ✅ LÓGICA DO MEDIDOR DE FORÇA DE SENHA
+    function checkPasswordStrength(password) {
+      const bar1 = document.getElementById('bar1');
+      const bar2 = document.getElementById('bar2');
+      const bar3 = document.getElementById('bar3');
+      const text = document.getElementById('strengthText');
+      
+      bar1.style.background = '#333'; bar2.style.background = '#333'; bar3.style.background = '#333';
+      
+      if (password.length === 0) {
+        text.innerText = 'Insere uma senha';
+        text.style.color = 'var(--text-muted)';
+        return;
+      }
+      
+      let strength = 0;
+      if (password.length >= 6) strength++;
+      if (password.length >= 10) strength++;
+      if (/[A-Z]/.test(password) && /[0-9]/.test(password)) strength++;
+      if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+      if (strength <= 1) {
+        bar1.style.background = 'var(--danger)';
+        text.innerText = 'Fraca';
+        text.style.color = 'var(--danger)';
+      } else if (strength <= 3) {
+        bar1.style.background = '#ffb300';
+        bar2.style.background = '#ffb300';
+        text.innerText = 'Média';
+        text.style.color = '#ffb300';
+      } else {
+        bar1.style.background = 'var(--success)';
+        bar2.style.background = 'var(--success)';
+        bar3.style.background = 'var(--success)';
+        text.innerText = 'Forte';
+        text.style.color = 'var(--success)';
+      }
+    }
+
+    async function savePassword() {
+      const currentPass = document.getElementById('currentPassword').value;
+      const newPass = document.getElementById('newPassword').value;
+      if (!currentPass) { showToast('Insere a tua palavra-passe atual.', 'error'); return; }
+      if (newPass.length < 6) { showToast('A nova senha deve ter 6+ caracteres.', 'error'); return; }
+      
+      const btn = document.getElementById('btnSavePassword');
+      btn.innerHTML = 'A validar...'; btn.disabled = true;
+      
+      const email = (await supabaseClient.auth.getUser()).data.user.email;
+      const { error: authError } = await supabaseClient.auth.signInWithPassword({ email, password: currentPass });
+      
+      if (authError) { showToast('Palavra-passe atual incorreta.', 'error'); btn.innerHTML = 'Guardar'; btn.disabled = false; return; }
+      
+      const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+      btn.innerHTML = 'Guardar'; btn.disabled = false;
+      if (error) { showToast('Erro: ' + error.message, 'error'); } else { showToast('Palavra-passe alterada!', 'success'); closeModal('modalPassword'); checkPasswordStrength(''); }
+    }
+
+    async function changeFontSize(size) {
+      localStorage.setItem('fly_font_size', size);
+      if (size === 'small') document.documentElement.style.fontSize = '14px';
+      else if (size === 'large') document.documentElement.style.fontSize = '18px';
+      else document.documentElement.style.fontSize = '16px';
+
+      const { error } = await supabaseClient.from('profiles').update({ font_size: size }).eq('id', currentUser);
+      if (error) { showToast('Erro ao guardar tamanho.', 'error'); }
+      else { showToast('Tamanho da fonte atualizado!', 'success'); closeModal('modalFontSize'); }
+    }
+
+    async function logoutOtherDevices() {
+      if (!confirm('Isto vai terminar a sessão em todos os outros dispositivos. Continuar?')) return;
+      const { error } = await supabaseClient.auth.signOut({ scope: 'others' });
+      if (error) { showToast('Erro: ' + error.message, 'error'); }
+      else { showToast('Outras sessões terminadas com sucesso.', 'success'); }
+    }
+
+    async function clearCache() {
+      if (!confirm('Isto vai limpar ficheiros temporários. Continuar?')) return;
+      const lang = localStorage.getItem('fly_language');
+      const font = localStorage.getItem('fly_font_size');
+      localStorage.clear();
+      if (lang) localStorage.setItem('fly_language', lang);
+      if (font) localStorage.setItem('fly_font_size', font);
+      showToast('Cache limpa! A recarregar...', 'success');
+      setTimeout(() => window.location.reload(), 1500);
+    }
+
+    async function submitTicket() {
+      const subject = document.getElementById('ticketSubject').value;
+      const message = document.getElementById('ticketMessage').value.trim();
+      if (!message) { showToast('Escreve uma mensagem.', 'error'); return; }
+
+      const btn = document.getElementById('btnSubmitTicket');
+      btn.innerHTML = 'A enviar...'; btn.disabled = true;
+
+      const { error } = await supabaseClient.from('support_tickets').insert([{
+        user_id: currentUser, subject: subject, message: message
+      }]);
+
+      btn.innerHTML = 'Enviar'; btn.disabled = false;
+
+      if (error) { showToast('Erro ao enviar: ' + error.message, 'error'); }
+      else { 
+        showToast('Ticket enviado! A equipa responderá em breve.', 'success'); 
+        closeModal('modalHelp'); 
+        document.getElementById('ticketMessage').value = '';
+      }
     }
 
     async function changeLanguage(langCode) {
       localStorage.setItem('fly_language', langCode);
       const { error } = await supabaseClient.from('profiles').update({ language: langCode }).eq('id', currentUser);
-      if (error) { alert('Erro ao guardar no banco: ' + error.message); }
+      if (error) { showToast('Erro ao guardar idioma.', 'error'); } else { showToast('Idioma guardado!', 'success'); }
     }
 
-    async function logout() { if(confirm('Terminar sessão?')) { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; } }
+    async function updateSetting(column, checkbox) {
+      const newValue = checkbox.checked;
+      const { error } = await supabaseClient.from('profiles').update({ [column]: newValue }).eq('id', currentUser);
+      if (error) { checkbox.checked = !newValue; showToast('Erro ao guardar definição.', 'error'); } else { showToast('Definição guardada!', 'success'); }
+    }
+
+    async function saveMessagePrivacy(value) {
+      const { error } = await supabaseClient.from('profiles').update({ message_privacy: value }).eq('id', currentUser);
+      if (error) { showToast('Erro ao guardar privacidade.', 'error'); } else { showToast('Privacidade de mensagens atualizada.', 'success'); }
+    }
+
+    async function saveEmail() {
+      const currentPass = document.getElementById('currentPasswordEmail').value;
+      const newEmail = document.getElementById('newEmail').value;
+      if (!currentPass) { showToast('Confirma a tua palavra-passe atual.', 'error'); return; }
+      if (!newEmail) { showToast('Insere um e-mail válido.', 'error'); return; }
+      
+      const btn = document.getElementById('btnSaveEmail');
+      btn.innerHTML = 'A validar...'; btn.disabled = true;
+      
+      const oldEmail = (await supabaseClient.auth.getUser()).data.user.email;
+      const { error: authError } = await supabaseClient.auth.signInWithPassword({ email: oldEmail, password: currentPass });
+      
+      if (authError) { showToast('Palavra-passe atual incorreta.', 'error'); btn.innerHTML = 'Guardar'; btn.disabled = false; return; }
+      
+      const { error } = await supabaseClient.auth.updateUser({ email: newEmail });
+      btn.innerHTML = 'Guardar'; btn.disabled = false;
+      if (error) { showToast('Erro: ' + error.message, 'error'); } else { showToast('Link enviado para o novo e-mail!', 'success'); closeModal('modalEmail'); }
+    }
+
+    async function savePaymentData() {
+      const iban = document.getElementById('paymentIban').value.trim();
+      const multi = document.getElementById('paymentMulticaixa').value.trim();
+      if (multi && !/^9\d{8}$/.test(multi)) { showToast('Nº de Multicaixa inválido (9 dígitos).', 'error'); return; }
+      
+      const btn = document.getElementById('btnSavePayment');
+      btn.innerHTML = 'A guardar...'; btn.disabled = true;
+      const { error } = await supabaseClient.from('profiles').update({ payment_iban: iban, payment_multicaixa: multi }).eq('id', currentUser);
+      btn.innerHTML = 'Guardar'; btn.disabled = false;
+      if (error) { showToast('Erro: ' + error.message, 'error'); } else { showToast('Dados guardados!', 'success'); closeModal('modalPayment'); }
+    }
+
+    async function saveAddress() {
+      const addr = document.getElementById('deliveryAddress').value.trim();
+      const btn = document.getElementById('btnSaveAddress');
+      btn.innerHTML = 'A guardar...'; btn.disabled = true;
+      const { error } = await supabaseClient.from('profiles').update({ delivery_address: addr }).eq('id', currentUser);
+      btn.innerHTML = 'Guardar'; btn.disabled = false;
+      if (error) { showToast('Erro: ' + error.message, 'error'); } else { showToast('Endereço guardado!', 'success'); closeModal('modalAddress'); }
+    }
+
+    async function executeDeleteAccount() {
+      const text = document.getElementById('confirmDeleteText').value.trim();
+      if (text !== 'APAGAR') { showToast('Escreve exatamente "APAGAR" para confirmar.', 'error'); return; }
+      
+      const btn = document.getElementById('btnDeleteAccount');
+      btn.innerHTML = 'A apagar...'; btn.disabled = true;
+      const { error } = await supabaseClient.rpc('delete_my_account');
+      if (error) { showToast('Erro ao apagar conta: ' + error.message, 'error'); btn.innerHTML = 'Apagar'; btn.disabled = false; } 
+      else { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
+    }
+
+    async function logout() { 
+      if(confirm('Terminar sessão?')) { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; } 
+    }
     
     init();
   </script>

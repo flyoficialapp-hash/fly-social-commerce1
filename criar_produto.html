@@ -52,7 +52,7 @@
     <div class="input-group"><label>Descrição</label><textarea id="pDescription" class="input-glass" rows="3" placeholder="Descreva o seu produto..."></textarea></div>
     <div class="input-row">
       <div class="input-group"><label>Preço (Kz)</label><input type="number" id="pPrice" class="input-glass" placeholder="Ex: 120000"></div>
-      <div class="input-group"><label>Estoque</label><input type="number" id="pStock" class="input-glass" placeholder="Ex: 10"></div>
+      <div class="input-group"><label>Estoque</label><input type="number" id="pStock" class="input-glass" placeholder="Ex: 10" min="1"></div>
     </div>
     <div class="toggle-group">
       <div style="display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-fire" style="color: #ff3366;"></i><span>Destacar Produto</span></div>
@@ -70,13 +70,13 @@
     <a href="mercado.html" class="nav-item"><i class="fa-solid fa-bag-shopping"></i><span>Mercado</span></a>
     <a href="duelos.html" class="nav-item" style="color: #ffd700; transform: scale(1.1);"><i class="fa-solid fa-trophy"></i><span style="font-weight: bold;">Duelo</span></a>
     <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span></a>
-    <a href="perfil.html" class="nav-item active"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+    <a href="gerenciar_vendas.html" class="nav-item active"><i class="fa-solid fa-briefcase"></i><span>Negócios</span></a>
+    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <script src="js/calls.js"></script>
-  <!-- i18n.js REMOVIDO -->
   <script>
     let selectedFile = null;
     let editProductId = null;
@@ -96,6 +96,7 @@
           document.getElementById('pCategory').value = product.category;
           document.getElementById('pDescription').value = product.description;
           document.getElementById('pPrice').value = product.price;
+          document.getElementById('pStock').value = product.stock || 1; // NOVO
           
           if (product.image_url) {
             currentImageUrl = product.image_url;
@@ -126,6 +127,7 @@
       const btn = document.getElementById('btnPublish'); const msg = document.getElementById('message');
       const name = document.getElementById('pName').value; const category = document.getElementById('pCategory').value;
       const description = document.getElementById('pDescription').value; const price = parseFloat(document.getElementById('pPrice').value);
+      const stock = parseInt(document.getElementById('pStock').value) || 1; // NOVO
       
       if (!name || !price) { msg.style.color = 'var(--danger)'; msg.innerText = 'Preencha o nome e o preço.'; return; }
       if (!selectedFile && !currentImageUrl) { msg.style.color = 'var(--danger)'; msg.innerText = 'Selecione uma imagem.'; return; }
@@ -146,11 +148,11 @@
       }
 
       if (editProductId) {
-        const { error: dbError } = await supabaseClient.from('products').update({ name, description, price, category, image_url: finalImageUrl }).eq('id', editProductId);
+        const { error: dbError } = await supabaseClient.from('products').update({ name, description, price, category, stock, image_url: finalImageUrl }).eq('id', editProductId);
         if (dbError) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro ao salvar: ' + dbError.message; btn.innerHTML = 'Guardar'; btn.disabled = false; return; }
         msg.style.color = 'var(--success)'; msg.innerText = 'Produto atualizado com sucesso!';
       } else {
-        const { error: dbError } = await supabaseClient.from('products').insert([{ seller_id: userId, name, description, price, category, image_url: finalImageUrl }]);
+        const { error: dbError } = await supabaseClient.from('products').insert([{ seller_id: userId, name, description, price, category, stock, image_url: finalImageUrl }]);
         if (dbError) { msg.style.color = 'var(--danger)'; msg.innerText = 'Erro ao salvar: ' + dbError.message; btn.innerHTML = 'Publicar'; btn.disabled = false; return; }
         msg.style.color = 'var(--success)'; msg.innerText = 'Produto publicado com sucesso!';
       }

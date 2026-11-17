@@ -83,46 +83,111 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <script src="js/calls.js"></script>
-  <!-- i18n.js REMOVIDO -->
   <script>
-    let currentUser = null; let orderId = null; let orderAmount = 0; let selectedMethod = 'multicaixa';
-    function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
+    let currentUser = null; 
+    let orderId = null; 
+    let orderAmount = 0; 
+    let selectedMethod = 'multicaixa';
+
+    function formatKz(value) { 
+      return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); 
+    }
 
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user.id;
+
       const urlParams = new URLSearchParams(window.location.search);
       orderId = urlParams.get('order_id');
-      if (!orderId) { alert('Pedido não encontrado.'); window.location.href = 'mercado.html'; return; }
-      const { data: order } = await supabaseClient.from('orders').select('total_price').eq('id', orderId).single();
-      if (order) { orderAmount = order.total_price; document.getElementById('checkoutTotal').innerText = formatKz(orderAmount); document.getElementById('btnAmount').innerText = formatKz(orderAmount); }
+
+      if (!orderId) { 
+        document.getElementById('paymentError').innerText = 'Pedido não especificado.';
+        document.getElementById('btnPay').disabled = true;
+        return; 
+      }
+
+      // ✅ VALIDAR QUE O PEDIDO PERTENCE AO UTILIZADOR E ESTÁ PENDENTE
+      const { data: order, error } = await supabaseClient
+        .from('orders')
+        .select('total_price, buyer_id, status')
+        .eq('id', orderId)
+        .eq('buyer_id', currentUser)
+        .single();
+
+      if (error || !order) {
+        document.getElementById('paymentError').innerText = 'Pedido não encontrado ou não te pertence.';
+        document.getElementById('btnPay').disabled = true;
+        setTimeout(() => { window.location.href = 'mercado.html'; }, 2500);
+        return;
+      }
+
+      if (order.status !== 'pendente') {
+        document.getElementById('paymentError').innerText = 'Este pedido já foi processado anteriormente.';
+        document.getElementById('btnPay').disabled = true;
+        setTimeout(() => { window.location.href = 'compras.html'; }, 2500);
+        return;
+      }
+
+      orderAmount = order.total_price;
+      document.getElementById('checkoutTotal').innerText = formatKz(orderAmount);
+      document.getElementById('btnAmount').innerText = formatKz(orderAmount);
     }
 
-    function selectMethod(method, element) { selectedMethod = method; document.querySelectorAll('.method-card').forEach(el => el.classList.remove('selected')); element.classList.add('selected'); }
+    function selectMethod(method, element) { 
+      selectedMethod = method; 
+      document.querySelectorAll('.method-card').forEach(el => el.classList.remove('selected')); 
+      element.classList.add('selected'); 
+    }
 
     async function processPayment() {
-      const btn = document.getElementById('btnPay'); const errorMsg = document.getElementById('paymentError');
-      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A processar...'; errorMsg.innerText = '';
+      const btn = document.getElementById('btnPay'); 
+      const errorMsg = document.getElementById('paymentError');
+      btn.disabled = true; 
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A processar...'; 
+      errorMsg.innerText = '';
+      
       try {
-        const { data: transaction, error: txError } = await supabaseClient.from('transactions').insert([{ order_id: orderId, buyer_id: currentUser, amount: orderAmount, method: selectedMethod, status: 'pendente' }]).select().single();
+        // 1. Cria a transação como "pendente" (Registo de intenção)
+        const { data: transaction, error: txError } = await supabaseClient
+          .from('transactions')
+          .insert([{ order_id: orderId, buyer_id: currentUser, amount: orderAmount, method: selectedMethod, status: 'pendente' }])
+          .select().single();
+        
         if (txError) throw txError;
 
-        const { data: response, error: fnError } = await supabaseClient.functions.invoke('process-payment', { body: { amount: orderAmount, method: selectedMethod, orderId: orderId } });
+        // 2. Chama a Edge Function (O backend vai validar o preço, processar e atualizar a BD)
+        const { data: response, error: fnError } = await supabaseClient.functions.invoke('process-payment', { 
+          body: { orderId: orderId, method: selectedMethod } 
+        });
+        
         if (fnError) throw fnError;
+        if (response && response.error) throw new Error(response.error);
 
-        if (response.success) {
-          await supabaseClient.from('transactions').update({ status: 'pago' }).eq('id', transaction.id);
-          await supabaseClient.from('orders').update({ status: 'preparando' }).eq('id', orderId);
-          const { data: order } = await supabaseClient.from('orders').select('seller_id').eq('id', orderId).single();
-          if (order) { await supabaseClient.from('notifications').insert([{ user_id: order.seller_id, sender_id: currentUser, type: 'order' }]); }
-          document.getElementById('successModal').style.display = 'flex';
-        } else { throw new Error('O gateway recusou o pagamento.'); }
+        // 3. Só mostra o sucesso! (Sem UPDATEs no frontend!)
+        document.getElementById('successModal').style.display = 'flex';
+        
       } catch (err) {
-        console.error(err); errorMsg.innerText = 'Erro no pagamento: ' + err.message;
-        btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-lock"></i> Pagar ${formatKz(orderAmount)}`;
+        console.error("ERRO DETALHADO DA EDGE FUNCTION:", err);
+        
+        let mensagemReal = err.message;
+        
+        // Tenta extrair a mensagem exata que a Edge Function devolveu
+        if (err.context && typeof err.context.json === 'function') {
+          try {
+            const errorBody = await err.context.json();
+            mensagemReal = errorBody.error || errorBody.message || JSON.stringify(errorBody);
+          } catch (e) {
+            // Se não conseguir ler o JSON, mantém a mensagem padrão
+          }
+        }
+        
+        errorMsg.innerText = 'Erro: ' + mensagemReal;
+        btn.disabled = false; 
+        btn.innerHTML = `<i class="fa-solid fa-lock"></i> Pagar ${formatKz(orderAmount)}`;
       }
     }
+
     init();
   </script>
 </body>

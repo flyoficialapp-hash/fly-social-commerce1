@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .header-icons i { font-size: 1.4rem; color: white; cursor: pointer;}
+    .header-icons i { font-size: 1.4rem; color: white; cursor: pointer; margin-left: 15px;}
     .product-container { padding: 15px; padding-bottom: 100px; }
     .main-image { width: 100%; height: 300px; object-fit: cover; border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: 0 0 20px rgba(0, 204, 255, 0.2); }
     .product-details { margin-top: 20px; }
@@ -18,17 +18,21 @@
     .description-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border); margin-bottom: 20px; }
     .description-box h3 { font-size: 1rem; margin-bottom: 8px; color: var(--neon); }
     .description-box p { font-size: 0.9rem; color: #ccc; line-height: 1.5; }
-    .seller-info { display: flex; align-items: center; gap: 10px; background: var(--glass-bg); padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border); }
+    .seller-info { display: flex; align-items: center; gap: 10px; background: var(--glass-bg); padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border); margin-bottom: 15px; }
     .seller-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: var(--primary); }
     .seller-name { font-weight: bold; }
     .seller-badge { font-size: 0.7rem; color: var(--success); }
+    .vacation-warning { background: rgba(255, 179, 0, 0.15); border: 1px solid #ffb300; color: #ffb300; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: bold; margin-bottom: 15px; display: none; text-align: center; }
+    
     .bottom-action-bar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--glass-border); display: flex; gap: 10px; z-index: 1000; }
     .btn-chat { flex: 1; padding: 15px; background: transparent; border: 1px solid var(--neon); border-radius: 12px; color: var(--neon); font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; }
     .btn-buy-now { flex: 2; padding: 15px; background: linear-gradient(90deg, var(--primary), var(--neon)); border: none; border-radius: 12px; color: white; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
-    .btn-buy-now:disabled { background: var(--text-muted); box-shadow: none; cursor: not-allowed; }
+    .btn-buy-now:disabled { background: var(--text-muted); box-shadow: none; cursor: not-allowed; opacity: 0.5; }
+    
     .seller-actions { display: flex; gap: 10px; margin-bottom: 20px; }
     .btn-edit { flex: 1; padding: 12px; background: rgba(255, 179, 0, 0.1); border: 1px solid #ffb300; color: #ffb300; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; }
     .btn-delete { flex: 1; padding: 12px; background: rgba(255, 51, 102, 0.1); border: 1px solid var(--danger); color: var(--danger); border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; }
+
     .confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 3000; display: none; justify-content: center; align-items: center; padding: 20px; }
     .confirm-box { background: var(--bg-color); border: 1px solid var(--danger); border-radius: 20px; width: 100%; max-width: 350px; padding: 25px; text-align: center; box-shadow: 0 0 30px rgba(255, 51, 102, 0.2); }
     .confirm-box i { font-size: 3rem; color: var(--danger); margin-bottom: 15px; }
@@ -37,12 +41,18 @@
     .confirm-actions { display: flex; gap: 10px; }
     .btn-cancel-confirm { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--glass-border); background: transparent; color: white; font-weight: bold; cursor: pointer; }
     .btn-confirm-delete { flex: 1; padding: 12px; border-radius: 10px; border: none; background: var(--danger); color: white; font-weight: bold; cursor: pointer; }
+    
+    .fav-icon { transition: 0.2s; }
+    .fav-icon.active { color: #ff3366; text-shadow: 0 0 10px rgba(255,51,102,0.5); }
   </style>
 </head>
 <body>
   <header class="header">
     <i class="fa-solid fa-arrow-left" onclick="window.history.back()"></i>
-    <div class="header-icons"><i class="fa-regular fa-heart"></i><i class="fa-solid fa-share-nodes" style="margin-left: 15px;"></i></div>
+    <div class="header-icons">
+      <i class="fa-regular fa-heart fav-icon" id="favIcon" onclick="toggleFavorite()"></i>
+      <i class="fa-solid fa-share-nodes" onclick="shareProduct()"></i>
+    </div>
   </header>
 
   <div class="product-container">
@@ -54,6 +64,10 @@
         <div id="pPrice" class="product-price"></div>
         <div class="product-location"><i class="fa-solid fa-location-dot"></i> Luanda, Angola</div>
         
+        <div class="vacation-warning" id="vacationWarning">
+          <i class="fa-solid fa-umbrella-beach"></i> Este vendedor está de férias. Não é possível comprar no momento.
+        </div>
+
         <div class="seller-actions" id="sellerActions" style="display: none;">
           <button class="btn-edit" onclick="editProduct()"><i class="fa-solid fa-pen"></i> Editar</button>
           <button class="btn-delete" onclick="openConfirmDelete()"><i class="fa-solid fa-trash"></i> Apagar</button>
@@ -91,25 +105,83 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <script src="js/calls.js"></script>
-  <!-- i18n.js REMOVIDO -->
   <script>
     let productData = null; let currentUser = null;
+    let isFavorited = false;
+
     function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    async function shareProduct() {
+      if (!productData) return;
+      const url = window.location.href;
+      const text = `Vê este produto no FLY: ${productData.name} por ${formatKz(productData.price)}. ${url}`;
+      
+      if (navigator.share) {
+        try { await navigator.share({ title: 'FLY', text: text, url: url }); return; } catch (err) {}
+      }
+      try { await navigator.clipboard.writeText(text); showToast('Link do produto copiado!', 'success'); } catch (err) { showToast('Erro ao copiar link.', 'error'); }
+    }
+
+    async function toggleFavorite() {
+      if (!currentUser || !productData) return;
+      const icon = document.getElementById('favIcon');
+      
+      if (isFavorited) {
+        await supabaseClient.from('favorites').delete().eq('product_id', productData.id).eq('user_id', currentUser);
+        isFavorited = false;
+        icon.classList.remove('fa-solid', 'active');
+        icon.classList.add('fa-regular');
+        showToast('Removido dos favoritos', 'success');
+      } else {
+        await supabaseClient.from('favorites').insert([{ product_id: productData.id, user_id: currentUser }]);
+        isFavorited = true;
+        icon.classList.remove('fa-regular');
+        icon.classList.add('fa-solid', 'active');
+        showToast('Adicionado aos favoritos!', 'success');
+      }
+    }
 
     async function loadProductDetails() {
       const urlParams = new URLSearchParams(window.location.search); const productId = urlParams.get('id');
       if (!productId) { alert('Produto não encontrado!'); window.location.href = 'mercado.html'; return; }
 
       const { data: { session } } = await supabaseClient.auth.getSession(); if (session) currentUser = session.user.id;
+      
       const { data: product, error } = await supabaseClient.from('products').select('*').eq('id', productId).single();
       if (error || !product) { document.getElementById('loading').innerText = 'Erro ao carregar.'; return; }
       
       productData = product;
       let sellerName = "Vendedor FLY"; let sellerAvatar = 'default-avatar.png';
+      let isSellerOnVacation = false;
       
       if (product.seller_id) {
-        const { data: seller } = await supabaseClient.from('profiles').select('username, avatar_url').eq('id', product.seller_id).single();
-        if (seller) { sellerName = seller.username; if(seller.avatar_url) sellerAvatar = seller.avatar_url; }
+        const { data: seller } = await supabaseClient.from('profiles').select('username, avatar_url, vacation_mode').eq('id', product.seller_id).single();
+        if (seller) { 
+          sellerName = seller.username; 
+          if(seller.avatar_url) sellerAvatar = seller.avatar_url; 
+          if (seller.vacation_mode) isSellerOnVacation = true;
+        }
+      }
+
+      // Verificar se está nos favoritos
+      if (currentUser) {
+        const { data: fav } = await supabaseClient.from('favorites').select('id').eq('product_id', productId).eq('user_id', currentUser).maybeSingle();
+        if (fav) {
+          isFavorited = true;
+          const icon = document.getElementById('favIcon');
+          icon.classList.remove('fa-regular');
+          icon.classList.add('fa-solid', 'active');
+        }
       }
 
       document.getElementById('loading').style.display = 'none';
@@ -123,13 +195,25 @@
       document.getElementById('pSellerName').innerText = sellerName;
       document.getElementById('pSellerAvatar').src = sellerAvatar;
 
+      const btnBuy = document.getElementById('btnBuy');
+
       if (currentUser === product.seller_id) {
         document.getElementById('sellerActions').style.display = 'flex';
-        const btnBuy = document.getElementById('btnBuy'); 
         btnBuy.innerText = 'Este produto é teu'; 
         btnBuy.disabled = true; 
       } else {
         document.getElementById('btnChat').onclick = () => { window.location.href = `conversa.html?seller_id=${product.seller_id}`; };
+        
+        // Verificação de Stock e Modo de Férias
+        if (isSellerOnVacation) {
+          document.getElementById('vacationWarning').style.display = 'block';
+          btnBuy.innerHTML = '<i class="fa-solid fa-umbrella-beach"></i> Vendedor de Férias';
+          btnBuy.disabled = true;
+        } else if (product.stock !== null && product.stock <= 0) {
+          btnBuy.innerHTML = '<i class="fa-solid fa-ban"></i> Produto Esgotado';
+          btnBuy.disabled = true;
+          btnBuy.style.background = 'var(--text-muted)';
+        }
       }
     }
 
@@ -140,8 +224,8 @@
     async function executeDelete() {
       closeConfirmDelete();
       const { error } = await supabaseClient.from('products').delete().eq('id', productData.id);
-      if (error) { alert('Erro ao apagar: ' + error.message); } 
-      else { alert('Anúncio apagado com sucesso!'); window.location.href = 'mercado.html'; }
+      if (error) { showToast('Erro ao apagar: ' + error.message, 'error'); } 
+      else { showToast('Anúncio apagado com sucesso!', 'success'); setTimeout(() => window.location.href = 'mercado.html', 1500); }
     }
 
     async function buyProduct() {
@@ -149,13 +233,24 @@
       const btn = document.getElementById('btnBuy'); 
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A processar...'; btn.disabled = true;
 
+      // 1. Criar a encomenda
       const { data: newOrder, error } = await supabaseClient.from('orders').insert([{ 
         buyer_id: currentUser, seller_id: productData.seller_id, product_id: productData.id, total_price: productData.price, status: 'pendente' 
       }]).select().single();
 
-      if (error) { alert('Erro ao criar pedido: ' + error.message); btn.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> Comprar'; btn.disabled = false; return; }
+      if (error) { 
+        showToast('Erro ao criar pedido: ' + error.message, 'error'); 
+        btn.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> Comprar'; btn.disabled = false; 
+        return; 
+      }
+
+      // 2. Descontar o stock
+      if (productData.stock !== null) {
+        await supabaseClient.from('products').update({ stock: productData.stock - 1 }).eq('id', productData.id);
+      }
       
       await supabaseClient.from('notifications').insert([{ user_id: productData.seller_id, sender_id: currentUser, type: 'order', post_id: null }]);
+      
       window.location.href = `checkout.html?order_id=${newOrder.id}`;
     }
     

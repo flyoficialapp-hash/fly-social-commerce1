@@ -22,12 +22,14 @@
     .img-upload-box { width: 100%; height: 120px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 12px; display: flex; justify-content: center; align-items: center; flex-direction: column; color: var(--text-muted); cursor: pointer; position: relative; overflow: hidden; background: rgba(0,0,0,0.5); }
     .img-upload-box input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
     .img-preview { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 5; }
+    
     .settings-row { display: flex; gap: 15px; margin-bottom: 15px; }
     .setting-group { flex: 1; }
     .setting-group label { display: block; color: var(--neon); font-size: 0.85rem; margin-bottom: 5px; font-weight: bold; }
     .setting-group select { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: white; padding: 12px; border-radius: 10px; outline: none; font-size: 0.9rem; appearance: none; }
-    .toggle-row { display: flex; justify-content: space-between; align-items: center; background: var(--glass-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 25px; }
-    .toggle-row span { color: white; font-weight: bold; font-size: 0.95rem; }
+    
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; background: var(--glass-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 15px; }
+    .toggle-row span { color: white; font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
     .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
@@ -53,7 +55,7 @@
       <div class="vs-divider">VS</div>
       
       <div class="option-box">
-        <label>Opção A</label>
+        <label id="labelA">Opção A</label>
         <div class="img-upload-box" id="boxA" onclick="document.getElementById('imgA').click()">
           <input type="file" id="imgA" accept="image/*" onchange="previewImage(event, 'A')">
           <img id="previewA" class="img-preview" src="">
@@ -64,7 +66,7 @@
       </div>
 
       <div class="option-box">
-        <label>Opção B</label>
+        <label id="labelB">Opção B</label>
         <div class="img-upload-box" id="boxB" onclick="document.getElementById('imgB').click()">
           <input type="file" id="imgB" accept="image/*" onchange="previewImage(event, 'B')">
           <img id="previewB" class="img-preview" src="">
@@ -78,26 +80,36 @@
     <div class="settings-row">
       <div class="setting-group">
         <label><i class="fa-solid fa-users"></i> Público</label>
-        <select id="audience">
+        <select id="audience" onchange="togglePrivateInput(this.value)">
           <option value="public">Todos (Público)</option>
           <option value="friends">Apenas Amigos</option>
+          <option value="private">Privado (Convidados)</option>
         </select>
       </div>
       <div class="setting-group">
         <label><i class="fa-solid fa-clock"></i> Duração</label>
         <select id="duration">
           <option value="1">1 Minuto (Relâmpago)</option>
+          <option value="5">5 Minutos</option>
           <option value="10">10 Minutos</option>
+          <option value="30">30 Minutos</option>
           <option value="60">1 Hora</option>
           <option value="1440" selected>24 Horas</option>
+          <option value="4320">3 Dias</option>
           <option value="10080">7 Dias</option>
         </select>
       </div>
     </div>
 
+    <!-- INPUT PARA CONVIDADOS (Só aparece se for Privado) -->
+    <div class="input-group" id="inviteGroup" style="display: none;">
+      <label style="color:var(--neon); font-size:0.85rem; font-weight:bold; margin-bottom:5px; display:block;"><i class="fa-solid fa-user-plus"></i> Convidar Utilizadores</label>
+      <input type="text" id="invitedUsersInput" class="input-glass" placeholder="Usernames separados por vírgula (ex: @ana, @carlos)">
+    </div>
+
     <div class="settings-row">
       <div class="setting-group">
-        <label><i class="fa-solid fa-bolt"></i> Modo</label>
+        <label><i class="fa-solid fa-bolt"></i> Modo de Votação</label>
         <select id="mode">
           <option value="normal">Normal</option>
           <option value="blind">Às Cegas (Ocultar até o fim)</option>
@@ -106,7 +118,31 @@
     </div>
 
     <div class="toggle-row">
-      <span><i class="fa-regular fa-comment-dots"></i> Permitir Comentários</span>
+      <span><i class="fa-solid fa-users-rectangle" style="color:#a855f7;"></i> Modo em Equipa</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="isTeamMode" onchange="toggleTeamMode(this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <span><i class="fa-solid fa-ranking-star" style="color:#ffd700;"></i> Melhor de Três</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="bestOfThree">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <span><i class="fa-solid fa-pen-nib" style="color:#00ccff;"></i> Exigir Justificativa no Voto</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="allowJustification">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <span><i class="fa-regular fa-comment-dots" style="color:var(--text-muted);"></i> Permitir Comentários</span>
       <label class="toggle-switch">
         <input type="checkbox" id="allowComments" checked>
         <span class="slider"></span>
@@ -134,6 +170,17 @@
       void toast.offsetWidth;
       toast.classList.add('show');
       setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    function togglePrivateInput(val) {
+      document.getElementById('inviteGroup').style.display = val === 'private' ? 'block' : 'none';
+    }
+
+    function toggleTeamMode(isTeam) {
+      document.getElementById('labelA').innerText = isTeam ? 'Equipa A' : 'Opção A';
+      document.getElementById('labelB').innerText = isTeam ? 'Equipa B' : 'Opção B';
+      document.getElementById('textA').placeholder = isTeam ? 'Nome da Equipa A' : 'Texto Opção A';
+      document.getElementById('textB').placeholder = isTeam ? 'Nome da Equipa B' : 'Texto Opção B';
     }
 
     async function init() {
@@ -166,10 +213,25 @@
       const audience = document.getElementById('audience').value;
       const durationMinutes = parseInt(document.getElementById('duration').value);
       const mode = document.getElementById('mode').value;
+      
+      const isTeamMode = document.getElementById('isTeamMode').checked;
+      const bestOfThree = document.getElementById('bestOfThree').checked;
+      const allowJustification = document.getElementById('allowJustification').checked;
       const allowComments = document.getElementById('allowComments').checked;
 
       if (!question) { showToast('Escreve a pergunta do duelo!', 'error'); return; }
       if (!fileA || !fileB) { showToast('Adiciona uma imagem para cada opção!', 'error'); return; }
+
+      // Processar Convidados se for privado
+      let invitedIds = [];
+      if (audience === 'private') {
+        const rawText = document.getElementById('invitedUsersInput').value;
+        const usernames = rawText.split(',').map(u => u.trim().replace('@', '')).filter(u => u);
+        if (usernames.length > 0) {
+          const { data: profiles } = await supabaseClient.from('profiles').select('id').in('username', usernames);
+          if (profiles) invitedIds = profiles.map(p => p.id);
+        }
+      }
 
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A publicar...';
@@ -188,7 +250,7 @@
         const endsAt = new Date();
         endsAt.setMinutes(endsAt.getMinutes() + durationMinutes);
 
-        const { error } = await supabaseClient.from('duels').insert([{
+        const { data: newDuel, error } = await supabaseClient.from('duels').insert([{
           creator_id: currentUser,
           question: question,
           option_a_text: textA,
@@ -196,12 +258,42 @@
           option_b_text: textB,
           option_b_image: urlB.publicUrl,
           audience: audience,
+          invited_users: invitedIds, // NOVO
           mode: mode,
           allow_comments: allowComments,
+          is_team_mode: isTeamMode,
+          best_of_three: bestOfThree,
+          allow_justification: allowJustification,
           ends_at: endsAt.toISOString()
-        }]);
+        }]).select().single();
 
         if (error) throw error;
+
+        // --- NOTIFICAÇÕES ---
+        // 1. Notificar Amigos se o duelo for para Amigos
+        if (audience === 'friends') {
+          const { data: friendships } = await supabaseClient.from('friendships').select('requester_id, addressee_id').eq('status', 'aceite').or(`requester_id.eq.${currentUser},addressee_id.eq.${currentUser}`);
+          if (friendships) {
+            const notifs = friendships.map(f => ({
+              user_id: f.requester_id === currentUser ? f.addressee_id : f.requester_id,
+              sender_id: currentUser,
+              type: 'duel_new',
+              post_id: newDuel.id
+            }));
+            await supabaseClient.from('notifications').insert(notifs);
+          }
+        }
+        
+        // 2. Notificar Convidados se for Privado
+        if (audience === 'private' && invitedIds.length > 0) {
+          const notifs = invitedIds.map(id => ({
+            user_id: id,
+            sender_id: currentUser,
+            type: 'duel_new',
+            post_id: newDuel.id
+          }));
+          await supabaseClient.from('notifications').insert(notifs);
+        }
 
         showToast('Duelo criado com sucesso! 🏆', 'success');
         setTimeout(() => { window.location.href = 'duelos.html'; }, 1500);

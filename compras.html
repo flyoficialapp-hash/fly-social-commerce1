@@ -6,27 +6,96 @@
   <title>FLY - Minhas Compras</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); }
     .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; color: white;}
     .header-title img { height: 30px; border-radius: 5px;}
-    .orders-list { padding: 15px; padding-bottom: 90px; display: flex; flex-direction: column; gap: 15px; }
-    .order-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; }
-    .order-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
-    .order-product { display: flex; gap: 10px; margin-bottom: 15px; align-items: center;}
-    .order-product img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; }
-    .order-product-info h4 { font-size: 0.95rem; margin-bottom: 3px; }
-    .order-product-info p { font-size: 0.85rem; color: var(--neon); font-weight: bold; }
-    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
-    .status-pendente { background: rgba(255, 179, 0, 0.2); color: #ffb300; border: 1px solid #ffb300; }
-    .status-preparando { background: rgba(0, 102, 255, 0.2); color: var(--primary); border: 1px solid var(--primary); }
-    .status-enviado { background: rgba(0, 230, 118, 0.2); color: var(--success); border: 1px solid var(--success); }
-    .status-concluido { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); }
+    
+    .search-bar-container { padding: 15px 15px 0 15px; }
+    .search-input-wrapper { display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 30px; padding: 10px 15px; gap: 10px; }
+    .search-input-wrapper i { color: var(--neon); }
+    .search-input-wrapper input { background: transparent; border: none; color: white; outline: none; width: 100%; font-size: 0.95rem; }
+
+    .filter-tabs { display: flex; gap: 10px; padding: 15px; overflow-x: auto; scrollbar-width: none; }
+    .filter-tab { padding: 8px 16px; border-radius: 20px; background: var(--glass-bg); border: 1px solid var(--glass-border); font-size: 0.85rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; font-weight: bold; transition: 0.3s;}
+    .filter-tab.active { background: var(--primary); color: white; border-color: var(--neon); }
+    
+    .orders-list { padding: 0 15px 90px 15px; display: flex; flex-direction: column; gap: 20px; }
+    
+    /* CARD DO PEDIDO COM BORDA DE ESTADO */
+    .order-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; animation: fadeIn 0.3s ease-out;}
+    .order-card::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: #333; }
+    .order-card:hover { border-color: var(--neon); }
+    
+    .status-pendente::before { background: #ffb300; }
+    .status-preparando::before { background: var(--primary); }
+    .status-enviado::before { background: var(--success); }
+    .status-concluido::before { background: rgba(255,255,255,0.3); }
+    .status-cancelado::before { background: var(--danger); }
+
+    .order-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+    .status-badge { padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; }
+    .badge-pendente { background: rgba(255, 179, 0, 0.2); color: #ffb300; }
+    .badge-preparando { background: rgba(0, 102, 255, 0.2); color: var(--primary); }
+    .badge-enviado { background: rgba(0, 230, 118, 0.2); color: var(--success); }
+    .badge-concluido { background: rgba(255, 255, 255, 0.1); color: white; }
+    .badge-cancelado { background: rgba(255, 51, 102, 0.2); color: var(--danger); }
+
+    .order-product { display: flex; gap: 15px; margin-bottom: 15px; align-items: center;}
+    .order-product img { width: 65px; height: 65px; border-radius: 10px; object-fit: cover; border: 1px solid var(--glass-border);}
+    .order-product-info h4 { font-size: 0.95rem; margin-bottom: 3px; color: white;}
+    .order-product-info p { font-size: 0.9rem; color: var(--neon); font-weight: bold; }
+    
+    .order-timeline { display: flex; justify-content: space-between; align-items: center; margin: 20px 0 10px 0; position: relative; padding: 0 10px; }
+    .timeline-track { position: absolute; top: 50%; left: 20px; right: 20px; height: 2px; background: #333; z-index: 1; transform: translateY(-50%); }
+    .timeline-progress { position: absolute; top: 50%; left: 20px; height: 2px; background: var(--success); z-index: 2; transform: translateY(-50%); transition: width 0.5s; }
+    .timeline-step { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .step-circle { width: 24px; height: 24px; border-radius: 50%; background: #333; border: 2px solid var(--bg-color); display: flex; justify-content: center; align-items: center; font-size: 0.6rem; color: transparent; transition: 0.3s; }
+    .step-circle.active { background: var(--success); color: #000; }
+    .step-circle.cancelled { background: var(--danger); color: white; }
+    .timeline-step span { font-size: 0.65rem; color: var(--text-muted); font-weight: bold; }
+    .timeline-step.active span { color: white; }
+    .timeline-step.cancelled span { color: var(--danger); }
+
+    .delivery-estimate { text-align: center; font-size: 0.8rem; color: #ffd700; margin-bottom: 15px; background: rgba(255, 215, 0, 0.1); padding: 5px; border-radius: 8px; }
+    .cancelled-text { text-align: center; font-size: 0.85rem; color: var(--danger); margin-bottom: 15px; background: rgba(255, 51, 102, 0.1); padding: 8px; border-radius: 8px; font-weight: bold;}
+
+    .order-actions { display: flex; flex-direction: column; gap: 10px; }
     .btn-action { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; justify-content: center; align-items: center; gap: 5px; transition: 0.2s; }
-    .btn-chat-buyer { background: transparent; border: 1px solid var(--neon); color: var(--neon); margin-bottom: 10px;}
+    .btn-chat { background: transparent; border: 1px solid var(--neon); color: var(--neon); }
+    .btn-confirm { background: var(--success); color: #000; box-shadow: 0 0 10px rgba(0, 230, 118, 0.3); }
     .btn-review { background: linear-gradient(90deg, #ffb300, #ffd700); color: #000; }
     .btn-reviewed { background: transparent; border: 1px solid var(--success); color: var(--success); cursor: default; }
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
+    .btn-rebuy { background: var(--primary); color: white; }
+    .btn-cancel-order { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+
+    /* MODAL DE RECIBO */
+    .receipt-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
+    .receipt-box { background: var(--bg-color); border: 1px solid var(--neon); border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; box-shadow: 0 0 30px rgba(0, 204, 255, 0.2); max-height: 90vh; overflow-y: auto; }
+    .receipt-header { text-align: center; margin-bottom: 20px; border-bottom: 1px dashed var(--glass-border); padding-bottom: 15px; }
+    .receipt-header h3 { color: white; font-size: 1.2rem; margin-bottom: 5px; }
+    .receipt-header p { color: var(--text-muted); font-size: 0.8rem; }
+    .receipt-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; }
+    .receipt-row span:first-child { color: var(--text-muted); }
+    .receipt-row span:last-child { color: white; font-weight: bold; }
+    .receipt-total { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--glass-border); font-size: 1.1rem; font-weight: bold; color: var(--neon); }
+    
+    .btn-print { background: linear-gradient(90deg, var(--primary), var(--neon)); color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; margin-top: 15px; cursor: pointer; font-weight: bold; display: flex; justify-content: center; gap: 8px; align-items: center; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
+    .btn-help { background: rgba(255, 51, 102, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 100%; padding: 12px; border-radius: 10px; margin-top: 10px; cursor: pointer; font-weight: bold; display: flex; justify-content: center; gap: 8px; align-items: center; }
+
+    /* MODAL DE CONFIRMAÇÃO DE CANCELAMENTO */
+    .confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 2500; display: none; justify-content: center; align-items: center; padding: 20px; }
+    .confirm-box { background: var(--bg-color); border: 1px solid var(--danger); border-radius: 20px; width: 100%; max-width: 350px; padding: 25px; text-align: center; box-shadow: 0 0 30px rgba(255, 51, 102, 0.2); }
+    .confirm-box i { font-size: 3rem; color: var(--danger); margin-bottom: 15px; }
+    .confirm-box h3 { color: white; margin-bottom: 10px; }
+    .confirm-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+    .confirm-actions { display: flex; gap: 10px; }
+    .btn-cancel-confirm { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--glass-border); background: transparent; color: white; font-weight: bold; cursor: pointer; }
+    .btn-confirm-delete { flex: 1; padding: 12px; border-radius: 10px; border: none; background: var(--danger); color: white; font-weight: bold; cursor: pointer; }
+
+    /* MODAL DE AVALIAÇÃO */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 2100; display: none; justify-content: center; align-items: center; padding: 20px; }
     .modal-content { background: var(--bg-color); border: 1px solid #ffd700; border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); text-align: center; }
     .modal-content h3 { color: #ffd700; margin-bottom: 10px; }
     .modal-content p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
@@ -36,11 +105,15 @@
     .btn-cancel { flex: 1; padding: 12px; border-radius: 10px; background: transparent; border: 1px solid var(--glass-border); color: white; font-weight: bold; cursor: pointer; }
     .btn-submit { flex: 2; padding: 12px; border-radius: 10px; background: linear-gradient(90deg, #b8860b, #ffd700); border: none; color: #000; font-weight: bold; cursor: pointer; }
 
-    /* SKELETONS PARA COMPRAS */
-    .skeleton-order-card { height: 200px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); position: relative; overflow: hidden; margin-bottom: 15px; }
-    .skeleton-order-header { height: 20px; margin: 15px; background: #1a2235; border-radius: 5px; }
-    .skeleton-order-body { height: 60px; margin: 15px; background: #1a2235; border-radius: 10px; }
-    .skeleton-order-footer { height: 40px; margin: 15px; background: #1a2235; border-radius: 10px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* SKELETONS */
+    .skeleton-order-card { height: 250px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); position: relative; overflow: hidden; margin-bottom: 15px; }
+    .skeleton-order-card::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent); animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    
+    .empty-state { text-align: center; color: var(--text-muted); padding: 50px 20px; display: flex; flex-direction: column; align-items: center; }
+    .empty-state i { font-size: 3rem; margin-bottom: 15px; color: var(--neon); opacity: 0.4; }
   </style>
 </head>
 <body>
@@ -50,20 +123,65 @@
     <div style="width: 24px;"></div>
   </header>
 
-  <div class="orders-list" id="ordersList">
-    <!-- Skeletons -->
-    <div class="skeleton-order-card">
-      <div class="skeleton-order-header"></div>
-      <div class="skeleton-order-body"></div>
-      <div class="skeleton-order-footer"></div>
-    </div>
-    <div class="skeleton-order-card">
-      <div class="skeleton-order-header"></div>
-      <div class="skeleton-order-body"></div>
-      <div class="skeleton-order-footer"></div>
+  <div class="search-bar-container">
+    <div class="search-input-wrapper">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="searchOrdersInput" placeholder="Pesquisar por produto ou vendedor..." oninput="filterAndRenderOrders()">
     </div>
   </div>
 
+  <div class="filter-tabs">
+    <div class="filter-tab active" id="filter-todos" onclick="setFilter('todos')">Todos</div>
+    <div class="filter-tab" id="filter-pendente" onclick="setFilter('pendente')">Pendentes</div>
+    <div class="filter-tab" id="filter-enviado" onclick="setFilter('enviado')">Enviados</div>
+    <div class="filter-tab" id="filter-concluido" onclick="setFilter('concluido')">Concluídos</div>
+    <div class="filter-tab" id="filter-cancelado" onclick="setFilter('cancelado')">Cancelados</div>
+  </div>
+
+  <div class="orders-list" id="ordersList"></div>
+
+  <!-- MODAL DE RECIBO/DETALHES -->
+  <div class="receipt-modal" id="receiptModal">
+    <div class="receipt-box" id="receiptBox">
+      <div class="receipt-header">
+        <h3><i class="fa-solid fa-file-invoice"></i> Recibo do Pedido</h3>
+        <p id="receiptOrderId">#ID</p>
+      </div>
+      
+      <div class="receipt-row"><span>Data do Pedido:</span> <span id="receiptDate">--/--/----</span></div>
+      <div class="receipt-row"><span>Produto:</span> <span id="receiptProduct">---</span></div>
+      <div class="receipt-row"><span>Vendedor:</span> <span id="receiptSeller">---</span></div>
+      <div class="receipt-row"><span>Método de Pagamento:</span> <span id="receiptMethod">---</span></div>
+      <div class="receipt-row" style="flex-direction: column; align-items: flex-start; gap: 5px; margin-top: 15px;">
+        <span>Morada de Entrega:</span> 
+        <span id="receiptAddress" style="color: #ccc; font-weight: normal; font-size: 0.85rem; text-align: left;">---</span>
+      </div>
+
+      <div class="receipt-total">
+        <span>Total Pago:</span>
+        <span id="receiptTotal">0 Kz</span>
+      </div>
+
+      <button class="btn-print" onclick="downloadReceiptPDF(this)" id="btnDownloadPDF"><i class="fa-solid fa-download"></i> Descarregar Recibo (PDF)</button>
+      <button class="btn-help" onclick="reportOrderIssue()" id="btnReportIssue"><i class="fa-solid fa-circle-exclamation"></i> Tenho um problema com este pedido</button>
+      <button class="btn-action btn-chat" style="margin-top: 10px;" onclick="closeReceiptModal()">Fechar Recibo</button>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIRMAÇÃO DE CANCELAMENTO -->
+  <div class="confirm-modal" id="cancelConfirmModal">
+    <div class="confirm-box">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <h3>Cancelar Pedido?</h3>
+      <p>Tens a certeza que queres cancelar este pedido? O produto voltará automaticamente para o stock do vendedor.</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel-confirm" onclick="closeCancelModal()">Voltar</button>
+        <button class="btn-confirm-delete" onclick="executeCancelOrder()" id="btnConfirmCancel">Sim, Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE AVALIAÇÃO -->
   <div class="modal-overlay" id="reviewModal">
     <div class="modal-content">
       <h3>Avaliar Vendedor</h3>
@@ -75,8 +193,14 @@
         <i class="fa-solid fa-star" onclick="setRating(4)"></i>
         <i class="fa-solid fa-star" onclick="setRating(5)"></i>
       </div>
-      <div class="input-group" style="text-align: left;"><label>Comentário (Opcional)</label><textarea id="reviewComment" class="input-glass" rows="2" placeholder="Escreve um comentário..."></textarea></div>
-      <div class="modal-footer"><button class="btn-cancel" onclick="closeReviewModal()">Cancelar</button><button class="btn-submit" onclick="submitReview()" id="btnSubmitReview">Enviar</button></div>
+      <div class="input-group" style="text-align: left;">
+        <label>Comentário (Opcional)</label>
+        <textarea id="reviewComment" class="input-glass" rows="2" placeholder="Escreve um comentário..." style="background:rgba(0,0,0,0.4); border:1px solid var(--glass-border); color:white; padding:10px; border-radius:10px; width:100%; outline:none;"></textarea>
+      </div>
+      <div class="modal-footer" style="margin-top:20px;">
+        <button class="btn-cancel" onclick="closeReviewModal()">Cancelar</button>
+        <button class="btn-submit" onclick="submitReview()" id="btnSubmitReview">Enviar</button>
+      </div>
     </div>
   </div>
 
@@ -86,14 +210,23 @@
     <a href="duelos.html" class="nav-item" style="color: #ffd700; transform: scale(1.1);"><i class="fa-solid fa-trophy"></i><span style="font-weight: bold;">Duelo</span></a>
     <a href="chat.html" class="nav-item"><i class="fa-solid fa-comment-dots"></i><span>Chat</span><span class="nav-badge" id="chat-badge">0</span></a>
     <a href="gerenciar_vendas.html" class="nav-item"><i class="fa-solid fa-briefcase"></i><span>Negócios</span></a>
-    <a href="perfil.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
+    <a href="perfil.html" class="nav-item active"><i class="fa-solid fa-user"></i><span>Perfil</span></a>
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <script src="js/calls.js"></script>
   <script>
-    let currentUser = null; let currentOrderForReview = null; let selectedRating = 0;
+    let currentUser = null; 
+    let currentOrderForReview = null; 
+    let selectedRating = 0;
+    let allOrders = [];
+    let currentFilter = 'todos';
+    let userAddress = 'Não definida';
+    let currentReceiptOrderId = null;
+    let currentCancelOrderId = null;
+    let currentCancelProductId = null;
+
     function formatKz(value) { return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(value).replace('AOA', 'Kz'); }
 
     function showToast(message, type = 'success') {
@@ -117,61 +250,266 @@
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user.id;
+      
       updateBadges(); setInterval(updateBadges, 10000);
 
-      const { data: orders, error } = await supabaseClient.from('orders').select(`*, products ( name, image_url ), profiles:seller_id ( username, avatar_url )`).eq('buyer_id', currentUser).order('created_at', { ascending: false });
+      const { data: profile } = await supabaseClient.from('profiles').select('delivery_address').eq('id', currentUser).single();
+      if (profile && profile.delivery_address) userAddress = profile.delivery_address;
+
       const list = document.getElementById('ordersList');
+      list.innerHTML = `<div class="skeleton-order-card"></div><div class="skeleton-order-card"></div>`;
+
+      const { data: orders, error } = await supabaseClient
+        .from('orders')
+        .select(`*, products ( name, image_url ), profiles:seller_id ( username, avatar_url )`)
+        .eq('buyer_id', currentUser)
+        .order('created_at', { ascending: false });
 
       if (error) { 
-        list.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar compras.</p>`; 
-        showToast('Erro ao carregar compras.', 'error');
+        list.innerHTML = `<p style="color:var(--danger); text-align:center;">Erro ao carregar compras.</p>`; 
         return; 
       }
       
-      if (!orders || orders.length === 0) {
-        list.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 30px;"><i class="fa-solid fa-bag-shopping" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i><p>Ainda não fizeste nenhuma compra.</p><button onclick="window.location.href='mercado.html'" style="margin-top:15px; padding:10px 20px; border-radius:20px; background:var(--primary); color:white; border:none;">Ir ao Mercado</button></div>`;
+      allOrders = orders || [];
+      filterAndRenderOrders();
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(`filter-${filter}`).classList.add('active');
+      filterAndRenderOrders();
+    }
+
+    function filterAndRenderOrders() {
+      const searchTerm = document.getElementById('searchOrdersInput').value.toLowerCase();
+      
+      let filtered = allOrders;
+      if (currentFilter !== 'todos') {
+        filtered = filtered.filter(o => o.status === currentFilter);
+      }
+      if (searchTerm) {
+        filtered = filtered.filter(o => {
+          const pName = o.products ? o.products.name.toLowerCase() : '';
+          const sName = o.profiles ? o.profiles.username.toLowerCase() : '';
+          return pName.includes(searchTerm) || sName.includes(searchTerm);
+        });
+      }
+
+      renderOrders(filtered);
+    }
+
+    async function renderOrders(filtered) {
+      const list = document.getElementById('ordersList');
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-box-open"></i><h3>Nenhum pedido encontrado</h3><p>Não tens compras que correspondam à pesquisa.</p></div>`;
         return;
       }
 
       list.innerHTML = '';
-      for (const order of orders) {
+
+      for (const order of filtered) {
         const productName = order.products ? order.products.name : 'Produto apagado';
         const productImg = order.products && order.products.image_url ? order.products.image_url : 'https://via.placeholder.com/60';
         const sellerName = order.profiles ? order.profiles.username : 'Vendedor';
         const date = new Date(order.created_at).toLocaleDateString('pt-PT');
 
-        let statusHtml = `<span class="status-badge status-pendente">Pendente</span>`;
-        if (order.status === 'preparando') statusHtml = `<span class="status-badge status-preparando">Em Preparação</span>`;
-        else if (order.status === 'enviado') statusHtml = `<span class="status-badge status-enviado">Enviado</span>`;
-        else if (order.status === 'concluido') statusHtml = `<span class="status-badge status-concluido">Concluído</span>`;
+        const deliveryDate = new Date(order.created_at);
+        deliveryDate.setDate(deliveryDate.getDate() + 5);
+        const deliveryStr = deliveryDate.toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' });
+
+        let step1 = 'active', step2 = '', step3 = '', step4 = '', progressWidth = '0%';
+        let statusCancelled = false;
+        let statusClass = `status-${order.status}`;
+        let statusBadge = '';
+
+        if (order.status === 'pendente') statusBadge = `<span class="status-badge badge-pendente">Pendente</span>`;
+        if (order.status === 'preparando') { step2 = 'active'; progressWidth = '33%'; statusBadge = `<span class="status-badge badge-preparando">A Preparar</span>`; }
+        if (order.status === 'enviado') { step2 = 'active'; step3 = 'active'; progressWidth = '66%'; statusBadge = `<span class="status-badge badge-enviado">Enviado</span>`; }
+        if (order.status === 'concluido') { step2 = 'active'; step3 = 'active'; step4 = 'active'; progressWidth = '100%'; statusBadge = `<span class="status-badge badge-concluido">Concluído</span>`; }
+        
+        if (order.status === 'cancelado') { 
+          statusCancelled = true;
+          step1 = 'cancelled'; progressWidth = '0%'; 
+          statusBadge = `<span class="status-badge badge-cancelado">Cancelado</span>`;
+        }
 
         const { data: existingReview } = await supabaseClient.from('reviews').select('id').eq('order_id', order.id).maybeSingle();
         const hasReviewed = !!existingReview;
 
-        let actionButtons = `<button class="btn-action btn-chat-buyer" onclick="window.location.href='conversa.html?seller_id=${order.seller_id}'"><i class="fa-solid fa-comment"></i> Falar com Vendedor</button>`;
+        let actionButtons = `
+          <button class="btn-action btn-chat" onclick="event.stopPropagation(); window.location.href='conversa.html?seller_id=${order.seller_id}'">
+            <i class="fa-solid fa-comment"></i> Falar com Vendedor
+          </button>
+        `;
 
-        if (order.status === 'concluido') {
-          if (hasReviewed) { actionButtons += `<button class="btn-action btn-reviewed"><i class="fa-solid fa-check"></i> Avaliado</button>`; } 
-          else { actionButtons += `<button class="btn-action btn-review" onclick="openReviewModal('${order.id}', '${order.seller_id}')"><i class="fa-solid fa-star"></i> Avaliar Vendedor</button>`; }
+        if (order.status === 'pendente') {
+          actionButtons += `<button class="btn-action btn-cancel-order" onclick="event.stopPropagation(); openCancelModal('${order.id}', '${order.product_id}')"><i class="fa-solid fa-xmark"></i> Cancelar Pedido</button>`;
         }
 
+        if (order.status === 'enviado') {
+          actionButtons += `<button class="btn-action btn-confirm" onclick="event.stopPropagation(); confirmReceipt('${order.id}', this)"><i class="fa-solid fa-box-check"></i> Confirmar Recebimento</button>`;
+        }
+
+        if (order.status === 'concluido') {
+          actionButtons += `<button class="btn-action btn-rebuy" onclick="event.stopPropagation(); window.location.href='produto.html?id=${order.product_id}'"><i class="fa-solid fa-rotate-right"></i> Comprar Novamente</button>`;
+          if (hasReviewed) { 
+            actionButtons += `<button class="btn-action btn-reviewed"><i class="fa-solid fa-check"></i> Avaliado</button>`; 
+          } else { 
+            actionButtons += `<button class="btn-action btn-review" onclick="event.stopPropagation(); openReviewModal('${order.id}', '${order.seller_id}')"><i class="fa-solid fa-star"></i> Avaliar Vendedor</button>`; 
+          }
+        }
+
+        const deliveryHtml = (order.status !== 'concluido' && order.status !== 'cancelado') ? `<div class="delivery-estimate"><i class="fa-solid fa-truck-fast"></i> Previsão de entrega: até ${deliveryStr}</div>` : '';
+        const cancelledHtml = statusCancelled ? `<div class="cancelled-text"><i class="fa-solid fa-ban"></i> Este pedido foi cancelado.</div>` : '';
+
         list.innerHTML += `
-          <div class="order-card">
-            <div class="order-header"><span>Pedido #${order.id.split('-')[0].toUpperCase()}</span><span>${date}</span></div>
-            <div class="order-product">
+          <div class="order-card ${statusClass}" onclick="openReceiptModal('${order.id}')">
+            <div class="order-header"><span>Pedido #${order.id.split('-')[0].toUpperCase()}</span><span>${date}</span>${statusBadge}</div>
+            
+            <div class="order-product" style="${statusCancelled ? 'opacity: 0.5;' : ''}">
               <img src="${productImg}">
-              <div class="order-product-info"><h4>${productName}</h4><p>${formatKz(order.total_price)}</p><div style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">Vendedor: <strong>${sellerName}</strong></div></div>
-              <div style="margin-left: auto; align-self: flex-start;">${statusHtml}</div>
+              <div class="order-product-info">
+                <h4>${productName}</h4>
+                <p>${formatKz(order.total_price)}</p>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">Vendedor: <strong>${sellerName}</strong></div>
+              </div>
             </div>
-            <div style="display:flex; flex-direction:column; gap:10px;">${actionButtons}</div>
+
+            <div class="order-timeline">
+              <div class="timeline-track"></div>
+              <div class="timeline-progress" style="width: ${progressWidth};"></div>
+              
+              <div class="timeline-step ${step1}"><div class="step-circle ${step1}"><i class="fa-solid ${step1==='cancelled'?'fa-xmark':'fa-check'}"></i></div><span>${step1==='cancelled'?'Cancelado':'Pago'}</span></div>
+              <div class="timeline-step ${step2}"><div class="step-circle ${step2}"><i class="fa-solid fa-check"></i></div><span>A preparar</span></div>
+              <div class="timeline-step ${step3}"><div class="step-circle ${step3}"><i class="fa-solid fa-check"></i></div><span>Enviado</span></div>
+              <div class="timeline-step ${step4}"><div class="step-circle ${step4}"><i class="fa-solid fa-check"></i></div><span>Concluído</span></div>
+            </div>
+
+            ${deliveryHtml}
+            ${cancelledHtml}
+
+            <div class="order-actions" style="${statusCancelled ? 'display: none;' : ''}">
+              ${actionButtons}
+            </div>
           </div>`;
       }
     }
 
+    // --- NOVA LÓGICA DE CANCELAMENTO COM MODAL ELEGANTE ---
+    function openCancelModal(orderId, productId) {
+      currentCancelOrderId = orderId;
+      currentCancelProductId = productId;
+      document.getElementById('cancelConfirmModal').style.display = 'flex';
+    }
+
+    function closeCancelModal() {
+      document.getElementById('cancelConfirmModal').style.display = 'none';
+      currentCancelOrderId = null;
+      currentCancelProductId = null;
+    }
+
+    async function executeCancelOrder() {
+      if (!currentCancelOrderId) return;
+      
+      const btn = document.getElementById('btnConfirmCancel');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A cancelar...';
+      btn.disabled = true;
+
+      // 1. Atualizar o estado do pedido
+      const { error } = await supabaseClient.from('orders').update({ status: 'cancelado' }).eq('id', currentCancelOrderId);
+      
+      if (error) { 
+        showToast('Erro ao cancelar o pedido.', 'error'); 
+        btn.innerHTML = 'Sim, Cancelar'; btn.disabled = false;
+        return; 
+      }
+
+      // 2. Repor o stock
+      if (currentCancelProductId) {
+        const { data: prod } = await supabaseClient.from('products').select('stock').eq('id', currentCancelProductId).single();
+        if (prod && prod.stock !== null) {
+          await supabaseClient.from('products').update({ stock: prod.stock + 1 }).eq('id', currentCancelProductId);
+        }
+      }
+
+      closeCancelModal();
+      showToast('Pedido cancelado e stock reposto.', 'success');
+      loadMyPurchases();
+    }
+
+    // --- LÓGICA DO RECIBO E DOWNLOAD PDF ---
+    async function openReceiptModal(orderId) {
+      const order = allOrders.find(o => o.id === orderId);
+      if (!order) return;
+      currentReceiptOrderId = orderId;
+
+      const { data: tx } = await supabaseClient.from('transactions').select('method').eq('order_id', orderId).maybeSingle();
+      let methodStr = 'Pago na Entrega';
+      if (tx) {
+        if (tx.method === 'multicaixa') methodStr = 'Multicaixa Express';
+        else if (tx.method === 'transferencia') methodStr = 'Transferência Bancária';
+        else if (tx.method === 'cartao') methodStr = 'Cartão de Crédito/Débito';
+      }
+
+      document.getElementById('receiptOrderId').innerText = `#${order.id.split('-')[0].toUpperCase()}`;
+      document.getElementById('receiptDate').innerText = new Date(order.created_at).toLocaleString('pt-PT');
+      document.getElementById('receiptProduct').innerText = order.products ? order.products.name : 'Produto apagado';
+      document.getElementById('receiptSeller').innerText = order.profiles ? order.profiles.username : 'Vendedor';
+      document.getElementById('receiptMethod').innerText = methodStr;
+      document.getElementById('receiptAddress').innerText = userAddress;
+      document.getElementById('receiptTotal').innerText = formatKz(order.total_price);
+
+      document.getElementById('receiptModal').style.display = 'flex';
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receiptModal').style.display = 'none';
+      currentReceiptOrderId = null;
+    }
+
+    function downloadReceiptPDF(btn) {
+      const element = document.getElementById('receiptBox');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A gerar PDF...';
+      btn.disabled = true;
+
+      const clone = element.cloneNode(true);
+      clone.querySelectorAll('button').forEach(b => b.remove());
+      clone.style.background = '#ffffff'; clone.style.color = '#000000'; clone.style.border = '1px solid #cccccc'; clone.style.boxShadow = 'none'; clone.style.padding = '20px'; clone.style.width = '100%'; clone.style.maxWidth = '100%';
+      clone.querySelectorAll('h3, p, span').forEach(el => el.style.color = '#000000');
+      clone.querySelectorAll('.receipt-header, .receipt-total').forEach(el => el.style.borderColor = '#cccccc');
+      clone.querySelector('.receipt-total').style.color = '#0066ff';
+
+      const opt = { margin: 10, filename: `Recibo_FLY_${currentReceiptOrderId.split('-')[0].toUpperCase()}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' } };
+
+      html2pdf().set(opt).from(clone).save().then(() => { btn.innerHTML = originalHTML; btn.disabled = false; showToast('PDF descarregado com sucesso!', 'success'); }).catch(err => { console.error(err); btn.innerHTML = originalHTML; btn.disabled = false; showToast('Erro ao gerar PDF.', 'error'); });
+    }
+
+    async function reportOrderIssue() {
+      if (!currentReceiptOrderId) return;
+      const btn = document.getElementById('btnReportIssue');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A abrir ticket...'; btn.disabled = true;
+      const order = allOrders.find(o => o.id === currentReceiptOrderId);
+      const productName = order.products ? order.products.name : 'Produto';
+      const { error } = await supabaseClient.from('support_tickets').insert([{ user_id: currentUser, subject: `Problema com o Pedido #${currentReceiptOrderId.split('-')[0].toUpperCase()}`, message: `O utilizador reportou um problema com o pedido do produto "${productName}".` }]);
+      btn.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Tenho um problema com este pedido'; btn.disabled = false;
+      if (error) { showToast('Erro ao abrir ticket.', 'error'); } else { showToast('Ticket de suporte aberto! A equipa falará contigo em breve.', 'success'); closeReceiptModal(); }
+    }
+
+    async function confirmReceipt(orderId, btn) {
+      if (!confirm('Confirmas que já recebeste o produto? O vendedor será notificado.')) return;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A confirmar...'; btn.disabled = true;
+      const { error } = await supabaseClient.from('orders').update({ status: 'concluido' }).eq('id', orderId);
+      if (error) { showToast('Erro ao confirmar.', 'error'); btn.innerHTML = '<i class="fa-solid fa-box-check"></i> Confirmar Recebimento'; btn.disabled = false; } else { showToast('Recebimento confirmado! Obrigado.', 'success'); loadMyPurchases(); }
+    }
+
+    // --- LÓGICA DE AVALIAÇÃO ---
     function openReviewModal(orderId, sellerId) { currentOrderForReview = { orderId, sellerId }; selectedRating = 0; updateStarsUI(0); document.getElementById('reviewComment').value = ''; document.getElementById('reviewModal').style.display = 'flex'; }
     function closeReviewModal() { document.getElementById('reviewModal').style.display = 'none'; }
     function setRating(rating) { selectedRating = rating; updateStarsUI(rating); }
-    function updateStarsUI(rating) { const stars = document.querySelectorAll('#starsContainer i'); stars.forEach((star, index) => { if (index < rating) { star.classList.add('active'); } else { star.classList.remove('active'); } }); }
+    function updateStarsUI(rating) { const stars = document.querySelectorAll('#starsContainer i'); stars.forEach((star, index) => { if (index < rating) star.classList.add('active'); else star.classList.remove('active'); }); }
 
     async function submitReview() {
       if (selectedRating === 0) { showToast('Escolhe pelo menos 1 estrela.', 'error'); return; }
@@ -181,6 +519,7 @@
       if (error) { showToast('Erro ao enviar avaliação: ' + error.message, 'error'); btn.innerHTML = 'Enviar'; btn.disabled = false; return; }
       closeReviewModal(); showToast('Obrigado pela tua avaliação! ⭐', 'success'); loadMyPurchases(); 
     }
+
     loadMyPurchases();
   </script>
 </body>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FLY - Administração</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background: var(--bg-color); background-image: var(--bg-gradient); min-height: 100vh; }
+    .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--danger); }
+    .header i { color: white; font-size: 1.5rem; cursor: pointer; }
+    .header-title { color: var(--danger); font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+    
+    .tabs { display: flex; gap: 10px; padding: 15px; overflow-x: auto; scrollbar-width: none; }
+    .tab { padding: 10px 20px; border-radius: 25px; background: var(--glass-bg); border: 1px solid var(--glass-border); font-size: 0.9rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; font-weight: bold; transition: 0.3s; }
+    .tab.active { background: var(--danger); color: white; border-color: var(--danger); box-shadow: 0 0 15px rgba(255, 51, 102, 0.4); }
+
+    .content-area { padding: 0 15px 90px 15px; display: flex; flex-direction: column; gap: 15px; }
+    .admin-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+    .admin-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+    .admin-card-title { font-weight: bold; color: white; font-size: 0.95rem; }
+    .admin-card-type { font-size: 0.75rem; color: var(--neon); background: rgba(0, 204, 255, 0.1); padding: 3px 8px; border-radius: 5px; font-weight: bold; }
+    
+    .report-reason { background: rgba(255, 51, 102, 0.1); border-left: 3px solid var(--danger); padding: 10px; border-radius: 5px; font-size: 0.85rem; color: #ccc; font-style: italic; }
+    
+    .admin-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px; }
+    .btn-action { flex: 1; padding: 8px; border-radius: 8px; border: none; font-size: 0.8rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; transition: 0.2s; min-width: 100px; }
+    .btn-ignore { background: rgba(255,255,255,0.1); color: white; }
+    .btn-delete { background: var(--danger); color: white; }
+    .btn-suspend { background: #ffb300; color: #000; }
+    .btn-end { background: var(--primary); color: white; }
+    .btn-promote { background: #a855f7; color: white; }
+    .btn-demote { background: rgba(255,255,255,0.1); color: white; }
+    .btn-reactivate { background: var(--success); color: #000; }
+    .btn-disabled { background: rgba(255,255,255,0.05); color: var(--text-muted); cursor: not-allowed; border: 1px dashed var(--text-muted); }
+
+    .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+    .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+    
+    /* CARD DE UTILIZADOR */
+    .user-admin-card { display: flex; align-items: center; justify-content: space-between; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; margin-bottom: 10px; }
+    .user-admin-info { display: flex; align-items: center; gap: 15px; }
+    .user-admin-info img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--glass-border); }
+    .user-admin-name { color: white; font-weight: bold; font-size: 0.95rem; }
+    .user-admin-badges { display: flex; gap: 5px; margin-top: 4px; }
+    .badge-role { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .role-admin { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+    .role-user { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+    .role-suspended { background: rgba(255, 51, 102, 0.2); color: var(--danger); }
+    
+    /* SKELETONS */
+    .skeleton-admin-card { height: 150px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); position: relative; overflow: hidden; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <i class="fa-solid fa-arrow-left" onclick="window.location.href='home.html'"></i>
+    <div class="header-title"><i class="fa-solid fa-shield-halved"></i> Administração</div>
+    <div style="width: 24px;"></div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('denuncias', this)">Denúncias</div>
+    <div class="tab" onclick="switchTab('duelos', this)">Duelos</div>
+    <div class="tab" onclick="switchTab('comentarios', this)">Comentários</div>
+    <div class="tab" onclick="switchTab('utilizadores', this)">Utilizadores</div>
+    <div class="tab" onclick="switchTab('logs', this)">Histórico</div>
+  </div>
+
+  <div class="content-area" id="contentArea">
+    <div class="skeleton-admin-card"></div>
+    <div class="skeleton-admin-card"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    let currentUser = null;
+    let currentTab = 'denuncias';
+    let totalAdminsCount = 0; // NOVO: Guardar a contagem de admins
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fly-toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+      document.body.appendChild(toast);
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user.id;
+
+      const { data: profile } = await supabaseClient.from('profiles').select('is_admin').eq('id', currentUser).single();
+      if (!profile || !profile.is_admin) {
+        alert('Acesso negado. Apenas administradores podem aceder a esta página.');
+        window.location.href = 'home.html';
+        return;
+      }
+
+      await countAdmins(); // NOVO: Contar os admins ao iniciar
+      loadContent();
+    }
+
+    async function countAdmins() {
+      const { count } = await supabaseClient
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_admin', true);
+      totalAdminsCount = count || 0;
+    }
+
+    function switchTab(tab, el) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      loadContent();
+    }
+
+    async function loadContent() {
+      const area = document.getElementById('contentArea');
+      area.innerHTML = `<div class="skeleton-admin-card"></div><div class="skeleton-admin-card"></div>`;
+
+      if (currentTab === 'denuncias') {
+        const { data: reports } = await supabaseClient.from('reports').select(`*, profiles:reporter_id(username)`).eq('status', 'pendente').order('created_at', { ascending: false });
+        if (!reports || reports.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-solid fa-check-circle" style="color:var(--success);"></i><p>Nenhuma denúncia pendente. Tudo limpo!</p></div>`; return; }
+        area.innerHTML = '';
+        reports.forEach(r => {
+          const reporterName = r.profiles?.username || 'Alguém';
+          area.innerHTML += `
+            <div class="admin-card">
+              <div class="admin-card-header">
+                <div>
+                  <div class="admin-card-title">Denúncia de ${reporterName}</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">Alvo ID: ${r.target_id.substring(0,8)}...</div>
+                </div>
+                <div class="admin-card-type">${r.target_type.toUpperCase()}</div>
+              </div>
+              <div class="report-reason">"${r.reason}"</div>
+              <div class="admin-actions">
+                <button class="btn-action btn-ignore" onclick="resolveReport('${r.id}', 'ignorado')"><i class="fa-solid fa-xmark"></i> Ignorar</button>
+                <button class="btn-action btn-delete" onclick="resolveReport('${r.id}', 'resolvido', '${r.target_type}', '${r.target_id}')"><i class="fa-solid fa-trash"></i> Apagar Alvo</button>
+              </div>
+            </div>
+          `;
+        });
+      } 
+      else if (currentTab === 'duelos') {
+        const { data: duels } = await supabaseClient.from('duels').select(`*, profiles:creator_id(username)`).order('created_at', { ascending: false }).limit(30);
+        if (!duels || duels.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-solid fa-trophy"></i><p>Nenhum duelo criado.</p></div>`; return; }
+        area.innerHTML = '';
+        duels.forEach(d => {
+          area.innerHTML += `
+            <div class="admin-card">
+              <div class="admin-card-header">
+                <div>
+                  <div class="admin-card-title">${d.question}</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">Por: ${d.profiles?.username || 'Desconhecido'}</div>
+                </div>
+                <div class="admin-card-type">${d.status.toUpperCase()}</div>
+              </div>
+              <div class="admin-actions">
+                <button class="btn-action btn-delete" onclick="deleteDuel('${d.id}')"><i class="fa-solid fa-trash"></i> Apagar Duelo</button>
+                ${d.status === 'active' ? `<button class="btn-action btn-end" onclick="endDuel('${d.id}')"><i class="fa-solid fa-flag-checkered"></i> Encerrar Agora</button>` : ''}
+              </div>
+            </div>
+          `;
+        });
+      }
+      else if (currentTab === 'comentarios') {
+        const { data: comments } = await supabaseClient.from('duel_comments').select(`*, profiles:user_id(username)`).order('created_at', { ascending: false }).limit(30);
+        if (!comments || comments.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-solid fa-comment-slash"></i><p>Nenhum comentário recente.</p></div>`; return; }
+        area.innerHTML = '';
+        comments.forEach(c => {
+          area.innerHTML += `
+            <div class="admin-card">
+              <div class="admin-card-header">
+                <div class="admin-card-title">${c.profiles?.username || 'Desconhecido'}</div>
+                <div class="admin-card-type">COMENTÁRIO</div>
+              </div>
+              <div style="font-size:0.9rem; color:#ddd;">"${c.content}"</div>
+              <div class="admin-actions">
+                <button class="btn-action btn-delete" onclick="deleteComment('${c.id}')"><i class="fa-solid fa-trash"></i> Apagar Comentário</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+      else if (currentTab === 'utilizadores') {
+        const { data: users } = await supabaseClient.from('profiles').select('*').order('username', { ascending: true });
+        if (!users || users.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-solid fa-users"></i><p>Nenhum utilizador encontrado.</p></div>`; return; }
+        area.innerHTML = '';
+        
+        users.forEach(u => {
+          const avatar = u.avatar_url || 'default-avatar.png';
+          const isAdmin = u.is_admin;
+          const isSuspended = u.is_suspended;
+          const isMe = u.id === currentUser;
+
+          let badges = `<span class="badge-role role-user">Membro</span>`;
+          if (isAdmin) badges = `<span class="badge-role role-admin">Admin</span>`;
+          if (isSuspended) badges += ` <span class="badge-role role-suspended">Suspenso</span>`;
+
+          // NOVO: Lógica de Proteção do Último Admin
+          let adminBtn = '';
+          let suspendBtn = '';
+
+          if (!isMe) {
+            // Podes gerir outros livremente
+            adminBtn = isAdmin 
+              ? `<button class="btn-action btn-demote" onclick="toggleAdmin('${u.id}', false)"><i class="fa-solid fa-arrow-down"></i> Rebaixar</button>`
+              : `<button class="btn-action btn-promote" onclick="toggleAdmin('${u.id}', true)"><i class="fa-solid fa-arrow-up"></i> Promover a Admin</button>`;
+
+            suspendBtn = isSuspended
+              ? `<button class="btn-action btn-reactivate" onclick="toggleSuspend('${u.id}', false)"><i class="fa-solid fa-check"></i> Reativar</button>`
+              : `<button class="btn-action btn-suspend" onclick="toggleSuspend('${u.id}', true)"><i class="fa-solid fa-ban"></i> Suspender</button>`;
+          } else {
+            // És tu. Mostramos o botão, mas bloqueamos se fores o último admin.
+            if (isAdmin) {
+              if (totalAdminsCount <= 1) {
+                adminBtn = `<button class="btn-action btn-disabled" onclick="showToast('Não podes rebaixar o único Admin do sistema.', 'error')"><i class="fa-solid fa-lock"></i> Último Admin</button>`;
+              } else {
+                adminBtn = `<button class="btn-action btn-demote" onclick="toggleAdmin('${u.id}', false)"><i class="fa-solid fa-arrow-down"></i> Rebaixar</button>`;
+              }
+            }
+            
+            if (isSuspended) {
+              suspendBtn = `<button class="btn-action btn-reactivate" onclick="toggleSuspend('${u.id}', false)"><i class="fa-solid fa-check"></i> Reativar</button>`;
+            } else {
+              suspendBtn = `<button class="btn-action btn-disabled" onclick="showToast('Não podes suspender a tua própria conta.', 'error')"><i class="fa-solid fa-ban"></i> Suspender</button>`;
+            }
+          }
+
+          area.innerHTML += `
+            <div class="user-admin-card">
+              <div class="user-admin-info">
+                <img src="${avatar}">
+                <div>
+                  <div class="user-admin-name">${u.username || 'Sem nome'} ${isMe ? '(Tu)' : ''}</div>
+                  <div class="user-admin-badges">${badges}</div>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:5px;">
+                ${adminBtn}
+                ${suspendBtn}
+              </div>
+            </div>
+          `;
+        });
+      }
+      else if (currentTab === 'logs') {
+        const { data: logs } = await supabaseClient.from('admin_logs').select(`*, profiles:admin_id(username)`).order('created_at', { ascending: false }).limit(50);
+        if (!logs || logs.length === 0) { area.innerHTML = `<div class="empty-state"><i class="fa-solid fa-clipboard-list"></i><p>Nenhuma ação registada.</p></div>`; return; }
+        area.innerHTML = '';
+        logs.forEach(l => {
+          const date = new Date(l.created_at).toLocaleString('pt-PT');
+          area.innerHTML += `
+            <div class="admin-card" style="padding: 10px 15px;">
+              <div style="font-size:0.85rem; color:white;"><strong>${l.profiles?.username || 'Admin'}</strong> - ${l.action}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">${l.details || ''} • ${date}</div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    async function logAction(action, details) {
+      await supabaseClient.from('admin_logs').insert([{ admin_id: currentUser, action, details }]);
+    }
+
+    // --- FUNÇÕES DE GESTÃO DE UTILIZADORES ---
+    async function toggleAdmin(userId, isAdmin) {
+      const actionText = isAdmin ? 'promover este utilizador a Admin' : 'remover o estatuto de Admin';
+      if (!confirm(`Tens a certeza que queres ${actionText}?`)) return;
+      
+      const { error } = await supabaseClient.from('profiles').update({ is_admin: isAdmin }).eq('id', userId);
+      if (error) { showToast('Erro ao atualizar utilizador.', 'error'); return; }
+      
+      await countAdmins(); // Atualiza a contagem
+      await logAction(isAdmin ? 'Promoveu a Admin' : 'Removeu Admin', `ID: ${userId}`);
+      showToast('Permissões atualizadas!', 'success');
+      loadContent();
+    }
+
+    async function toggleSuspend(userId, isSuspended) {
+      const actionText = isSuspended ? 'suspender' : 'reativar';
+      if (!confirm(`Tens a certeza que queres ${actionText} este utilizador?`)) return;
+      
+      const { error } = await supabaseClient.from('profiles').update({ is_suspended: isSuspended }).eq('id', userId);
+      if (error) { showToast('Erro ao atualizar utilizador.', 'error'); return; }
+      
+      await logAction(isSuspended ? 'Suspendeu Utilizador' : 'Reativou Utilizador', `ID: ${userId}`);
+      showToast('Estado atualizado!', 'success');
+      loadContent();
+    }
+
+    async function resolveReport(reportId, status, targetType = null, targetId = null) {
+      if (status === 'resolvido' && targetType && targetId) {
+        if (targetType === 'duel') await supabaseClient.from('duels').delete().eq('id', targetId);
+        if (targetType === 'comment') await supabaseClient.from('duel_comments').delete().eq('id', targetId);
+      }
+      
+      await supabaseClient.from('reports').update({ status }).eq('id', reportId);
+      await logAction(`Denúncia ${status}`, `ID Alvo: ${targetId || 'N/A'}`);
+      showToast('Denúncia processada.', 'success');
+      loadContent();
+    }
+
+    async function deleteDuel(duelId) {
+      if (!confirm('Tens a certeza que queres apagar este duelo?')) return;
+      await supabaseClient.from('duels').delete().eq('id', duelId);
+      await logAction('Duelo Apagado', `ID: ${duelId}`);
+      showToast('Duelo apagado.', 'success');
+      loadContent();
+    }
+
+    async function endDuel(duelId) {
+      if (!confirm('Encerrar este duelo agora?')) return;
+      await supabaseClient.from('duels').update({ status: 'finished', ends_at: new Date().toISOString() }).eq('id', duelId);
+      await logAction('Duelo Encerrado Manualmente', `ID: ${duelId}`);
+      showToast('Duelo encerrado.', 'success');
+      loadContent();
+    }
+
+    async function deleteComment(commentId) {
+      if (!confirm('Apagar este comentário?')) return;
+      await supabaseClient.from('duel_comments').delete().eq('id', commentId);
+      await logAction('Comentário Apagado', `ID: ${commentId}`);
+      showToast('Comentário apagado.', 'success');
+      loadContent();
+    }
+
+    init();
+  </script>
+</body>
+</html>

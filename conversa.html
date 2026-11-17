@@ -7,17 +7,9 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      --chat-bg: #050b14;
-      --sent-bg: #0055ff;
-      --received-bg: rgba(10, 25, 50, 0.6);
-      --input-bg: rgba(10, 25, 50, 0.9);
-    }
-
+    :root { --chat-bg: #050b14; --sent-bg: #0055ff; --received-bg: rgba(10, 25, 50, 0.6); --input-bg: rgba(10, 25, 50, 0.9); }
     html, body { height: 100vh; height: 100dvh; margin: 0; padding: 0; overflow: hidden; overscroll-behavior: none; background: var(--chat-bg); }
     body { display: flex; flex-direction: column; font-family: 'Inter', sans-serif; }
-
-    /* HEADER */
     .chat-header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: rgba(3, 7, 18, 0.95); border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10; }
     .header-left { display: flex; align-items: center; gap: 12px; }
     .header-left i { font-size: 1.5rem; cursor: pointer; color: white; }
@@ -26,16 +18,17 @@
     .chat-user-name { font-weight: bold; font-size: 1rem; color: white; display: flex; align-items: center; gap: 5px; }
     .chat-status { font-size: 0.75rem; color: var(--success); display: flex; align-items: center; gap: 4px; }
     .chat-status .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 5px var(--success); }
-    
     .header-actions { display: flex; gap: 12px; }
     .header-actions i { font-size: 1.3rem; cursor: pointer; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; border-radius: 50%; }
     .header-actions .phone { color: #00e676; background: rgba(0, 230, 118, 0.15); }
     .header-actions .video { color: #00ccff; background: rgba(0, 204, 255, 0.15); }
     .header-actions .more { color: white; background: rgba(255, 255, 255, 0.1); }
 
-    /* CHAT MESSAGES */
     .chat-messages { flex: 1; min-height: 0; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
-    .message-row { display: flex; align-items: flex-end; gap: 8px; max-width: 85%; }
+    
+    .message-row { display: flex; align-items: flex-end; gap: 8px; max-width: 85%; user-select: none; -webkit-user-select: none; transition: transform 0.1s; }
+    .message-row:active { transform: scale(0.98); }
+    
     .message-row.sent { align-self: flex-end; flex-direction: row-reverse; }
     .message-row.received { align-self: flex-start; }
     .msg-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid var(--glass-border); margin-bottom: 18px;}
@@ -50,41 +43,46 @@
     .message-footer { display: flex; justify-content: flex-end; align-items: center; gap: 5px; margin-top: 5px; }
     .message-time { font-size: 0.65rem; color: rgba(255,255,255,0.6); }
     .read-receipt { font-size: 0.75rem; color: #fff; }
-    
-    .translated-tag { display: inline-block; font-size: 0.65rem; color: #a855f7; background: rgba(168, 85, 247, 0.15); padding: 2px 6px; border-radius: 4px; margin-bottom: 5px; font-weight: bold; }
-    .translated-text { font-style: italic; color: #e0e0e0; }
-    
     .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; padding: 40px 20px; }
     .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; color: var(--neon); }
     .empty-state h3 { color: white; margin-bottom: 8px; font-size: 1.1rem; }
 
-    /* TYPING INDICATOR */
     .typing-indicator { display: none; align-items: center; gap: 4px; padding: 10px 15px; background: var(--received-bg); border-radius: 18px; border-bottom-left-radius: 4px; width: fit-content; margin-bottom: 15px; }
     .typing-indicator span { width: 6px; height: 6px; background: rgba(255,255,255,0.6); border-radius: 50%; display: inline-block; animation: typing 1.4s infinite ease-in-out both; }
-    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; } .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
     @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-    /* INPUT AREA (A PARTE DE BAIXO) */
     .chat-bottom-area { flex-shrink: 0; background: rgba(3, 7, 18, 0.95); border-top: 1px solid rgba(255,255,255,0.05); padding: 10px 15px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 20; display: flex; flex-direction: column; gap: 12px; }
-
-    /* Input de texto */
     .text-input-row { display: flex; gap: 10px; align-items: center; }
     .text-input-wrapper { flex: 1; display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 25px; padding: 5px 15px; }
     .text-input-wrapper i { color: var(--text-muted); font-size: 1.3rem; cursor: pointer; padding: 5px; }
     .chat-input { flex: 1; min-width: 0; background: transparent; border: none; padding: 10px; color: white; outline: none; font-size: 0.95rem; }
 
-    /* Fila de botões grandes */
     .action-buttons-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; overflow-x: auto; scrollbar-width: none; }
     .action-buttons-row::-webkit-scrollbar { display: none; }
-    
     .action-btn-circle { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; min-width: 55px; }
     .action-btn-circle .icon-bg { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: center; align-items: center; font-size: 1.3rem; color: white; transition: 0.2s; }
     .action-btn-circle:hover .icon-bg { background: rgba(255,255,255,0.1); }
+    .action-btn-circle:active .icon-bg { transform: scale(0.9); background: var(--neon); color: #000; }
     .action-btn-circle span { font-size: 0.7rem; color: var(--text-muted); }
     
     .action-btn-circle.send .icon-bg { background: var(--primary); border-color: var(--neon); font-size: 1.5rem; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
     .action-btn-circle.send span { color: var(--primary); font-weight: bold; }
+
+    .recording-status { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--danger); color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; display: none; align-items: center; gap: 10px; z-index: 30; box-shadow: 0 0 20px rgba(255, 51, 102, 0.5); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+    .bottom-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; display: none; justify-content: center; align-items: flex-end; backdrop-filter: blur(3px); }
+    .bottom-sheet { background: #0a1f44; width: 100%; max-width: 500px; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 25px; padding-bottom: 40px; border-top: 1px solid var(--neon); animation: slideUp 0.3s ease-out; }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .sheet-handle { width: 40px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 5px; margin: 0 auto 20px auto; }
+    .sheet-title { text-align: center; color: white; font-weight: bold; font-size: 1.1rem; margin-bottom: 20px; }
+    .sheet-btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 1rem; font-weight: bold; display: flex; align-items: center; gap: 15px; cursor: pointer; margin-bottom: 10px; transition: 0.2s; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); }
+    .sheet-btn i { font-size: 1.2rem; width: 24px; text-align: center; }
+    .sheet-btn.danger { color: var(--danger); border-color: var(--danger); background: rgba(255, 51, 102, 0.1); }
+    .sheet-btn.cancel { justify-content: center; color: var(--text-muted); background: transparent; border: none; margin-top: 10px; }
+
+    .blocked-warning { display: none; text-align: center; padding: 20px; background: rgba(255, 51, 102, 0.1); border-top: 1px solid var(--danger); color: var(--danger); font-weight: bold; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -100,19 +98,21 @@
     <div class="header-actions">
       <i class="fa-solid fa-phone phone" onclick="startCall('audio')"></i>
       <i class="fa-solid fa-video video" onclick="startCall('video')"></i>
-      <i class="fa-solid fa-ellipsis-vertical more"></i>
+      <i class="fa-solid fa-ellipsis-vertical more" onclick="openChatOptions()"></i>
     </div>
   </header>
 
   <div class="chat-messages" id="chatMessages"></div>
   
-  <!-- Indicador de A Digitar -->
   <div class="typing-indicator" id="typingIndicator">
     <span></span><span></span><span></span>
   </div>
 
-  <div class="chat-bottom-area">
-    <!-- Input de Texto -->
+  <div class="recording-status" id="recordingStatus">
+    <i class="fa-solid fa-circle"></i> <span id="recordingText">A gravar...</span>
+  </div>
+
+  <div class="chat-bottom-area" id="chatInputArea">
     <div class="text-input-row">
       <div class="text-input-wrapper">
         <i class="fa-regular fa-face-smile" onclick="toggleEmojiPanel()"></i>
@@ -121,13 +121,12 @@
       </div>
     </div>
 
-    <!-- Fila de Botões -->
     <div class="action-buttons-row">
-      <div class="action-btn-circle" onclick="triggerFileUpload('audio/*')">
+      <div class="action-btn-circle" id="btnAudio" onmousedown="startRecording('audio')" onmouseup="stopRecording()" onmouseleave="stopRecording()" ontouchstart="startRecording('audio')" ontouchend="stopRecording()">
         <div class="icon-bg"><i class="fa-solid fa-microphone"></i></div>
         <span>Áudio</span>
       </div>
-      <div class="action-btn-circle" onclick="triggerFileUpload('video/*')">
+      <div class="action-btn-circle" onclick="startRecording('video')">
         <div class="icon-bg"><i class="fa-solid fa-video"></i></div>
         <span>Vídeo</span>
       </div>
@@ -151,6 +150,38 @@
 
     <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;" onchange="uploadMedia(event)">
   </div>
+  
+  <div class="blocked-warning" id="blockedWarning">
+    <i class="fa-solid fa-ban"></i> Bloqueaste este utilizador. Não podes enviar mensagens.
+  </div>
+
+  <div class="bottom-sheet-overlay" id="chatOptionsOverlay" onclick="closeChatOptions(event)">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Opções da Conversa</div>
+      <button class="sheet-btn" onclick="toggleMuteChat()" id="btnMuteChat">
+        <i class="fa-solid fa-bell-slash"></i> Silenciar Notificações
+      </button>
+      <button class="sheet-btn danger" onclick="blockUser()" id="btnBlockUser">
+        <i class="fa-solid fa-ban"></i> Bloquear Utilizador
+      </button>
+      <button class="sheet-btn danger" onclick="deleteEntireConversation()">
+        <i class="fa-solid fa-trash"></i> Apagar Conversa Inteira
+      </button>
+      <button class="sheet-btn cancel" onclick="closeChatOptions()">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="bottom-sheet-overlay" id="messageOptionsOverlay" onclick="closeMessageOptions(event)">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Opções da Mensagem</div>
+      <button class="sheet-btn danger" onclick="confirmDeleteSingleMessage()">
+        <i class="fa-solid fa-trash"></i> Apagar Mensagem
+      </button>
+      <button class="sheet-btn cancel" onclick="closeMessageOptions()">Cancelar</button>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
@@ -170,13 +201,22 @@
     let isSending = false;
     let isUploading = false;
     let typingTimeout = null;
+    
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    let recordingTimer = null;
+    
+    // Variáveis de Bloqueio (Fase 2 e 3)
+    let isBlockedByMe = false;
+    let isBlockedByThem = false;
 
-    const LANGS = {
-      'pt': 'Português', 'en': 'Inglês', 'es': 'Espanhol', 'fr': 'Francês',
-      'de': 'Alemão', 'it': 'Italiano', 'ru': 'Russo', 'ja': 'Japonês',
-      'zh-CN': 'Chinês', 'ar': 'Árabe', 'sw': 'Suaíli', 'ko': 'Coreano',
-      'nl': 'Holandês', 'tr': 'Turco', 'hi': 'Hindi'
-    };
+    // Variáveis de Long Press
+    let selectedMessageId = null;
+    let selectedMessageSender = null;
+    let pressTimer = null;
+
+    const LANGS = { 'pt': 'Português', 'en': 'Inglês', 'es': 'Espanhol', 'fr': 'Francês', 'de': 'Alemão', 'it': 'Italiano', 'ru': 'Russo', 'ja': 'Japonês', 'zh-CN': 'Chinês', 'ar': 'Árabe', 'sw': 'Suaíli', 'ko': 'Coreano', 'nl': 'Holandês', 'tr': 'Turco', 'hi': 'Hindi' };
 
     function showToast(message, type = 'success') {
       const toast = document.createElement('div');
@@ -212,10 +252,203 @@
       else box.scrollTop = box.scrollHeight;
     }
 
-    // ---- Lógica de "A Digitar..." ----
     function handleTyping() {
       if (!realtimeChannel) return;
       realtimeChannel.send({ type: 'broadcast', event: 'typing', payload: { user: currentUser } });
+    }
+
+    function startPressTimer(e, msgId, senderId) {
+      if (!msgId) return;
+      clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => {
+        selectedMessageId = msgId;
+        selectedMessageSender = senderId;
+        document.getElementById('messageOptionsOverlay').style.display = 'flex';
+      }, 600);
+    }
+
+    function clearPressTimer() {
+      clearTimeout(pressTimer);
+    }
+
+    function closeMessageOptions(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('messageOptionsOverlay').style.display = 'none';
+      selectedMessageId = null;
+      selectedMessageSender = null;
+    }
+
+    async function confirmDeleteSingleMessage() {
+      const msgIdToDelete = selectedMessageId;
+      const msgSender = selectedMessageSender;
+      
+      if (!msgIdToDelete) return;
+
+      if (msgSender !== currentUser) {
+        showToast('Só podes apagar as tuas próprias mensagens.', 'error');
+        closeMessageOptions();
+        return;
+      }
+
+      closeMessageOptions();
+
+      const { error } = await supabaseClient.rpc('delete_single_message', {
+        message_id: msgIdToDelete
+      });
+
+      if (error) {
+        showToast('Erro ao apagar a mensagem: ' + error.message, 'error');
+      } else {
+        showToast('Mensagem apagada.', 'success');
+        const row = document.getElementById(`msg-${msgIdToDelete}`);
+        if (row) row.remove();
+      }
+    }
+
+    async function checkBlockStatus() {
+      const { data: iBlocked } = await supabaseClient.from('blocked_users').select('id').eq('blocker_id', currentUser).eq('blocked_id', sellerId).maybeSingle();
+      const { data: theyBlocked } = await supabaseClient.from('blocked_users').select('id').eq('blocker_id', sellerId).eq('blocked_id', currentUser).maybeSingle();
+      
+      if (iBlocked) {
+        isBlockedByMe = true;
+        document.getElementById('chatInputArea').style.display = 'none';
+        document.getElementById('blockedWarning').style.display = 'block';
+        document.getElementById('btnBlockUser').innerHTML = '<i class="fa-solid fa-check"></i> Desbloquear Utilizador';
+        document.getElementById('btnBlockUser').classList.remove('danger');
+        document.getElementById('btnBlockUser').style.color = 'var(--success)';
+      } else if (theyBlocked) {
+        isBlockedByThem = true;
+        document.getElementById('chatInputArea').style.display = 'none';
+        document.getElementById('blockedWarning').innerHTML = '<i class="fa-solid fa-ban"></i> Este utilizador bloqueou-te. Não podes enviar mensagens.';
+        document.getElementById('blockedWarning').style.display = 'block';
+        document.getElementById('btnBlockUser').style.display = 'none';
+      }
+    }
+
+    async function blockUser() {
+      if (isBlockedByMe) {
+        if (!confirm('Desbloquear este utilizador?')) return;
+        await supabaseClient.from('blocked_users').delete().eq('blocker_id', currentUser).eq('blocked_id', sellerId);
+        showToast('Utilizador desbloqueado.', 'success');
+        closeChatOptions();
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        if (!confirm('Tens a certeza que queres bloquear este utilizador? Não poderás enviar mensagens.')) return;
+        await supabaseClient.from('blocked_users').insert([{ blocker_id: currentUser, blocked_id: sellerId }]);
+        showToast('Utilizador bloqueado.', 'success');
+        closeChatOptions();
+        setTimeout(() => window.location.reload(), 1000);
+      }
+    }
+
+    async function deleteEntireConversation() {
+      if (!confirm('Tens a certeza que queres apagar TODAS as mensagens desta conversa? Esta ação é irreparável.')) return;
+      
+      document.getElementById('chatMessages').innerHTML = '';
+      closeChatOptions();
+
+      const { error } = await supabaseClient.rpc('delete_conversation', { user1_id: currentUser, user2_id: sellerId });
+
+      if (error) { 
+        showToast('Erro ao apagar no banco de dados: ' + error.message, 'error'); 
+        setTimeout(() => loadMessages(), 1500);
+      } else { 
+        showToast('Conversa apagada.', 'success'); 
+        showEmptyState();
+      }
+    }
+
+    function toggleMuteChat() {
+      let mutedChats = JSON.parse(localStorage.getItem('fly_muted_chats') || '[]');
+      if (mutedChats.includes(sellerId)) {
+        mutedChats = mutedChats.filter(id => id !== sellerId);
+        showToast('Notificações ativadas.', 'success');
+        document.getElementById('btnMuteChat').innerHTML = '<i class="fa-solid fa-bell-slash"></i> Silenciar Notificações';
+      } else {
+        mutedChats.push(sellerId);
+        showToast('Conversa silenciada.', 'success');
+        document.getElementById('btnMuteChat').innerHTML = '<i class="fa-solid fa-bell"></i> Ativar Notificações';
+      }
+      localStorage.setItem('fly_muted_chats', JSON.stringify(mutedChats));
+    }
+
+    function openChatOptions() { 
+      const mutedChats = JSON.parse(localStorage.getItem('fly_muted_chats') || '[]');
+      if (mutedChats.includes(sellerId)) document.getElementById('btnMuteChat').innerHTML = '<i class="fa-solid fa-bell"></i> Ativar Notificações';
+      document.getElementById('chatOptionsOverlay').style.display = 'flex'; 
+    }
+    
+    function closeChatOptions(event) { 
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('chatOptionsOverlay').style.display = 'none'; 
+    }
+
+    async function startRecording(type) {
+      if (isUploading || isRecording || isSending) return;
+      if (isBlockedByMe || isBlockedByThem) { showToast('Não podes enviar mensagens.', 'error'); return; }
+      
+      isRecording = true;
+      audioChunks = [];
+      document.getElementById('recordingText').innerText = type === 'video' ? 'A gravar vídeo...' : 'A gravar áudio...';
+      document.getElementById('recordingStatus').style.display = 'flex';
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' ? { facingMode: 'user' } : false });
+        const options = type === 'video' ? { mimeType: 'video/webm' } : { mimeType: 'audio/webm' };
+        mediaRecorder = new MediaRecorder(stream, options);
+
+        mediaRecorder.ondataavailable = event => { if (event.data.size > 0) audioChunks.push(event.data); };
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(audioChunks, { type: type === 'video' ? 'video/webm' : 'audio/webm' });
+          const file = new File([blob], `record_${Date.now()}.webm`, { type: blob.type });
+          stream.getTracks().forEach(track => track.stop());
+          await uploadRecordedMedia(file, type);
+        };
+
+        mediaRecorder.start();
+        recordingTimer = setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording(); }, 30000);
+      } catch (err) {
+        isRecording = false;
+        document.getElementById('recordingStatus').style.display = 'none';
+        showToast('Erro de permissão: ' + err.message, 'error');
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        clearTimeout(recordingTimer);
+        document.getElementById('recordingStatus').style.display = 'none';
+        isRecording = false;
+      }
+    }
+
+    async function uploadRecordedMedia(file, type) {
+      const fileName = `chats/${currentUser}_${Date.now()}_rec.webm`;
+      const chatBox = document.getElementById('chatMessages');
+      
+      const tempRow = document.createElement('div');
+      tempRow.className = 'message-row sent';
+      tempRow.innerHTML = `<div class="message"><i class="fa-solid fa-spinner fa-spin"></i> A enviar ${type}...</div>`;
+      chatBox.appendChild(tempRow);
+      scrollToBottom(false);
+      isUploading = true;
+
+      const { error: uploadError } = await supabaseClient.storage.from('fly_bucket').upload(fileName, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+      
+      if (uploadError) {
+        tempRow.remove(); isUploading = false; showToast('Erro no upload.', 'error'); return;
+      }
+
+      const { data: publicUrl } = supabaseClient.storage.from('fly_bucket').getPublicUrl(fileName);
+      const fileUrl = publicUrl.publicUrl;
+
+      const { data: inserted, error: dbError } = await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: sellerId, content: '', file_url: fileUrl, file_type: file.type, is_read: false }]).select().single();
+      tempRow.remove(); isUploading = false;
+
+      if (dbError) { showToast('Upload feito mas falhou gravar.', 'error'); return; }
+      appendMessage(inserted);
+      showToast('Enviado! ✅', 'success');
     }
 
     async function initChat() {
@@ -233,12 +466,46 @@
         if (me.language) { myLanguage = me.language; updateKeyboardLanguage(myLanguage); }
       }
 
-      const { data: other } = await supabaseClient.from('profiles').select('username, avatar_url, language').eq('id', sellerId).single();
+      // ✅ BUSCAR DADOS DO OUTRO UTILIZADOR (Incluindo Privacidade)
+      const { data: other } = await supabaseClient.from('profiles').select('username, avatar_url, language, message_privacy, hide_online_status').eq('id', sellerId).single();
       if (other) {
         if (other.avatar_url) otherAvatarUrl = other.avatar_url;
         if (other.language) otherLanguage = other.language;
+        
         document.getElementById('chatSellerName').innerHTML = `${currentUser === sellerId ? 'Você' : other.username} <i class="fa-solid fa-circle-check" style="color: var(--neon); font-size: 0.8rem;"></i>`;
         document.getElementById('chatAvatar').src = otherAvatarUrl;
+
+        // ✅ ESCONDER ONLINE (Fase 3)
+        if (other.hide_online_status) {
+          const statusEl = document.querySelector('.chat-status');
+          statusEl.innerHTML = '<i class="fa-solid fa-circle" style="font-size:0.5rem; color:var(--text-muted);"></i> Offline';
+          statusEl.style.color = 'var(--text-muted)';
+          const dot = document.querySelector('.chat-status .dot');
+          if (dot) dot.style.display = 'none';
+        }
+      }
+
+      await checkBlockStatus();
+
+      // ✅ VERIFICAR PRIVACIDADE DE MENSAGENS (Fase 3)
+      // Só aplica se não houver bloqueio direto (Fase 2)
+      if (!isBlockedByMe && !isBlockedByThem && other) {
+        if (other.message_privacy === 'ninguem') {
+          isBlockedByThem = true; // Reutilizamos a flag para bloquear envio
+          document.getElementById('chatInputArea').style.display = 'none';
+          document.getElementById('blockedWarning').innerHTML = '<i class="fa-solid fa-lock"></i> Este utilizador não aceita mensagens.';
+          document.getElementById('blockedWarning').style.display = 'block';
+        } else if (other.message_privacy === 'amigos') {
+          // Verifica se são amigos
+          const { data: friendship } = await supabaseClient.from('friendships').select('id').eq('status', 'aceite').or(`and(requester_id.eq.${currentUser},addressee_id.eq.${sellerId}),and(requester_id.eq.${sellerId},addressee_id.eq.${currentUser})`).maybeSingle();
+          
+          if (!friendship) {
+            isBlockedByThem = true;
+            document.getElementById('chatInputArea').style.display = 'none';
+            document.getElementById('blockedWarning').innerHTML = '<i class="fa-solid fa-lock"></i> Este utilizador só aceita mensagens de amigos.';
+            document.getElementById('blockedWarning').style.display = 'block';
+          }
+        }
       }
 
       await loadMessages();
@@ -284,6 +551,14 @@
       const row = document.createElement('div');
       row.className = `message-row ${isSent ? 'sent' : 'received'}`;
       row.id = `msg-${msg.id || 'temp-' + Date.now()}`;
+      
+      if (msg.id) {
+        row.onmousedown = (e) => startPressTimer(e, msg.id, msg.sender_id);
+        row.onmouseup = clearPressTimer;
+        row.onmouseleave = clearPressTimer;
+        row.ontouchstart = (e) => startPressTimer(e, msg.id, msg.sender_id);
+        row.ontouchend = clearPressTimer;
+      }
 
       let contentHtml = '';
       if (msg.file_url) {
@@ -292,7 +567,7 @@
         if (type.startsWith('image/')) { contentHtml = `<img src="${safeUrl}" class="message-image" onclick="window.open(this.src, '_blank')" alt="Imagem">`; } 
         else if (type.startsWith('video/')) { contentHtml = `<video src="${safeUrl}" controls playsinline preload="metadata" class="message-video"></video>`; } 
         else if (type.startsWith('audio/')) { contentHtml = `<audio src="${safeUrl}" controls class="message-audio"></audio>`; }
-        else { contentHtml = `<a href="${safeUrl}" target="_blank" style="color:var(--neon); text-decoration:underline; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-file"></i> Abrir ficheiro</a>`; }
+        else { contentHtml = `<a href="${safeUrl}" target="_blank" style="color:var(--neon); text-decoration:underline;">📎 Abrir ficheiro</a>`; }
       }
 
       const safeText = escapeHtml(msg.content || '');
@@ -303,7 +578,6 @@
         textHtml = `<div class="translated-tag" id="tag-${row.id}"><i class="fa-solid fa-spinner fa-spin"></i> A traduzir...</div><div class="translated-text" id="text-${row.id}">${safeText}</div>`;
       }
 
-      // Visto duplo (Read receipt) para mensagens enviadas
       let receiptHtml = '';
       if (isSent) {
         receiptHtml = msg.is_read ? '<i class="fa-solid fa-check-double read-receipt"></i>' : '<i class="fa-solid fa-check read-receipt" style="color: rgba(255,255,255,0.5);"></i>';
@@ -347,11 +621,12 @@
 
     async function sendMessage() {
       if (isSending) return;
+      if (isBlockedByMe || isBlockedByThem) { showToast('Não podes enviar mensagens.', 'error'); return; }
+      
       const input = document.getElementById('messageInput');
       const text = input.value.trim();
       if (!text) return;
       
-      const btn = document.getElementById('btnSend');
       isSending = true; 
       const originalText = input.value;
       input.value = '';
@@ -371,6 +646,7 @@
       const file = event.target.files[0];
       if (!file) return;
       if (isUploading) { showToast('Já tens um ficheiro a enviar...', 'error'); event.target.value = ''; return; }
+      if (isBlockedByMe || isBlockedByThem) { showToast('Não podes enviar mensagens.', 'error'); event.target.value = ''; return; }
       
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
@@ -404,13 +680,14 @@
       const { data: inserted, error: dbError } = await supabaseClient.from('messages').insert([{ sender_id: currentUser, receiver_id: sellerId, content: '', file_url: fileUrl, file_type: file.type, is_read: false }]).select().single();
       tempRow.remove(); isUploading = false; event.target.value = '';
 
-      if (dbError) { showToast('Upload feito mas falhou gravar na BD.', 'error'); return; }
+      if (dbError) { showToast('Upload feito mas falhou gravar.', 'error'); return; }
       appendMessage(inserted);
       showToast('Enviado! ✅', 'success');
     }
 
     async function startCall(type) {
       if (!currentUser || !sellerId) return;
+      if (isBlockedByMe || isBlockedByThem) { showToast('Não podes ligar para este utilizador.', 'error'); return; }
       const { data: call, error } = await supabaseClient.from('calls').insert([{ caller_id: currentUser, receiver_id: sellerId, type, status: 'ringing' }]).select().single();
       if (error || !call) { showToast('Não foi possível iniciar a chamada.', 'error'); return; }
       window.location.href = `chamada.html?user_id=${sellerId}&type=${type}&call_id=${call.id}&role=caller`;
@@ -428,6 +705,11 @@
           if (document.getElementById(`msg-${newMsg.id}`)) return;
           appendMessage(newMsg);
           markAsRead();
+        })
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
+          const deletedMsg = payload.old;
+          const row = document.getElementById(`msg-${deletedMsg.id}`);
+          if (row) row.remove();
         })
         .on('broadcast', { event: 'typing' }, (payload) => {
           if (payload.payload.user === sellerId) {

@@ -68,6 +68,7 @@
 
   <div class="login-wrapper">
     
+    <!-- CÓDIGO ORIGINAL RESTAURADO -->
     <div class="gif-hero-container">
       <video class="login-video" autoplay muted loop playsinline webkit-playsinline preload="metadata">
         <source src="fundo_login.mp4" type="video/mp4">
@@ -149,6 +150,14 @@
     const messageEl = document.getElementById('message');
     let isLogin = true;
 
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('suspended') === '1') {
+        messageEl.style.color = 'var(--danger)';
+        messageEl.innerText = 'A tua conta foi suspensa. Contacta o suporte.';
+      }
+    });
+
     toggleAuth.addEventListener('click', () => {
       isLogin = !isLogin;
       if (isLogin) {
@@ -175,9 +184,24 @@
       if (error) {
         messageEl.style.color = 'var(--danger)';
         messageEl.innerText = error.message;
-      } else {
-        window.location.href = 'home.html';
+        return;
       }
+
+      // ✅ VERIFICAÇÃO DE SEGURANÇA (SUSPENSÃO)
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('is_suspended')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profile && profile.is_suspended) {
+        await supabaseClient.auth.signOut();
+        messageEl.style.color = 'var(--danger)';
+        messageEl.innerText = 'A tua conta foi suspensa. Contacta o suporte.';
+        return;
+      }
+
+      window.location.href = 'home.html';
     });
 
     registerForm.addEventListener('submit', async (e) => {
@@ -195,11 +219,23 @@
       if (authError) {
         messageEl.style.color = 'var(--danger)';
         messageEl.innerText = authError.message;
-      } else {
-        messageEl.style.color = 'var(--success)';
-        messageEl.innerText = 'Conta criada! A entrar...';
-        setTimeout(() => window.location.href = 'home.html', 1500);
+        return;
       }
+
+      if (authData.user) {
+        const { data: profile } = await supabaseClient
+          .from('profiles').select('is_suspended').eq('id', authData.user.id).single();
+        if (profile && profile.is_suspended) {
+          await supabaseClient.auth.signOut();
+          messageEl.style.color = 'var(--danger)';
+          messageEl.innerText = 'A tua conta foi suspensa. Contacta o suporte.';
+          return;
+        }
+      }
+
+      messageEl.style.color = 'var(--success)';
+      messageEl.innerText = 'Conta criada! A entrar...';
+      setTimeout(() => window.location.href = 'home.html', 1500);
     });
   </script>
 </body>

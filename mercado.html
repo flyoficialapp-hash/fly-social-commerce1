@@ -13,6 +13,10 @@
     .header-icons i { font-size: 1.4rem; margin-left: 15px; color: white; cursor: pointer;}
     .search-bar { padding: 0 15px 15px 15px; display: flex; gap: 10px; }
     .search-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 30px; padding: 12px 20px; color: white; outline: none; }
+    .btn-filter { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50%; width: 45px; height: 45px; color: var(--neon); font-size: 1.2rem; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
+    .btn-filter:hover { background: var(--neon); color: #000; }
+    .btn-filter.active { background: var(--neon); color: #000; box-shadow: 0 0 10px var(--neon); }
+    
     .categories { display: flex; gap: 15px; padding: 0 15px 20px 15px; overflow-x: auto; scrollbar-width: none; }
     .category-item { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
     .category-icon { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; border: 1px solid var(--glass-border); transition: 0.2s; }
@@ -23,8 +27,9 @@
     .product-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; position: relative;}
     .product-card.premium { border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
     .premium-tag { position: absolute; top: 10px; left: 10px; background: linear-gradient(90deg, #b8860b, #ffd700); color: #000; font-size: 0.65rem; font-weight: bold; padding: 4px 8px; border-radius: 10px; z-index: 10; display: flex; align-items: center; gap: 3px; }
-    .fav-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; cursor: pointer; z-index: 10; backdrop-filter: blur(5px); border: 1px solid var(--glass-border); }
-    .fav-btn.active { color: #ff3366; border-color: #ff3366; box-shadow: 0 0 10px rgba(255,51,102,0.5); }
+    .product-actions-top { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 10; }
+    .action-btn-card { background: rgba(0,0,0,0.5); width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; cursor: pointer; backdrop-filter: blur(5px); border: 1px solid var(--glass-border); }
+    .action-btn-card.active { color: #ff3366; border-color: #ff3366; box-shadow: 0 0 10px rgba(255,51,102,0.5); }
     .product-image { width: 100%; height: 150px; object-fit: cover; background: #000; }
     .product-info { padding: 10px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
     .product-title { font-size: 0.9rem; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -32,7 +37,21 @@
     .product-location { font-size: 0.7rem; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
     .btn-buy { margin-top: auto; width: 100%; padding: 8px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 0.8rem; cursor: pointer; }
 
-    /* SKELETONS DO MERCADO */
+    /* MODAL DE FILTROS */
+    .filter-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: flex-end; }
+    .filter-content { background: var(--bg-color); border-top: 1px solid var(--neon); border-top-left-radius: 25px; border-top-right-radius: 25px; width: 100%; max-width: 500px; padding: 25px; padding-bottom: 40px; animation: slideUp 0.3s ease-out; }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .filter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .filter-header h3 { color: white; font-size: 1.2rem; }
+    .filter-header i { color: white; font-size: 1.5rem; cursor: pointer; }
+    .filter-group { margin-bottom: 20px; }
+    .filter-group label { display: block; color: var(--neon); font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; }
+    .filter-row { display: flex; gap: 10px; }
+    .filter-row input { flex: 1; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 10px; padding: 12px; color: white; outline: none; }
+    .btn-apply { width: 100%; padding: 15px; background: linear-gradient(90deg, var(--primary), var(--neon)); border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 0 15px rgba(0, 204, 255, 0.4); }
+    .btn-clear { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-weight: bold; font-size: 0.9rem; cursor: pointer; margin-top: 10px; }
+
+    /* SKELETONS */
     .skeleton-product-card { height: 250px; border-radius: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); position: relative; overflow: hidden; }
     .skeleton-img-market { width: 100%; height: 150px; background: #1a2235; }
     .skeleton-text-market { height: 15px; margin: 10px; background: #1a2235; border-radius: 5px; }
@@ -42,12 +61,15 @@
 <body>
   <header class="header">
     <div class="header-logo"><img src="logo.png" alt="FLY"> FLY</div>
-    <div class="header-icons"><i class="fa-solid fa-magnifying-glass"></i><i class="fa-regular fa-bell"></i></div>
+    <div class="header-icons">
+      <i class="fa-solid fa-magnifying-glass" onclick="focusSearch()"></i>
+      <i class="fa-regular fa-bell" onclick="window.location.href='notificacoes.html'"></i>
+    </div>
   </header>
   
   <div class="search-bar">
     <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar produtos..." onkeyup="filterProducts()">
-    <button style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50%; width: 45px; height: 45px; color: var(--neon); font-size: 1.2rem;"><i class="fa-solid fa-sliders"></i></button>
+    <button class="btn-filter" id="btnFilter" onclick="openFilterModal()"><i class="fa-solid fa-sliders"></i></button>
   </div>
   
   <div class="categories" id="categoriesContainer">
@@ -59,11 +81,27 @@
   </div>
   
   <div class="products-grid" id="productsGrid">
-    <!-- Skeletons que aparecem antes de carregar -->
     <div class="skeleton-product-card"><div class="skeleton-img-market"></div><div class="skeleton-text-market"></div><div class="skeleton-text-market short"></div></div>
     <div class="skeleton-product-card"><div class="skeleton-img-market"></div><div class="skeleton-text-market"></div><div class="skeleton-text-market short"></div></div>
-    <div class="skeleton-product-card"><div class="skeleton-img-market"></div><div class="skeleton-text-market"></div><div class="skeleton-text-market short"></div></div>
-    <div class="skeleton-product-card"><div class="skeleton-img-market"></div><div class="skeleton-text-market"></div><div class="skeleton-text-market short"></div></div>
+  </div>
+
+  <!-- MODAL DE FILTROS -->
+  <div class="filter-modal" id="filterModal">
+    <div class="filter-content">
+      <div class="filter-header">
+        <h3><i class="fa-solid fa-sliders"></i> Filtrar Produtos</h3>
+        <i class="fa-solid fa-xmark" onclick="closeFilterModal()"></i>
+      </div>
+      <div class="filter-group">
+        <label>Preço (Kz)</label>
+        <div class="filter-row">
+          <input type="number" id="filterMinPrice" placeholder="Mínimo" min="0">
+          <input type="number" id="filterMaxPrice" placeholder="Máximo" min="0">
+        </div>
+      </div>
+      <button class="btn-apply" onclick="applyFiltersAndClose()"><i class="fa-solid fa-check"></i> Aplicar Filtros</button>
+      <button class="btn-clear" onclick="clearFilters()">Limpar Filtros</button>
+    </div>
   </div>
   
   <nav class="bottom-nav">
@@ -80,6 +118,7 @@
   <script src="js/calls.js"></script>
   <script>
     let currentUser = null; let allProducts = []; let currentCategory = 'Tudo'; let userFavorites = [];
+    let filterMin = null; let filterMax = null;
 
     function showToast(message, type = 'success') {
       const toast = document.createElement('div');
@@ -89,6 +128,44 @@
       void toast.offsetWidth;
       toast.classList.add('show');
       setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    function focusSearch() { document.getElementById('searchInput').focus(); }
+
+    async function shareProduct(platform, name, price, id) {
+      const url = window.location.origin + '/produto.html?id=' + id;
+      const text = `Vê este produto no FLY: ${name} por ${price}. ${url}`;
+      
+      if (platform === 'native') {
+        if (navigator.share) {
+          try { await navigator.share({ title: 'FLY', text: text, url: url }); return; } catch (err) {}
+        }
+        try { await navigator.clipboard.writeText(text); showToast('Link copiado!', 'success'); } catch (err) { showToast('Erro ao copiar.', 'error'); }
+      }
+    }
+
+    function openFilterModal() {
+      document.getElementById('filterModal').style.display = 'flex';
+      document.getElementById('filterMinPrice').value = filterMin || '';
+      document.getElementById('filterMaxPrice').value = filterMax || '';
+    }
+    function closeFilterModal() {
+      document.getElementById('filterModal').style.display = 'none';
+    }
+    function applyFiltersAndClose() {
+      filterMin = parseFloat(document.getElementById('filterMinPrice').value) || null;
+      filterMax = parseFloat(document.getElementById('filterMaxPrice').value) || null;
+      document.getElementById('btnFilter').classList.add('active');
+      closeFilterModal();
+      applyFilters();
+    }
+    function clearFilters() {
+      document.getElementById('filterMinPrice').value = '';
+      document.getElementById('filterMaxPrice').value = '';
+      filterMin = null; filterMax = null;
+      document.getElementById('btnFilter').classList.remove('active');
+      closeFilterModal();
+      applyFilters();
     }
 
     async function updateBadges() {
@@ -116,9 +193,15 @@
 
     async function loadProducts() {
       const grid = document.getElementById('productsGrid');
-      const { data: products, error } = await supabaseClient.from('products').select('id, name, price, image_url, category, profiles(is_premium)').order('created_at', { ascending: false });
       
+      // CORREÇÃO: Query simplificada. O filtro de férias é feito no JavaScript.
+      const { data: products, error } = await supabaseClient
+        .from('products')
+        .select('id, name, price, image_url, category, stock, profiles!seller_id(is_premium, vacation_mode)')
+        .order('created_at', { ascending: false });
+        
       if (error) { 
+        console.error("Erro na query:", error);
         grid.innerHTML = `<p style="color: #ff3366; grid-column: span 2; text-align: center;">Erro ao carregar produtos.</p>`; 
         showToast('Erro ao carregar produtos.', 'error');
         return; 
@@ -142,8 +225,13 @@
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
       let filtered = allProducts;
       
+      // Filtro de Férias no JavaScript (à prova de falhas)
+      filtered = filtered.filter(p => !p.profiles || p.profiles.vacation_mode !== true);
+      
       if (currentCategory !== 'Tudo') filtered = filtered.filter(p => p.category === currentCategory);
       if (searchTerm) filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm));
+      if (filterMin !== null) filtered = filtered.filter(p => p.price >= filterMin);
+      if (filterMax !== null) filtered = filtered.filter(p => p.price <= filterMax);
       
       filtered.sort((a, b) => {
         const aPrem = a.profiles && a.profiles.is_premium ? 1 : 0;
@@ -166,7 +254,10 @@
 
         card.innerHTML = `
           ${premiumTag}
-          <div class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${product.id}', this)"><i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i></div>
+          <div class="product-actions-top">
+            <div class="action-btn-card ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, '${product.id}', this)"><i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i></div>
+            <div class="action-btn-card" onclick="shareProduct('native', '${product.name.replace(/'/g, "\\'")}', '${formatKz(product.price)}', '${product.id}')"><i class="fa-solid fa-share-nodes"></i></div>
+          </div>
           <img src="${imgUrl}" alt="${product.name}" class="product-image">
           <div class="product-info">
             <div class="product-title">${product.name}</div>

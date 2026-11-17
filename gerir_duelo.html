@@ -16,7 +16,16 @@
     .container { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 90px; }
     
     /* CARTÃO DO DUELO */
-    .duel-preview { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; margin-bottom: 25px; position: relative; overflow: hidden; }
+    .duel-preview { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; margin-bottom: 20px; position: relative; overflow: hidden; }
+    
+    /* BADGES DE MODOS */
+    .mode-badges { display: flex; gap: 8px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
+    .mode-badge { padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+    .badge-team { background: rgba(168, 85, 247, 0.2); color: #a855f7; border: 1px solid #a855f7; }
+    .badge-bo3 { background: rgba(255, 215, 0, 0.2); color: #ffd700; border: 1px solid #ffd700; }
+    .badge-blind { background: rgba(255, 51, 102, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+    .badge-justify { background: rgba(0, 204, 255, 0.2); color: var(--neon); border: 1px solid var(--neon); }
+
     .duel-question { font-size: 1.3rem; font-weight: bold; color: white; text-align: center; margin-bottom: 20px; }
     .duel-options { display: flex; gap: 10px; position: relative; margin-bottom: 20px; }
     .duel-option { flex: 1; border-radius: 12px; overflow: hidden; background: #111; position: relative; border: 1px solid rgba(255,255,255,0.1); }
@@ -25,7 +34,7 @@
     .vs-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(45deg, #7e22ce, #ec4899); width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; color: white; border: 3px solid var(--bg-color); box-shadow: 0 0 15px rgba(236, 72, 153, 0.6); z-index: 10; font-size: 1rem; font-style: italic; }
     
     /* ESTATÍSTICAS */
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
     .stat-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; text-align: center; }
     .stat-value { font-size: 1.8rem; font-weight: 900; margin-bottom: 5px; }
     .stat-label { font-size: 0.8rem; color: var(--text-muted); }
@@ -42,13 +51,19 @@
     /* LISTA DE VOTANTES */
     .section-title { font-size: 1.1rem; font-weight: bold; color: white; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
     .voters-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
-    .voter-item { display: flex; align-items: center; justify-content: space-between; background: var(--glass-bg); padding: 12px 15px; border-radius: 12px; border: 1px solid var(--glass-border); }
+    
+    .voter-item { display: flex; flex-direction: column; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border); padding: 12px 15px; gap: 10px; }
+    .voter-main { display: flex; align-items: center; justify-content: space-between; }
     .voter-info { display: flex; align-items: center; gap: 12px; }
     .voter-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--glass-border); }
     .voter-info span { color: white; font-weight: bold; font-size: 0.95rem; }
     .vote-badge { padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; }
     .badge-a { background: rgba(0, 204, 255, 0.15); color: #00ccff; border: 1px solid #00ccff; }
     .badge-b { background: rgba(236, 72, 153, 0.15); color: #ec4899; border: 1px solid #ec4899; }
+    
+    /* JUSTIFICATIVA DO VOTO */
+    .voter-justification { background: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 8px; font-size: 0.85rem; color: #ccc; font-style: italic; border-left: 3px solid var(--neon); }
+    
     .empty-voters { text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 20px; }
 
     /* BOTÕES DE AÇÃO */
@@ -108,19 +123,17 @@
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user.id;
 
-      // Carregar Duelo e Votos (com os perfis dos votantes)
       const { data: duel, error } = await supabaseClient
         .from('duels')
         .select(`
           *,
-          duel_votes ( user_id, choice, created_at, profiles:user_id (username, avatar_url) )
+          duel_votes ( user_id, choice, justification, created_at, profiles:user_id (username, avatar_url) )
         `)
         .eq('id', duelId)
         .single();
 
       if (error || !duel) { alert('Duelo não encontrado.'); window.location.href = 'duelos.html'; return; }
       
-      // Segurança: Só o criador pode aceder a esta página
       if (duel.creator_id !== currentUser) {
         showToast('Não tens permissão para gerir este duelo.', 'error');
         setTimeout(() => window.location.href = 'duelos.html', 1500);
@@ -143,11 +156,20 @@
       
       const isExpired = new Date() > new Date(duelData.ends_at) || duelData.status === 'finished';
 
+      // Termos dinâmicos (Equipa ou Opção)
+      const termA = duelData.is_team_mode ? 'Equipa A' : duelData.option_a_text;
+      const termB = duelData.is_team_mode ? 'Equipa B' : duelData.option_b_text;
+
+      let badgesHtml = '';
+      if (duelData.is_team_mode) badgesHtml += `<div class="mode-badge badge-team"><i class="fa-solid fa-users-rectangle"></i> Modo Equipa</div>`;
+      if (duelData.best_of_three) badgesHtml += `<div class="mode-badge badge-bo3"><i class="fa-solid fa-ranking-star"></i> Melhor de 3</div>`;
+      if (duelData.mode === 'blind') badgesHtml += `<div class="mode-badge badge-blind"><i class="fa-solid fa-eye-slash"></i> Modo Cego</div>`;
+      if (duelData.allow_justification) badgesHtml += `<div class="mode-badge badge-justify"><i class="fa-solid fa-pen-nib"></i> Justificativa</div>`;
+
       let votersHtml = '';
       if (votesList.length === 0) {
         votersHtml = `<div class="empty-voters"><i class="fa-solid fa-user-slash"></i><br>Ainda ninguém votou.</div>`;
       } else {
-        // Ordenar por data de voto (mais recentes primeiro)
         votesList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         
         votesList.forEach(v => {
@@ -155,13 +177,21 @@
           const avatar = v.profiles?.avatar_url || 'default-avatar.png';
           const isA = v.choice === 'A';
           
+          let justificationHtml = '';
+          if (v.justification) {
+            justificationHtml = `<div class="voter-justification"><i class="fa-solid fa-quote-left"></i> ${v.justification}</div>`;
+          }
+
           votersHtml += `
             <div class="voter-item">
-              <div class="voter-info">
-                <img src="${avatar}">
-                <span>${name}</span>
+              <div class="voter-main">
+                <div class="voter-info">
+                  <img src="${avatar}">
+                  <span>${name}</span>
+                </div>
+                <div class="vote-badge ${isA ? 'badge-a' : 'badge-b'}">${isA ? termA : termB}</div>
               </div>
-              <div class="vote-badge ${isA ? 'badge-a' : 'badge-b'}">${isA ? duelData.option_a_text : duelData.option_b_text}</div>
+              ${justificationHtml}
             </div>
           `;
         });
@@ -169,6 +199,7 @@
 
       container.innerHTML = `
         <div class="duel-preview">
+          ${badgesHtml ? `<div class="mode-badges">${badgesHtml}</div>` : ''}
           <div class="duel-question">${duelData.question}</div>
           <div class="duel-options">
             <div class="duel-option">
